@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xử lý đơn hàng tự động by Taideptrai</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg1:#f8fafc;
+      --bg2:#eef2ff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --primary:#111827;
+      --primary2:#1f2937;
+      --accent:#2563eb;
+      --accent-soft:#dbeafe;
+      --ok-bg:#ecfdf5;
+      --ok:#047857;
+      --err-bg:#fef2f2;
+      --err:#b91c1c;
+      --shadow:0 20px 50px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 28%),
+        linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+      min-height:100vh;
+    }
+    .wrap{max-width:1220px;margin:0 auto;padding:28px 18px 40px}
+    .hero{
+      display:flex;align-items:center;gap:16px;margin-bottom:18px;
+      padding:8px 2px 2px;
+    }
+    .logo{
+      width:58px;height:58px;border-radius:18px;
+      background:linear-gradient(135deg,#0f172a 0%,#2563eb 100%);
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      font-size:30px;font-weight:900;box-shadow:var(--shadow);
+      letter-spacing:-1px;
+    }
+    .hero h1{
+      margin:0;font-size:34px;line-height:1.08;letter-spacing:-.02em;
+    }
+    .hero p{margin:6px 0 0;color:var(--muted);font-size:15px;line-height:1.6}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:22px}
+    .card{
+      background:rgba(255,255,255,.88);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .section{padding:26px}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:9px 14px;border-radius:999px;
+      background:var(--accent-soft);color:#1d4ed8;
+      font-size:13px;font-weight:800;margin-bottom:14px;
+    }
+    .lead{
+      margin:0;color:var(--muted);font-size:15px;line-height:1.7;
+    }
+    .upload-shell{
+      margin-top:18px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+      border-radius:24px;
+      padding:16px;
+    }
+    .dropzone{
+      border:2px dashed #cbd5e1;
+      border-radius:22px;
+      background:#fff;
+      padding:34px 20px;
+      text-align:center;
+      transition:.2s ease;
+    }
+    .dropzone.drag{
+      border-color:#2563eb;
+      background:#eff6ff;
+      transform:translateY(-1px);
+    }
+    .file-icon{
+      width:74px;height:74px;border-radius:22px;
+      background:linear-gradient(180deg,#eff6ff 0%,#e2e8f0 100%);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 14px;font-size:34px;
+    }
+    .title{
+      font-size:19px;font-weight:800;margin-bottom:6px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .file-input{
+      margin-top:18px;
+      display:inline-block;
+      max-width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+    }
+    .pill{
+      margin-top:14px;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:999px;
+      background:#f8fafc;border:1px solid var(--line);
+      font-size:14px;font-weight:600;
+      color:#334155;
+    }
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    .btn{
+      border:none;border-radius:18px;
+      padding:14px 18px;font-size:14px;font-weight:800;
+      cursor:pointer;transition:.2s ease;
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary2)}
+    .btn-secondary{background:#fff;border:1px solid var(--line);color:var(--text)}
+    .btn-secondary:hover{background:#f8fafc}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .status{
+      display:none;margin-top:16px;padding:16px 18px;border-radius:18px;font-size:14px;font-weight:600;
+    }
+    .status.show{display:block}
+    .status.ok{background:var(--ok-bg);color:var(--ok)}
+    .status.err{background:var(--err-bg);color:var(--err)}
+    .stats{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px;
+    }
+    .stat{
+      border:1px solid var(--line);
+      background:#fff;border-radius:22px;padding:18px;
+    }
+    .stat .label{font-size:13px;color:var(--muted)}
+    .stat .value{font-size:32px;font-weight:900;letter-spacing:-.02em;margin-top:4px}
+    .table-wrap{
+      margin-top:18px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#fff;
+    }
+    .table-scroll{max-height:430px;overflow:auto}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead{position:sticky;top:0;background:#f8fafc;z-index:2}
+    th,td{padding:13px 14px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:top}
+    tbody tr:hover{background:#fafcff}
+    th{font-size:13px;color:#334155}
+    .note{margin-top:12px;font-size:13px;color:var(--muted)}
+    .side-title{margin:0;font-size:22px}
+    .rule-list{display:grid;gap:10px;margin-top:16px}
+    .rule{
+      display:flex;gap:10px;align-items:flex-start;
+      padding:13px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;
+      color:#334155;font-size:14px;
+    }
+    .rule .check{
+      width:22px;height:22px;border-radius:999px;background:#ecfeff;color:#0891b2;
+      display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;font-weight:900;
+      margin-top:1px;
+    }
+    .mini-card{
+      margin-top:20px;padding:18px;border-radius:22px;
+      background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%);
+      color:#fff;
+    }
+    .mini-card h3{margin:0 0 8px;font-size:18px}
+    .mini-card p{margin:0;color:rgba(255,255,255,.88);font-size:14px;line-height:1.65}
+    @media (max-width: 960px){
+      .grid{grid-template-columns:1fr}
+      .hero h1{font-size:28px}
+      .stats{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 640px){
+      .wrap{padding:18px 12px 30px}
+      .hero{align-items:flex-start}
+      .hero h1{font-size:24px}
+      .stats{grid-template-columns:1fr}
+      .section{padding:18px}
+      th,td{padding:11px 10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="logo">T</div>
+      <div>
+        <h1>Xử lý đơn hàng tự động</h1>
+        <p>Tải file Excel lên, xử lý theo đúng rule của bạn và nhận lại file kết quả ngay trên trình duyệt.</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card section">
+        <div class="badge">⚡ @tranductai</div>
+        <p class="lead">Website tự động gộp theo <b>Mã sản phẩm</b>, đếm <b>unique Mã đơn</b>, không cộng chồng trạng thái và trả file Excel đã sắp xếp đúng thứ tự bạn yêu cầu.</p>
+
+        <div class="upload-shell">
+          <div id="dropzone" class="dropzone">
+            <div class="file-icon">📊</div>
+            <div class="title">Kéo thả hoặc chọn file Excel</div>
+            <div class="muted small">Hỗ trợ định dạng .xlsx và .xls</div>
+            <input id="fileInput" class="file-input" type="file" accept=".xlsx,.xls" />
+            <div id="filePill" class="pill" style="display:none"></div>
+          </div>
+
+          <div class="actions">
+            <button id="processBtn" class="btn btn-primary" disabled>⚙️ Xử lý file</button>
+            <button id="resetBtn" class="btn btn-secondary">↺ Chọn file khác</button>
+          </div>
+
+          <div id="okBox" class="status ok"></div>
+          <div id="errBox" class="status err"></div>
+        </div>
+
+        <div id="stats" class="stats" style="display:none">
+          <div class="stat">
+            <div class="label">Số sản phẩm</div>
+            <div id="statProducts" class="value">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Tổng số đơn</div>
+            <div id="statOrders" class="value">0</div>
+          </div>
+        </div>
+
+        <div id="previewWrap" style="display:none">
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mã sản phẩm</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Tổng số đơn</th>
+                    <th>Đã gửi</th>
+                    <th>Đã nhận</th>
+                    <th>Đã hoàn</th>
+                  </tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="note">Dữ liệu xem nhanh hiển thị theo đúng thứ tự sắp xếp của file trả về: <b>Tổng số đơn → Đã gửi → Đã nhận → Đã hoàn</b>.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card section">
+          <h2 class="side-title">Quy tắc xử lý</h2>
+          <div class="rule-list">
+            <div class="rule"><div class="check">✓</div><div>Gộp hoàn toàn theo <b>Mã sản phẩm</b></div></div>
+            <div class="rule"><div class="check">✓</div><div><b>1 mã = 1 dòng</b></div></div>
+            <div class="rule"><div class="check">✓</div><div>Tên sản phẩm lấy <b>1 giá trị đại diện</b></div></div>
+            <div class="rule"><div class="check">✓</div><div>Tất cả chỉ số đều đếm <b>unique Mã đơn</b></div></div>
+            <div class="rule"><div class="check">✓</div><div>Không cộng chồng trạng thái</div></div>
+            <div class="rule"><div class="check">✓</div><div><b>Đã nhận</b> = unique đơn trạng thái Đã nhận</div></div>
+            <div class="rule"><div class="check">✓</div><div><b>Đã hoàn</b> = unique đơn trạng thái Đang hoàn + Đã hoàn</div></div>
+            <div class="rule"><div class="check">✓</div><div><b>Đã gửi hàng</b> luôn ≤ Tổng số đơn</div></div>
+            <div class="rule"><div class="check">✓</div><div>Xóa dòng có <b>Tổng số đơn = 0</b></div></div>
+            <div class="rule"><div class="check">✓</div><div>Sắp xếp giảm dần theo <b>Tổng số đơn → Đã gửi → Đã nhận → Đã hoàn</b></div></div>
+          </div>
+
+          <div class="mini-card">
+            <h3>File kết quả</h3>
+            <p>Xuất ra Excel với sheet <b>Tong_hop</b> và <b>Du_lieu_goc</b>. Dữ liệu tổng hợp đã được làm sạch, sắp xếp đúng thứ tự và sẵn sàng dùng ngay.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const fileInput = document.getElementById('fileInput');
+  const processBtn = document.getElementById('processBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const dropzone = document.getElementById('dropzone');
+  const filePill = document.getElementById('filePill');
+  const okBox = document.getElementById('okBox');
+  const errBox = document.getElementById('errBox');
+  const stats = document.getElementById('stats');
+  const statProducts = document.getElementById('statProducts');
+  const statOrders = document.getElementById('statOrders');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewBody = document.getElementById('previewBody');
+
+  let selectedFile = null;
+
+  function normalizeKey(v){ return String(v ?? '').trim(); }
+  function normalizeStatus(v){ return String(v ?? '').trim().toLowerCase(); }
+
+  function hideMessages(){
+    okBox.className = 'status ok';
+    errBox.className = 'status err';
+    okBox.textContent = '';
+    errBox.textContent = '';
+  }
+
+  function showOk(msg){
+    okBox.textContent = msg;
+    okBox.className = 'status ok show';
+  }
+
+  function showErr(msg){
+    errBox.textContent = msg;
+    errBox.className = 'status err show';
+  }
+
+  function pickRepresentativeName(names){
+    const filtered = names.map(x => String(x ?? '').trim()).filter(Boolean);
+    if(!filtered.length) return '';
+    const freq = {};
+    filtered.forEach(n => { freq[n] = (freq[n] || 0) + 1; });
+    return Object.entries(freq).sort((a,b) => b[1]-a[1] || a[0].length-b[0].length)[0][0];
+  }
+
+  function findColumn(columns, candidates){
+    const map = new Map(columns.map(c => [String(c).trim().toLowerCase(), c]));
+    for(const c of candidates){
+      const found = map.get(c.toLowerCase());
+      if(found) return found;
+    }
+    return null;
+  }
+
+  function processOrders(rows){
+    if(!rows.length) throw new Error('File không có dữ liệu.');
+
+    const columns = Object.keys(rows[0] || {});
+    const productCodeCol = findColumn(columns, ['Mã sản phẩm','Ma san pham','SKU','Product Code','Mã SP']);
+    const productNameCol = findColumn(columns, ['Tên sản phẩm','Ten san pham','Product Name','Tên SP']);
+    const orderCodeCol = findColumn(columns, ['Mã đơn','Mã đơn hàng','Ma don','Ma don hang','Order ID','Order Code']);
+    const statusCol = findColumn(columns, ['Trạng thái','Trang thai','Status','Tình trạng']);
+
+    if(!productCodeCol || !orderCodeCol || !statusCol){
+      throw new Error('Không tìm thấy đủ cột bắt buộc. Cần có ít nhất: Mã sản phẩm, Mã đơn hàng, Trạng thái.');
+    }
+
+    const RECEIVED = new Set([normalizeStatus('Đã nhận')]);
+    const RETURNED = new Set([normalizeStatus('Đang hoàn'), normalizeStatus('Đã hoàn')]);
+
+    const grouped = new Map();
+
+    for(const row of rows){
+      const productCode = normalizeKey(row[productCodeCol]);
+      const orderCode = normalizeKey(row[orderCodeCol]);
+      const status = normalizeStatus(row[statusCol]);
+      const productName = productNameCol ? row[productNameCol] : '';
+
+      if(!productCode || !orderCode) continue;
+
+      if(!grouped.has(productCode)){
+        grouped.set(productCode, {
+          productCode,
+          productNames: [],
+          totalOrders: new Set(),
+          receivedOrders: new Set(),
+          returnedOrders: new Set(),
+          shippedOrders: new Set()
+        });
+      }
+
+      const item = grouped.get(productCode);
+      item.productNames.push(productName);
+      item.totalOrders.add(orderCode);
+
+      if(RECEIVED.has(status)) item.receivedOrders.add(orderCode);
+      if(RETURNED.has(status)) item.returnedOrders.add(orderCode);
+
+      // unique đơn toàn bộ nhóm trạng thái của sản phẩm
+      item.shippedOrders.add(orderCode);
+    }
+
+    const summary = Array.from(grouped.values())
+      .map(item => {
+        const total = item.totalOrders.size;
+        const shipped = Math.min(item.shippedOrders.size, total);
+        return {
+          'Mã sản phẩm': item.productCode,
+          'Tên sản phẩm': pickRepresentativeName(item.productNames),
+          'Tổng số đơn': total,
+          'Đã gửi': shipped,
+          'Đã nhận': item.receivedOrders.size,
+          'Đã hoàn': item.returnedOrders.size
+        };
+      })
+      .filter(r => r['Tổng số đơn'] > 0)
+      .sort((a,b) =>
+        (b['Tổng số đơn'] - a['Tổng số đơn']) ||
+        (b['Đã gửi'] - a['Đã gửi']) ||
+        (b['Đã nhận'] - a['Đã nhận']) ||
+        (b['Đã hoàn'] - a['Đã hoàn']) ||
+        String(a['Mã sản phẩm']).localeCompare(String(b['Mã sản phẩm']), 'vi')
+      );
+
+    return {
+      summary,
+      meta: {
+        totalProducts: summary.length,
+        totalOrders: summary.reduce((acc, r) => acc + r['Tổng số đơn'], 0)
+      }
+    };
+  }
+
+  function exportWorkbook(summaryRows, originalRows, sourceFileName){
+    const wb = XLSX.utils.book_new();
+    const wsSummary = XLSX.utils.json_to_sheet(
+      summaryRows.map(r => ({
+        'Mã sản phẩm': r['Mã sản phẩm'],
+        'Tên sản phẩm': r['Tên sản phẩm'],
+        'Tổng số đơn': r['Tổng số đơn'],
+        'Đã gửi': r['Đã gửi'],
+        'Đã nhận': r['Đã nhận'],
+        'Đã hoàn': r['Đã hoàn']
+      }))
+    );
+    const wsOriginal = XLSX.utils.json_to_sheet(originalRows);
+
+    wsSummary['!cols'] = [
+      {wch:18},{wch:38},{wch:14},{wch:12},{wch:12},{wch:12}
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Tong_hop');
+    XLSX.utils.book_append_sheet(wb, wsOriginal, 'Du_lieu_goc');
+
+    const cleanName = (sourceFileName || 'orders')
+      .replace(/\.xlsx?$/i, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '_');
+
+    XLSX.writeFile(wb, cleanName + '_processed.xlsx');
+  }
+
+  function escapeHtml(value){
+    return String(value ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  function setFile(file){
+    selectedFile = file || null;
+    processBtn.disabled = !selectedFile;
+    previewWrap.style.display = 'none';
+    stats.style.display = 'none';
+    previewBody.innerHTML = '';
+    hideMessages();
+
+    if(selectedFile){
+      filePill.style.display = 'inline-flex';
+      filePill.textContent = 'Đã chọn: ' + selectedFile.name;
+    } else {
+      filePill.style.display = 'none';
+      filePill.textContent = '';
+      fileInput.value = '';
+    }
+  }
+
+  fileInput.addEventListener('change', e => {
+    setFile(e.target.files && e.target.files[0] ? e.target.files[0] : null);
+  });
+
+  ['dragenter','dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('drag');
+    });
+  });
+
+  ['dragleave','drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('drag');
+    });
+  });
+
+  dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) setFile(file);
+  });
+
+  resetBtn.addEventListener('click', () => setFile(null));
+
+  processBtn.addEventListener('click', async () => {
+    if(!selectedFile) return;
+
+    hideMessages();
+    processBtn.disabled = true;
+    processBtn.textContent = 'Đang xử lý...';
+
+    try{
+      const buffer = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const originalRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      const { summary, meta } = processOrders(originalRows);
+      if(!summary.length){
+        throw new Error('Không có dữ liệu hợp lệ sau khi xử lý.');
+      }
+
+      statProducts.textContent = meta.totalProducts;
+      statOrders.textContent = meta.totalOrders;
+      stats.style.display = 'grid';
+
+      previewBody.innerHTML = '';
+      summary.slice(0, 20).forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(row['Mã sản phẩm'])}</td>
+          <td>${escapeHtml(row['Tên sản phẩm'])}</td>
+          <td>${row['Tổng số đơn']}</td>
+          <td>${row['Đã gửi']}</td>
+          <td>${row['Đã nhận']}</td>
+          <td>${row['Đã hoàn']}</td>
+        `;
+        previewBody.appendChild(tr);
+      });
+      previewWrap.style.display = 'block';
+
+      exportWorkbook(summary, originalRows, selectedFile.name);
+      showOk('Đã xử lý xong và tải file kết quả.');
+    } catch(err){
+      showErr(err && err.message ? err.message : 'Có lỗi xảy ra khi xử lý file.');
+    } finally {
+      processBtn.disabled = !selectedFile;
+      processBtn.textContent = '⚙️ Xử lý file';
+    }
+  });
+})();
+</script>
+</body>
+</html>
