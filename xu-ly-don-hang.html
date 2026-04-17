@@ -1,280 +1,401 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Xử lý đơn hàng tự động by Taideptrai</title>
+  <title>T Order Processor</title>
+
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="T Order Processor">
+<meta property="og:description" content="Xử lý đơn hàng tự động by taideptrai">
+<meta property="og:image" content="preview.png">
+<meta property="og:type" content="website">
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{
-      --bg1:#f8fafc;
-      --bg2:#eef2ff;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e2e8f0;
-      --primary:#111827;
-      --primary2:#1f2937;
-      --accent:#2563eb;
-      --accent-soft:#dbeafe;
-      --ok-bg:#ecfdf5;
-      --ok:#047857;
-      --err-bg:#fef2f2;
-      --err:#b91c1c;
-      --shadow:0 20px 50px rgba(15,23,42,.08);
+      --bg1:#eaf2ff;
+      --bg2:#f7fbff;
+      --glass:rgba(255,255,255,.38);
+      --glass-strong:rgba(255,255,255,.52);
+      --stroke:rgba(255,255,255,.62);
+      --text:#0b1220;
+      --muted:#61708a;
+      --primary:#0f6fff;
+      --primary-dark:#0b57d0;
+      --ok:#0f9f6e;
+      --ok-bg:rgba(16,185,129,.12);
+      --err:#dc2626;
+      --err-bg:rgba(239,68,68,.12);
+      --shadow:0 24px 70px rgba(43,76,140,.16);
+      --shadow-strong:0 30px 90px rgba(43,76,140,.22);
+      --blur:26px;
     }
+
+    html[data-theme="dark"]{
+      --bg1:#07101d;
+      --bg2:#0b1526;
+      --glass:rgba(10,18,34,.48);
+      --glass-strong:rgba(12,22,40,.62);
+      --stroke:rgba(255,255,255,.10);
+      --text:#eef4ff;
+      --muted:#95a4bf;
+      --primary:#5ea2ff;
+      --primary-dark:#2c7eff;
+      --ok:#55d6a4;
+      --ok-bg:rgba(16,185,129,.14);
+      --err:#ff8c8c;
+      --err-bg:rgba(239,68,68,.14);
+      --shadow:0 24px 70px rgba(0,0,0,.36);
+      --shadow-strong:0 30px 90px rgba(0,0,0,.48);
+    }
+
     *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
     body{
       margin:0;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 28%),
-        linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+        radial-gradient(circle at 12% 12%, rgba(59,130,246,.22), transparent 24%),
+        radial-gradient(circle at 84% 14%, rgba(125,211,252,.26), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(196,181,253,.22), transparent 28%),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
       min-height:100vh;
+      overflow-x:hidden;
+      transition:background .35s ease, color .25s ease;
     }
-    .wrap{max-width:1220px;margin:0 auto;padding:28px 18px 40px}
-    .hero{
-      display:flex;align-items:center;gap:16px;margin-bottom:18px;
-      padding:8px 2px 2px;
-    }
+    .ambient{position:fixed; inset:0; pointer-events:none; overflow:hidden; filter: blur(10px);}
+    .orb{position:absolute; border-radius:999px; opacity:.75; animation:floatOrb 18s ease-in-out infinite;}
+    .orb.a{width:360px;height:360px;background:rgba(59,130,246,.26);left:-100px;top:60px}
+    .orb.b{width:300px;height:300px;background:rgba(125,211,252,.28);right:-80px;top:180px;animation-delay:-5s}
+    .orb.c{width:280px;height:280px;background:rgba(196,181,253,.24);left:25%;bottom:-40px;animation-delay:-9s}
+    @keyframes floatOrb{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(16px,-20px,0) scale(1.05)}}
+
+    .wrap{max-width:960px; margin:0 auto; padding:22px 14px 120px; position:relative; z-index:2;}
+    .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; opacity:0; transform:translateY(10px); animation:fadeUp .7s ease forwards;}
+    .brand{display:flex; align-items:center; gap:14px;}
     .logo{
-      width:58px;height:58px;border-radius:18px;
-      background:linear-gradient(135deg,#0f172a 0%,#2563eb 100%);
-      color:#fff;display:flex;align-items:center;justify-content:center;
-      font-size:30px;font-weight:900;box-shadow:var(--shadow);
-      letter-spacing:-1px;
+      width:58px; height:58px; border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.32)),linear-gradient(135deg,#0b1220 0%, #0f6fff 100%);
+      border:1px solid rgba(255,255,255,.78);
+      box-shadow:var(--shadow-strong), inset 0 1px 0 rgba(255,255,255,.88);
+      backdrop-filter:blur(28px);
+      display:flex; align-items:center; justify-content:center;
+      font-size:30px; font-weight:900; letter-spacing:-1px; color:#08111f;
     }
-    .hero h1{
-      margin:0;font-size:34px;line-height:1.08;letter-spacing:-.02em;
+    html[data-theme="dark"] .logo{color:#eef4ff}
+    .brand-title{color:var(--muted); font-size:14px; font-weight:700; margin-bottom:4px;}
+    .brand h1{margin:0; font-size:30px; line-height:1.04; letter-spacing:-.04em; font-weight:850;}
+    .mode-toggle{
+      border:none; cursor:pointer; padding:12px 16px; border-radius:999px;
+      background:rgba(255,255,255,.44); border:1px solid rgba(255,255,255,.72);
+      box-shadow:var(--shadow); backdrop-filter:blur(26px) saturate(160%);
+      color:var(--text); font-size:13px; font-weight:800; display:inline-flex; align-items:center; gap:10px;
+      transition:.22s ease;
     }
-    .hero p{margin:6px 0 0;color:var(--muted);font-size:15px;line-height:1.6}
-    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:22px}
+    .mode-toggle:hover{transform:translateY(-1px)}
+    .mode-toggle svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
     .card{
-      background:rgba(255,255,255,.88);
-      backdrop-filter:blur(10px);
-      border:1px solid rgba(226,232,240,.9);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
+      background:var(--glass);
+      border:1px solid var(--stroke);
+      border-radius:36px;
+      box-shadow:var(--shadow-strong), inset 0 1px 0 rgba(255,255,255,.86);
+      backdrop-filter:blur(var(--blur)) saturate(180%);
+      -webkit-backdrop-filter:blur(var(--blur)) saturate(180%);
+      transition:background .25s ease,border-color .25s ease,box-shadow .25s ease;
     }
-    .section{padding:26px}
-    .badge{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:9px 14px;border-radius:999px;
-      background:var(--accent-soft);color:#1d4ed8;
-      font-size:13px;font-weight:800;margin-bottom:14px;
-    }
-    .lead{
-      margin:0;color:var(--muted);font-size:15px;line-height:1.7;
-    }
-    .upload-shell{
-      margin-top:18px;
-      border:1px solid var(--line);
-      background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
-      border-radius:24px;
-      padding:16px;
-    }
+    .main-card{padding:24px; position:relative; overflow:hidden; opacity:0; transform:translateY(16px) scale(.988); animation:fadeScale .82s cubic-bezier(.2,.8,.2,1) .06s forwards;}
+    .main-card::before{content:""; position:absolute; width:260px; height:260px; right:-80px; top:-90px; border-radius:999px; background:radial-gradient(circle, rgba(59,130,246,.22), transparent 66%); pointer-events:none;}
+
+    .hero{margin-top:4px; max-width:700px;}
+    .hero h2{margin:0 0 10px; font-size:44px; line-height:1.02; letter-spacing:-.05em; font-weight:900;}
+    .hero p{margin:0; color:var(--muted); font-size:16px; line-height:1.75;}
+
+    .drop-shell{margin-top:22px; padding:14px; border-radius:32px; background:rgba(255,255,255,.28); border:1px solid rgba(255,255,255,.62); box-shadow: inset 0 1px 0 rgba(255,255,255,.84); backdrop-filter:blur(24px);}
+    html[data-theme="dark"] .drop-shell{background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.10)}
     .dropzone{
-      border:2px dashed #cbd5e1;
-      border-radius:22px;
-      background:#fff;
-      padding:34px 20px;
-      text-align:center;
-      transition:.2s ease;
+      min-height:320px; border-radius:30px; border:1.5px dashed rgba(15,111,255,.28);
+      background:linear-gradient(180deg, rgba(255,255,255,.56) 0%, rgba(255,255,255,.28) 100%);
+      display:flex; align-items:center; justify-content:center; text-align:center; padding:28px 18px;
+      transition:.32s cubic-bezier(.2,.8,.2,1); position:relative; overflow:hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
     }
-    .dropzone.drag{
-      border-color:#2563eb;
-      background:#eff6ff;
-      transform:translateY(-1px);
+    html[data-theme="dark"] .dropzone{
+      background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
-    .file-icon{
-      width:74px;height:74px;border-radius:22px;
-      background:linear-gradient(180deg,#eff6ff 0%,#e2e8f0 100%);
-      display:flex;align-items:center;justify-content:center;
-      margin:0 auto 14px;font-size:34px;
+    .dropzone::before,.dropzone::after{content:""; position:absolute; border-radius:999px; pointer-events:none;}
+    .dropzone::before{width:180px;height:180px;left:-50px;bottom:-50px;background:radial-gradient(circle, rgba(59,130,246,.18), transparent 70%);}
+    .dropzone::after{width:160px;height:160px;right:-40px;top:-40px;background:radial-gradient(circle, rgba(125,211,252,.22), transparent 70%);}
+    .dropzone.drag{transform:translateY(-2px) scale(1.01); border-color:rgba(15,111,255,.52); background:linear-gradient(180deg, rgba(239,246,255,.82) 0%, rgba(255,255,255,.36) 100%); box-shadow:0 22px 40px rgba(15,111,255,.14), inset 0 1px 0 rgba(255,255,255,.92);}
+    html[data-theme="dark"] .dropzone.drag{background:linear-gradient(180deg, rgba(35,67,120,.32) 0%, rgba(255,255,255,.06) 100%)}
+
+    .upload-box{max-width:560px; position:relative; z-index:2;}
+    .sf-icon{
+      width:96px; height:96px; margin:0 auto 16px; border-radius:30px; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(239,246,255,.6));
+      border:1px solid rgba(255,255,255,.88);
+      box-shadow:0 18px 34px rgba(15,111,255,.12), inset 0 1px 0 rgba(255,255,255,.95);
+      animation:pulseSoft 3.4s ease-in-out infinite;
     }
-    .title{
-      font-size:19px;font-weight:800;margin-bottom:6px;
+    html[data-theme="dark"] .sf-icon{background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border-color:rgba(255,255,255,.12)}
+    .sf-icon svg,.btn svg,.pill svg,.mode-toggle svg,.tab svg{
+      width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;
     }
-    .muted{color:var(--muted)}
-    .small{font-size:13px}
+    .sf-icon svg{width:42px;height:42px;color:var(--primary)}
+    @keyframes pulseSoft{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.03)}}
+    .upload-box h3{margin:0 0 8px; font-size:28px; letter-spacing:-.04em;}
+    .upload-box p{margin:0; color:var(--muted); font-size:15px; line-height:1.72;}
+
+    .file-input-wrap{margin-top:18px; display:flex; justify-content:center;}
     .file-input{
-      margin-top:18px;
-      display:inline-block;
-      max-width:100%;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:#fff;
+      max-width:100%; padding:12px 14px; border-radius:18px; border:1px solid rgba(255,255,255,.88);
+      background:rgba(255,255,255,.68); color:#334155; box-shadow: inset 0 1px 0 rgba(255,255,255,.92);
     }
+    html[data-theme="dark"] .file-input{background:rgba(255,255,255,.07); color:#dbe8ff; border-color:rgba(255,255,255,.10)}
     .pill{
-      margin-top:14px;
-      display:inline-flex;align-items:center;gap:8px;
-      padding:10px 14px;border-radius:999px;
-      background:#f8fafc;border:1px solid var(--line);
-      font-size:14px;font-weight:600;
-      color:#334155;
+      margin-top:16px; display:inline-flex; align-items:center; gap:10px; padding:12px 16px; border-radius:999px;
+      background:rgba(255,255,255,.72); border:1px solid rgba(255,255,255,.86); box-shadow:0 14px 30px rgba(15,23,42,.08);
+      backdrop-filter:blur(24px); font-size:14px; font-weight:800; color:#334155; animation:fadeScale .35s ease;
     }
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    html[data-theme="dark"] .pill{background:rgba(255,255,255,.08); color:#e5efff; border-color:rgba(255,255,255,.10)}
+
+    .actions{margin-top:18px; display:flex; gap:12px; flex-wrap:wrap;}
     .btn{
-      border:none;border-radius:18px;
-      padding:14px 18px;font-size:14px;font-weight:800;
-      cursor:pointer;transition:.2s ease;
-      display:inline-flex;align-items:center;gap:8px;
+      border:none; border-radius:22px; padding:16px 20px; font-size:15px; font-weight:850; letter-spacing:-.015em; cursor:pointer;
+      transition:.25s ease; display:inline-flex; align-items:center; gap:10px;
     }
-    .btn-primary{background:var(--primary);color:#fff}
-    .btn-primary:hover{background:var(--primary2)}
-    .btn-secondary{background:#fff;border:1px solid var(--line);color:var(--text)}
-    .btn-secondary:hover{background:#f8fafc}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .status{
-      display:none;margin-top:16px;padding:16px 18px;border-radius:18px;font-size:14px;font-weight:600;
-    }
+    .btn-primary{color:#fff; background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); box-shadow:0 16px 30px rgba(15,111,255,.26);}
+    .btn-primary:hover{transform:translateY(-1px); box-shadow:0 18px 34px rgba(15,111,255,.30)}
+    .btn-secondary{color:var(--text); background:rgba(255,255,255,.62); border:1px solid rgba(255,255,255,.82); box-shadow: inset 0 1px 0 rgba(255,255,255,.90);}
+    html[data-theme="dark"] .btn-secondary{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.10)}
+    .btn-secondary:hover{transform:translateY(-1px); background:rgba(255,255,255,.76)}
+    .btn:disabled{opacity:.56; cursor:not-allowed; transform:none !important}
+
+    .status{display:none; margin-top:16px; padding:15px 16px; border-radius:20px; font-size:14px; font-weight:800; animation:fadeUp .35s ease; backdrop-filter:blur(20px);}
     .status.show{display:block}
-    .status.ok{background:var(--ok-bg);color:var(--ok)}
-    .status.err{background:var(--err-bg);color:var(--err)}
-    .stats{
-      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px;
-    }
+    .status.ok{color:var(--ok); background:var(--ok-bg); border:1px solid rgba(16,185,129,.18)}
+    .status.err{color:var(--err); background:var(--err-bg); border:1px solid rgba(239,68,68,.18)}
+
+    .stats{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px;}
     .stat{
-      border:1px solid var(--line);
-      background:#fff;border-radius:22px;padding:18px;
+      padding:18px; border-radius:26px; background:var(--glass-strong); border:1px solid rgba(255,255,255,.78); box-shadow: inset 0 1px 0 rgba(255,255,255,.92);
+      opacity:0; transform:translateY(6px); animation:fadeUp .45s ease forwards; backdrop-filter:blur(24px) saturate(180%);
     }
-    .stat .label{font-size:13px;color:var(--muted)}
-    .stat .value{font-size:32px;font-weight:900;letter-spacing:-.02em;margin-top:4px}
+    html[data-theme="dark"] .stat{border-color:rgba(255,255,255,.10)}
+    .stat:nth-child(2){animation-delay:.06s}
+    .stat-label{color:var(--muted); font-size:13px; margin-bottom:6px; font-weight:700;}
+    .stat-value{font-size:34px; line-height:1; letter-spacing:-.04em; font-weight:900;}
+
+    .preview-shell{
+      margin-top:18px; padding:10px; border-radius:30px; background:rgba(255,255,255,.24); border:1px solid rgba(255,255,255,.68);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.84); backdrop-filter:blur(24px);
+    }
+    html[data-theme="dark"] .preview-shell{background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.10)}
     .table-wrap{
-      margin-top:18px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#fff;
+      border-radius:24px; overflow:hidden; background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.82); box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
     }
-    .table-scroll{max-height:430px;overflow:auto}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    thead{position:sticky;top:0;background:#f8fafc;z-index:2}
-    th,td{padding:13px 14px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:top}
-    tbody tr:hover{background:#fafcff}
-    th{font-size:13px;color:#334155}
-    .note{margin-top:12px;font-size:13px;color:var(--muted)}
-    .side-title{margin:0;font-size:22px}
-    .rule-list{display:grid;gap:10px;margin-top:16px}
-    .rule{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:13px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;
-      color:#334155;font-size:14px;
+    html[data-theme="dark"] .table-wrap{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.10)}
+    .table-scroll{max-height:460px; overflow:auto;}
+    table{width:100%; border-collapse:collapse; font-size:14px;}
+    thead{position:sticky; top:0; z-index:2; background:rgba(248,250,252,.64); backdrop-filter:blur(22px) saturate(180%);}
+    html[data-theme="dark"] thead{background:rgba(9,17,31,.78)}
+    th,td{padding:14px 16px; text-align:left; border-bottom:1px solid rgba(226,232,240,.62); vertical-align:top;}
+    html[data-theme="dark"] th, html[data-theme="dark"] td{border-bottom-color:rgba(255,255,255,.08)}
+    th{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:850;}
+    tbody tr{transition:.18s ease; animation:fadeUp .3s ease both;}
+    tbody tr:hover{background:rgba(239,246,255,.55);}
+    html[data-theme="dark"] tbody tr:hover{background:rgba(255,255,255,.04)}
+
+    .tabbar-wrap{
+      position:fixed; left:50%; bottom:16px; transform:translateX(-50%); width:min(720px, calc(100% - 24px)); z-index:30;
     }
-    .rule .check{
-      width:22px;height:22px;border-radius:999px;background:#ecfeff;color:#0891b2;
-      display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;font-weight:900;
-      margin-top:1px;
+    .tabbar{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:10px; border-radius:30px; background:rgba(255,255,255,.44);
+      border:1px solid rgba(255,255,255,.76); box-shadow:var(--shadow-strong), inset 0 1px 0 rgba(255,255,255,.94); backdrop-filter:blur(30px) saturate(190%);
     }
-    .mini-card{
-      margin-top:20px;padding:18px;border-radius:22px;
-      background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%);
-      color:#fff;
+    html[data-theme="dark"] .tabbar{background:rgba(11,17,31,.56); border-color:rgba(255,255,255,.10)}
+    .tab{
+      min-height:68px; border-radius:22px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:7px;
+      color:#718198; text-decoration:none; font-size:12px; font-weight:800; letter-spacing:.01em; transition:.22s ease; user-select:none; cursor:pointer; border:none;
+      background:transparent;
     }
-    .mini-card h3{margin:0 0 8px;font-size:18px}
-    .mini-card p{margin:0;color:rgba(255,255,255,.88);font-size:14px;line-height:1.65}
-    @media (max-width: 960px){
-      .grid{grid-template-columns:1fr}
-      .hero h1{font-size:28px}
-      .stats{grid-template-columns:1fr 1fr}
-    }
-    @media (max-width: 640px){
-      .wrap{padding:18px 12px 30px}
-      .hero{align-items:flex-start}
-      .hero h1{font-size:24px}
+    html[data-theme="dark"] .tab{color:#94a3b8}
+    .tab.active{color:var(--primary); background:rgba(255,255,255,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 20px rgba(15,111,255,.12);}
+    html[data-theme="dark"] .tab.active{background:rgba(255,255,255,.08)}
+    .tab-label{pointer-events:none}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeScale{from{opacity:0;transform:translateY(16px) scale(.988)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+    @media (max-width:640px){
+      .wrap{padding:18px 12px 118px}
+      .brand h1{font-size:24px}
+      .hero h2{font-size:30px}
+      .main-card{padding:18px}
+      .dropzone{min-height:280px}
       .stats{grid-template-columns:1fr}
-      .section{padding:18px}
-      th,td{padding:11px 10px}
+      th,td{padding:12px 12px}
+      .actions{flex-direction:column}
+      .btn{width:100%;justify-content:center}
+      .tab{min-height:62px}
     }
   </style>
 </head>
 <body>
+  <div class="ambient">
+    <div class="orb a"></div>
+    <div class="orb b"></div>
+    <div class="orb c"></div>
+  </div>
+
   <div class="wrap">
-    <div class="hero">
-      <div class="logo">T</div>
-      <div>
-        <h1>Xử lý đơn hàng tự động</h1>
-        <p>Tải file Excel lên, xử lý theo đúng rule của bạn và nhận lại file kết quả ngay trên trình duyệt.</p>
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">T</div>
+        <div>
+          <div class="brand-title">T Đ T</div>
+          <h1>Xử lý đơn hàng</h1>
+        </div>
       </div>
+
+      <button id="themeToggle" class="mode-toggle" type="button">
+        <svg id="themeIcon" viewBox="0 0 24 24">
+          <path d="M12 3v2.5"></path>
+          <path d="M12 18.5V21"></path>
+          <path d="m4.93 4.93 1.77 1.77"></path>
+          <path d="m17.3 17.3 1.77 1.77"></path>
+          <path d="M3 12h2.5"></path>
+          <path d="M18.5 12H21"></path>
+          <path d="m4.93 19.07 1.77-1.77"></path>
+          <path d="m17.3 6.7 1.77-1.77"></path>
+          <circle cx="12" cy="12" r="4"></circle>
+        </svg>
+        <span id="themeLabel">Dark mode</span>
+      </button>
     </div>
 
-    <div class="grid">
-      <div class="card section">
-        <div class="badge">⚡ @tranductai</div>
-        <p class="lead">Website tự động gộp theo <b>Mã sản phẩm</b>, đếm <b>unique Mã đơn</b>, không cộng chồng trạng thái và trả file Excel đã sắp xếp đúng thứ tự bạn yêu cầu.</p>
+    <div class="card main-card">
+      <div class="hero" id="section-upload">
+        <h2>Tải file lên, xử lý mượt và nhận lại file Excel ngay</h2>
+        <p>@tranductai</p>
+      </div>
 
-        <div class="upload-shell">
-          <div id="dropzone" class="dropzone">
-            <div class="file-icon">📊</div>
-            <div class="title">Kéo thả hoặc chọn file Excel</div>
-            <div class="muted small">Hỗ trợ định dạng .xlsx và .xls</div>
-            <input id="fileInput" class="file-input" type="file" accept=".xlsx,.xls" />
-            <div id="filePill" class="pill" style="display:none"></div>
-          </div>
-
-          <div class="actions">
-            <button id="processBtn" class="btn btn-primary" disabled>⚙️ Xử lý file</button>
-            <button id="resetBtn" class="btn btn-secondary">↺ Chọn file khác</button>
-          </div>
-
-          <div id="okBox" class="status ok"></div>
-          <div id="errBox" class="status err"></div>
-        </div>
-
-        <div id="stats" class="stats" style="display:none">
-          <div class="stat">
-            <div class="label">Số sản phẩm</div>
-            <div id="statProducts" class="value">0</div>
-          </div>
-          <div class="stat">
-            <div class="label">Tổng số đơn</div>
-            <div id="statOrders" class="value">0</div>
-          </div>
-        </div>
-
-        <div id="previewWrap" style="display:none">
-          <div class="table-wrap">
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Mã sản phẩm</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Tổng số đơn</th>
-                    <th>Đã gửi</th>
-                    <th>Đã nhận</th>
-                    <th>Đã hoàn</th>
-                  </tr>
-                </thead>
-                <tbody id="previewBody"></tbody>
-              </table>
+      <div class="drop-shell">
+        <div id="dropzone" class="dropzone">
+          <div class="upload-box">
+            <div class="sf-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 16V7"></path>
+                <path d="M8.5 10.5 12 7l3.5 3.5"></path>
+                <path d="M5 17.5v.5A2 2 0 0 0 7 20h10a2 2 0 0 0 2-2v-.5"></path>
+              </svg>
+            </div>
+            <h3>Kéo thả hoặc chọn file Excel</h3>
+            <p>Hỗ trợ định dạng .xlsx và .xls. File sẽ được xử lý trực tiếp trên trình duyệt và tự động tải về sau khi hoàn tất.</p>
+            <div class="file-input-wrap">
+              <input id="fileInput" class="file-input" type="file" accept=".xlsx,.xls" />
+            </div>
+            <div id="filePill" class="pill" style="display:none">
+              <svg viewBox="0 0 24 24">
+                <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"></path>
+                <path d="M14 5h5v5"></path>
+                <path d="M10 14 19 5"></path>
+              </svg>
+              <span id="filePillText"></span>
             </div>
           </div>
-          <div class="note">Dữ liệu xem nhanh hiển thị theo đúng thứ tự sắp xếp của file trả về: <b>Tổng số đơn → Đã gửi → Đã nhận → Đã hoàn</b>.</div>
         </div>
       </div>
 
-      <div>
-        <div class="card section">
-          <h2 class="side-title">Quy tắc xử lý</h2>
-          <div class="rule-list">
-            <div class="rule"><div class="check">✓</div><div>Gộp hoàn toàn theo <b>Mã sản phẩm</b></div></div>
-            <div class="rule"><div class="check">✓</div><div><b>1 mã = 1 dòng</b></div></div>
-            <div class="rule"><div class="check">✓</div><div>Tên sản phẩm lấy <b>1 giá trị đại diện</b></div></div>
-            <div class="rule"><div class="check">✓</div><div>Tất cả chỉ số đều đếm <b>unique Mã đơn</b></div></div>
-            <div class="rule"><div class="check">✓</div><div>Không cộng chồng trạng thái</div></div>
-            <div class="rule"><div class="check">✓</div><div><b>Đã nhận</b> = unique đơn trạng thái Đã nhận</div></div>
-            <div class="rule"><div class="check">✓</div><div><b>Đã hoàn</b> = unique đơn trạng thái Đang hoàn + Đã hoàn</div></div>
-            <div class="rule"><div class="check">✓</div><div><b>Đã gửi hàng</b> luôn ≤ Tổng số đơn</div></div>
-            <div class="rule"><div class="check">✓</div><div>Xóa dòng có <b>Tổng số đơn = 0</b></div></div>
-            <div class="rule"><div class="check">✓</div><div>Sắp xếp giảm dần theo <b>Tổng số đơn → Đã gửi → Đã nhận → Đã hoàn</b></div></div>
-          </div>
+      <div class="actions">
+        <button id="processBtn" class="btn btn-primary">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3v3"></path>
+            <path d="M18.36 5.64 16.24 7.76"></path>
+            <path d="M21 12h-3"></path>
+            <path d="m18.36 18.36-2.12-2.12"></path>
+            <path d="M12 21v-3"></path>
+            <path d="m7.76 16.24-2.12 2.12"></path>
+            <path d="M6 12H3"></path>
+            <path d="m7.76 7.76-2.12-2.12"></path>
+          </svg>
+          <span>Xử lý file</span>
+        </button>
 
-          <div class="mini-card">
-            <h3>File kết quả</h3>
-            <p>Xuất ra Excel với sheet <b>Tong_hop</b> và <b>Du_lieu_goc</b>. Dữ liệu tổng hợp đã được làm sạch, sắp xếp đúng thứ tự và sẵn sàng dùng ngay.</p>
+        <button id="resetBtn" class="btn btn-secondary" type="button">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+            <path d="M3 3v6h6"></path>
+          </svg>
+          <span>Chọn file khác</span>
+        </button>
+      </div>
+
+      <div id="okBox" class="status ok"></div>
+      <div id="errBox" class="status err"></div>
+
+      <div id="stats" class="stats" style="display:none">
+        <div class="stat">
+          <div class="stat-label">Số sản phẩm</div>
+          <div id="statProducts" class="stat-value">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Tổng số đơn</div>
+          <div id="statOrders" class="stat-value">0</div>
+        </div>
+      </div>
+
+      <div id="section-preview" class="preview-shell" style="display:none">
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mã sản phẩm</th>
+                  <th>Tên sản phẩm</th>
+                  <th>Tổng số đơn</th>
+                  <th>Đã gửi</th>
+                  <th>Đã nhận</th>
+                  <th>Đã hoàn</th>
+                </tr>
+              </thead>
+              <tbody id="previewBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="tabbar-wrap">
+    <div class="tabbar">
+      <button class="tab active" id="tabUpload" type="button">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 9.5V20h14V9.5"></path>
+        </svg>
+        <span class="tab-label">Xử lý</span>
+      </button>
+      <button class="tab" id="tabPreview" type="button">
+        <svg viewBox="0 0 24 24">
+          <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+          <path d="M8 9h8"></path>
+          <path d="M8 13h8"></path>
+          <path d="M8 17h5"></path>
+        </svg>
+        <span class="tab-label">Xem trước</span>
+      </button>
+      <button class="tab" id="tabDownload" type="button">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3v12"></path>
+          <path d="m8.5 11.5 3.5 3.5 3.5-3.5"></path>
+          <path d="M5 19h14"></path>
+        </svg>
+        <span class="tab-label">Tải xuống</span>
+      </button>
     </div>
   </div>
 
@@ -285,18 +406,50 @@
   const resetBtn = document.getElementById('resetBtn');
   const dropzone = document.getElementById('dropzone');
   const filePill = document.getElementById('filePill');
+  const filePillText = document.getElementById('filePillText');
   const okBox = document.getElementById('okBox');
   const errBox = document.getElementById('errBox');
   const stats = document.getElementById('stats');
   const statProducts = document.getElementById('statProducts');
   const statOrders = document.getElementById('statOrders');
-  const previewWrap = document.getElementById('previewWrap');
+  const previewWrap = document.getElementById('section-preview');
   const previewBody = document.getElementById('previewBody');
+  const themeToggle = document.getElementById('themeToggle');
+  const themeLabel = document.getElementById('themeLabel');
+  const themeIcon = document.getElementById('themeIcon');
+  const tabUpload = document.getElementById('tabUpload');
+  const tabPreview = document.getElementById('tabPreview');
+  const tabDownload = document.getElementById('tabDownload');
+  const sectionUpload = document.getElementById('section-upload');
 
   let selectedFile = null;
+  let lastDownloadBlob = null;
+  let lastDownloadName = '';
 
   function normalizeKey(v){ return String(v ?? '').trim(); }
   function normalizeStatus(v){ return String(v ?? '').trim().toLowerCase(); }
+
+  function setActiveTab(tab){
+    [tabUpload, tabPreview, tabDownload].forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('t-order-theme', theme);
+    if(theme === 'dark'){
+      themeLabel.textContent = 'Light mode';
+      themeIcon.innerHTML = '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path>';
+    } else {
+      themeLabel.textContent = 'Dark mode';
+      themeIcon.innerHTML = '<path d="M12 3v2.5"></path><path d="M12 18.5V21"></path><path d="m4.93 4.93 1.77 1.77"></path><path d="m17.3 17.3 1.77 1.77"></path><path d="M3 12h2.5"></path><path d="M18.5 12H21"></path><path d="m4.93 19.07 1.77-1.77"></path><path d="m17.3 6.7 1.77-1.77"></path><circle cx="12" cy="12" r="4"></circle>';
+    }
+  }
+
+  function initTheme(){
+    const saved = localStorage.getItem('t-order-theme') || 'light';
+    applyTheme(saved);
+  }
 
   function hideMessages(){
     okBox.className = 'status ok';
@@ -375,8 +528,6 @@
 
       if(RECEIVED.has(status)) item.receivedOrders.add(orderCode);
       if(RETURNED.has(status)) item.returnedOrders.add(orderCode);
-
-      // unique đơn toàn bộ nhóm trạng thái của sản phẩm
       item.shippedOrders.add(orderCode);
     }
 
@@ -411,7 +562,7 @@
     };
   }
 
-  function exportWorkbook(summaryRows, originalRows, sourceFileName){
+  function buildWorkbookBlob(summaryRows, originalRows){
     const wb = XLSX.utils.book_new();
     const wsSummary = XLSX.utils.json_to_sheet(
       summaryRows.map(r => ({
@@ -432,11 +583,19 @@
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Tong_hop');
     XLSX.utils.book_append_sheet(wb, wsOriginal, 'Du_lieu_goc');
 
-    const cleanName = (sourceFileName || 'orders')
-      .replace(/\.xlsx?$/i, '')
-      .replace(/[^a-zA-Z0-9_-]+/g, '_');
+    const array = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+    return new Blob([array], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
 
-    XLSX.writeFile(wb, cleanName + '_processed.xlsx');
+  function triggerDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function escapeHtml(value){
@@ -454,14 +613,20 @@
     previewWrap.style.display = 'none';
     stats.style.display = 'none';
     previewBody.innerHTML = '';
+    lastDownloadBlob = null;
+    lastDownloadName = '';
     hideMessages();
 
     if(selectedFile){
       filePill.style.display = 'inline-flex';
-      filePill.textContent = 'Đã chọn: ' + selectedFile.name;
+      filePillText.textContent = selectedFile.name;
+      filePill.animate(
+        [{transform:'translateY(6px)', opacity:0}, {transform:'translateY(0)', opacity:1}],
+        {duration:320, easing:'cubic-bezier(.2,.8,.2,1)'}
+      );
     } else {
       filePill.style.display = 'none';
-      filePill.textContent = '';
+      filePillText.textContent = '';
       fileInput.value = '';
     }
   }
@@ -494,11 +659,14 @@
   resetBtn.addEventListener('click', () => setFile(null));
 
   processBtn.addEventListener('click', async () => {
-    if(!selectedFile) return;
+    if(!selectedFile) {
+      showErr('Bạn chưa chọn file Excel.');
+      return;
+    }
 
     hideMessages();
     processBtn.disabled = true;
-    processBtn.textContent = 'Đang xử lý...';
+    processBtn.querySelector('span').textContent = 'Đang xử lý...';
 
     try{
       const buffer = await selectedFile.arrayBuffer();
@@ -517,8 +685,9 @@
       stats.style.display = 'grid';
 
       previewBody.innerHTML = '';
-      summary.slice(0, 20).forEach(row => {
+      summary.slice(0, 20).forEach((row, index) => {
         const tr = document.createElement('tr');
+        tr.style.animationDelay = (index * 18) + 'ms';
         tr.innerHTML = `
           <td>${escapeHtml(row['Mã sản phẩm'])}</td>
           <td>${escapeHtml(row['Tên sản phẩm'])}</td>
@@ -530,16 +699,61 @@
         previewBody.appendChild(tr);
       });
       previewWrap.style.display = 'block';
+      previewWrap.animate(
+        [{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'translateY(0)'}],
+        {duration:380, easing:'cubic-bezier(.2,.8,.2,1)'}
+      );
 
-      exportWorkbook(summary, originalRows, selectedFile.name);
+      const cleanName = (selectedFile.name || 'orders')
+        .replace(/\.xlsx?$/i, '')
+        .replace(/[^a-zA-Z0-9_-]+/g, '_');
+
+      lastDownloadName = cleanName + '_processed.xlsx';
+      lastDownloadBlob = buildWorkbookBlob(summary, originalRows);
+      triggerDownload(lastDownloadBlob, lastDownloadName);
+
       showOk('Đã xử lý xong và tải file kết quả.');
+      previewWrap.scrollIntoView({ behavior:'smooth', block:'start' });
+      setActiveTab(tabPreview);
     } catch(err){
       showErr(err && err.message ? err.message : 'Có lỗi xảy ra khi xử lý file.');
     } finally {
       processBtn.disabled = !selectedFile;
-      processBtn.textContent = '⚙️ Xử lý file';
+      processBtn.querySelector('span').textContent = 'Xử lý file';
     }
   });
+
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  });
+
+  tabUpload.addEventListener('click', () => {
+    setActiveTab(tabUpload);
+    sectionUpload.scrollIntoView({ behavior:'smooth', block:'start' });
+    setTimeout(() => fileInput.focus(), 250);
+  });
+
+  tabPreview.addEventListener('click', () => {
+    if(previewWrap.style.display === 'none'){
+      showErr('Chưa có dữ liệu xem trước. Hãy xử lý file trước.');
+      return;
+    }
+    setActiveTab(tabPreview);
+    previewWrap.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  tabDownload.addEventListener('click', () => {
+    if(!lastDownloadBlob){
+      showErr('Chưa có file kết quả để tải. Hãy xử lý file trước.');
+      return;
+    }
+    setActiveTab(tabDownload);
+    triggerDownload(lastDownloadBlob, lastDownloadName || 'processed.xlsx');
+    showOk('Đã tải lại file kết quả.');
+  });
+
+  initTheme();
 })();
 </script>
 </body>
