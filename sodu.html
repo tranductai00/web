@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>T Balance v4.1</title>
+  <title>T Balance v4.3 realtime</title>
   <style>
     :root{
       --bg:#f3f6fb; --card:#fff; --text:#15213a; --muted:#6d7a96; --line:#dfe6f2;
@@ -88,6 +88,15 @@
     .modal{width:min(720px,100%);background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:20px;border:1px solid var(--line)}
     .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modal-head h3{margin:0}
+.sync-pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px;font-weight:700;color:var(--text)}
+.sync-dot{width:10px;height:10px;border-radius:999px;background:var(--muted);display:inline-block;flex:0 0 auto}
+.sync-pill.success .sync-dot{background:var(--ok)}
+.sync-pill.error .sync-dot{background:var(--bad)}
+.sync-pill.loading .sync-dot{background:var(--brand);animation:pulse 1s infinite}
+.sync-pill.offline .sync-dot{background:var(--warn)}
+.sync-log{display:grid;gap:8px;margin-top:10px}
+.sync-log-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;color:var(--muted)}
+@keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.55}100%{transform:scale(1);opacity:1}}
     @media (max-width:1100px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-2{grid-template-columns:1fr}
@@ -121,7 +130,7 @@
       <button class="nav-btn" data-section="ads">Tài khoản QC</button>
       <button class="nav-btn" data-section="transactions">Thanh toán</button>
       <button class="nav-btn" data-section="settings">Cài đặt</button>
-      <small>Tài khoản quảng cáo không có số dư riêng. Thanh toán quảng cáo sẽ tự trừ vào tài khoản ngân hàng liên kết. Phí thẻ cài 1 lần trong Cài đặt.</small>
+      <small>Tự động lưu cloud sau khi nhập. Realtime sync giữa các thiết bị bằng Firestore snapshot. Tài khoản quảng cáo không có số dư riêng.</small>
     </div>
   </aside>
 
@@ -131,9 +140,10 @@
     <div class="topbar">
       <div>
         <h1>Quản lý số dư Facebook Ads</h1>
-        <div class="sub">Chỉnh sửa được tài khoản sau khi tạo. Thanh toán quảng cáo tự cộng phí thẻ và tự trừ đúng ngân hàng liên kết.</div>
+        <div class="sub">Tự động đẩy dữ liệu lên cloud sau khi điền và đồng bộ realtime giữa các thiết bị.</div>
       </div>
       <div class="actions">
+        <div id="syncIndicator" class="sync-pill loading"><span class="sync-dot"></span><span id="syncIndicatorText">Đang khởi tạo...</span></div>
         <button class="secondary" id="btnPullTop">Lấy dữ liệu</button>
         <button class="ghost" id="btnPushTop">Đẩy dữ liệu lên cloud</button>
       </div>
@@ -211,7 +221,7 @@
             <div class="field"><label>Ngân hàng liên kết</label><select id="adBankId"></select></div>
           </div>
           <div class="row" style="margin-top:12px">
-            <div class="field"><label>Ngưỡng thanh toán</label><input id="adThreshold" inputmode="numeric" placeholder="Chỉ nhập số" /></div>
+            <div class="field"><label>Ngưỡng sẽ bị thu tiền</label><input id="adThreshold" inputmode="numeric" placeholder="Chỉ nhập số" /></div>
             <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button id="btnAddAd">Thêm tài khoản QC</button></div>
           </div>
         </div>
@@ -254,7 +264,7 @@
       <div class="grid-2">
         <div class="card section-card">
           <h2>Cài đặt Firebase</h2>
-          <div class="notice">Phần kết nối Firebase đã được ẩn vào danh mục này. Dữ liệu cũ ưu tiên lấy từ kho <b>tran-duc-tai-main</b>.</div>
+          <div class="notice">Auto push cloud sau khi nhập. Realtime sync bật sẵn. Dữ liệu cũ ưu tiên lấy từ kho <b>tran-duc-tai-main</b>.</div>
           <div class="setting-box" style="margin-top:14px">
             <div class="field"><label>Firebase config JSON</label><textarea id="firebaseConfig"></textarea></div>
             <div class="field"><label>Tên kho dữ liệu</label><input id="workspaceId" value="tran-duc-tai-main" placeholder="tran-duc-tai-main" /></div>
@@ -272,7 +282,11 @@
           <div class="setting-box">
             <button class="secondary" id="btnDemo">Tạo dữ liệu mẫu</button>
             <button class="danger" id="btnClear">Xóa toàn bộ</button>
-            <div class="helper-note">Phí thẻ chỉ nhập 1 lần ở đây. Có thể nhập số thập phân như 0,0121 hoặc 1,21. Khi thanh toán, hệ thống sẽ tự tính: số tiền thanh toán + phí thẻ.</div>
+            <div class="helper-note">Sau khi nhập dữ liệu, hệ thống sẽ tự lưu local và tự đẩy lên Firebase. Thiết bị khác đang mở cùng workspace sẽ tự cập nhật.</div>
+            <div>
+              <h2 style="margin:10px 0 8px;font-size:18px">Log đồng bộ</h2>
+              <div id="syncLog" class="sync-log"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -300,14 +314,14 @@
       <div class="field"><label>Mã tài khoản</label><input id="editAdCode" /></div>
       <div class="field"><label>Ngân hàng liên kết</label><select id="editAdBankId"></select></div>
     </div>
-    <div class="row" style="margin-top:14px"><div class="field"><label>Ngưỡng thanh toán</label><input id="editAdThreshold" inputmode="numeric" /></div></div>
+    <div class="row" style="margin-top:14px"><div class="field"><label>Ngưỡng sẽ bị thu tiền</label><input id="editAdThreshold" inputmode="numeric" /></div></div>
     <div class="row" style="margin-top:14px"><button id="btnSaveAdEdit">Lưu thay đổi</button></div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const STORAGE_KEY = "tbalance_online_html_v1";
 const CONFIG_KEY = "tbalance_online_firebase_cfg";
@@ -320,36 +334,28 @@ let data = (() => {
     const d = raw ? JSON.parse(raw) : DEFAULT_DATA;
     if (!d.settings) d.settings = { cardFeePercent: 0 };
     return d;
-  } catch {
-    return DEFAULT_DATA;
-  }
+  } catch { return DEFAULT_DATA; }
 })();
 let db = null;
 let workspaceId = localStorage.getItem(WORKSPACE_KEY) || "tran-duc-tai-main";
 let editingBankId = null;
 let editingAdId = null;
+let unsubscribeRealtime = null;
+let autoSaveTimer = null;
+let isApplyingRemote = false;
 
 const el = (id) => document.getElementById(id);
 const uid = () => Math.random().toString(36).slice(2, 10);
 const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
 const money = (n) => `${Number(n || 0).toLocaleString("vi-VN")} đ`;
-const positiveInt = (v) => {
-  const n = Number(digitsOnly(v));
-  return Number.isFinite(n) ? n : 0;
-};
+const positiveInt = (v) => { const n = Number(digitsOnly(v)); return Number.isFinite(n) ? n : 0; };
 const parseDecimalPercent = (v) => {
-  const cleaned = String(v || "")
-    .replace(/\s+/g, "")
-    .replace(/[^0-9,.-]/g, "")
-    .replace(",", ".");
+  const cleaned = String(v || "").replace(/\s+/g, "").replace(/[^0-9,.-]/g, "").replace(",", ".");
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 };
 const formatDecimalPercent = (v) => {
-  const cleaned = String(v || "")
-    .replace(/\s+/g, "")
-    .replace(/[^0-9,.-]/g, "")
-    .replace(",", ".");
+  const cleaned = String(v || "").replace(/\s+/g, "").replace(/[^0-9,.-]/g, "").replace(",", ".");
   if (!cleaned || cleaned === "." || cleaned === "-" || cleaned === "-.") return "";
   return cleaned.replace(".", ",");
 };
@@ -363,7 +369,6 @@ function formatMoneyInput(id) {
     e.target.value = digits ? Number(digits).toLocaleString("vi-VN") : "";
   });
 }
-
 function bankDeposits(bankId) {
   return data.transactions.filter(t => t.type === "bank_deposit" && t.bankId === bankId).reduce((s, t) => s + Number(t.amount || 0), 0);
 }
@@ -379,13 +384,27 @@ function getBankBalance(bank) {
 function getAdPaymentTotal(adId) {
   return data.transactions.filter(t => t.type === "ad_payment" && t.adAccountId === adId).reduce((s, t) => s + Number(t.amount || 0), 0);
 }
+function getCardFeePercent() {
+  return parseDecimalPercent(data.settings?.cardFeePercent || 0);
+}
+function getThresholdCharge(ad) {
+  const threshold = Number(ad.threshold || 0);
+  const feePercent = getCardFeePercent();
+  const fee = Math.round(threshold * feePercent / 100);
+  return threshold + fee;
+}
+function getAdLinkedBank(ad) {
+  return data.banks.find(b => b.id === ad.bankId);
+}
 function getAdStatus(ad) {
   const threshold = Number(ad.threshold || 0);
-  const paid = getAdPaymentTotal(ad.id);
   if (threshold <= 0) return { text: "Ổn", cls: "ok" };
-  if (paid >= threshold) return { text: "Đã chạm ngưỡng", cls: "bad" };
-  if (paid >= threshold * 0.8) return { text: "Gần ngưỡng", cls: "warn" };
-  return { text: "Ổn", cls: "ok" };
+  const bank = getAdLinkedBank(ad);
+  const bankBalance = bank ? getBankBalance(bank) : 0;
+  const required = getThresholdCharge(ad);
+  if (bankBalance < required) return { text: "Không đủ để thanh toán", cls: "bad" };
+  if (bankBalance <= required * 1.2) return { text: "Sát ngưỡng an toàn", cls: "warn" };
+  return { text: "Đủ để thanh toán", cls: "ok" };
 }
 function fillSelect(selectEl, items, placeholder) {
   const current = selectEl.value;
@@ -414,26 +433,73 @@ function renderMobileNav() {
 function escapeHtml(str) {
   return String(str || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
 }
+let syncLogs = [];
+
+function addSyncLog(message) {
+  const time = new Date().toLocaleTimeString("vi-VN");
+  syncLogs.unshift(`${time} · ${message}`);
+  syncLogs = syncLogs.slice(0, 8);
+  renderSyncLog();
+}
+
+function renderSyncLog() {
+  const wrap = el("syncLog");
+  if (!wrap) return;
+  if (!syncLogs.length) {
+    wrap.innerHTML = '<div class="sync-log-item">Chưa có hoạt động đồng bộ.</div>';
+    return;
+  }
+  wrap.innerHTML = syncLogs.map(item => `<div class="sync-log-item">${item}</div>`).join("");
+}
+
+function setSyncIndicator(type, msg) {
+  const pill = el("syncIndicator");
+  const text = el("syncIndicatorText");
+  if (!pill || !text) return;
+  pill.className = `sync-pill ${type}`;
+  text.textContent = msg;
+}
+
 function showStatus(msg, isError=false) {
   el("syncStatus").textContent = msg;
   el("syncStatus").style.color = isError ? "var(--bad)" : "var(--muted)";
+  setSyncIndicator(isError ? "error" : "success", msg);
 }
 function updatePaymentPreview(inputId, outputId) {
   const rawAmount = positiveInt(el(inputId)?.value || "");
-  const feePercent = parseDecimalPercent(data.settings?.cardFeePercent || 0);
+  const feePercent = getCardFeePercent();
   const output = el(outputId);
   if (!output) return;
   if (!rawAmount) {
-    output.textContent = feePercent ? `Phí thẻ hiện tại: ${feePercent}%` : "";
+    output.textContent = feePercent ? `Phí thẻ hiện tại: ${String(data.settings?.cardFeePercent || feePercent).replace(".", ",")}%` : "";
     return;
   }
   const fee = Math.round(rawAmount * feePercent / 100);
   const total = rawAmount + fee;
-  output.textContent = `Phí: ${money(fee)} (${feePercent}%) · Tổng trừ ngân hàng: ${money(total)}`;
+  output.textContent = `Phí: ${money(fee)} (${String(data.settings?.cardFeePercent || feePercent).replace(".", ",")}%) · Tổng trừ ngân hàng: ${money(total)}`;
+}
+async function scheduleCloudSave() {
+  if (!db || isApplyingRemote) return;
+  clearTimeout(autoSaveTimer);
+  setSyncIndicator("loading", "Đang chờ lưu...");
+  autoSaveTimer = setTimeout(async () => {
+    try {
+      setSyncIndicator("loading", "Đang lưu cloud...");
+      const ref = await getLegacyCloudRef();
+      await setDoc(ref, { payload: data, updatedAt: serverTimestamp() });
+      showStatus("Đã tự động lưu cloud.");
+      addSyncLog("Đã tự động lưu cloud");
+    } catch (e) {
+      console.error(e);
+      showStatus("Lỗi auto sync cloud.", true);
+      addSyncLog("Lỗi auto sync cloud");
+    }
+  }, 500);
 }
 function persist() {
   saveLocal();
   render();
+  scheduleCloudSave();
 }
 function render() {
   const q = el("searchBox").value.trim().toLowerCase();
@@ -483,7 +549,7 @@ function render() {
           return `<div class="tx">
               <div class="tx-left">
                 <div class="tx-title">${escapeHtml(ad.name)}</div>
-                <div class="muted">${escapeHtml(ad.accountId || "Chưa có mã")} · Đã thanh toán (gồm phí): ${money(getAdPaymentTotal(ad.id))}</div>
+                <div class="muted">${escapeHtml(ad.accountId || "Chưa có mã")} · Cần đủ khi chạm ngưỡng: ${money(getThresholdCharge(ad))}</div>
               </div>
               <div class="right"><span class="badge ${st.cls}">${st.text}</span><span class="badge tag">Ngưỡng ${money(ad.threshold || 0)}</span></div>
             </div>`;
@@ -522,7 +588,7 @@ function render() {
     const st = getAdStatus(ad);
     const item = document.createElement("div");
     item.className = "tx";
-    item.innerHTML = `<div class="tx-left"><div class="tx-title">${escapeHtml(ad.name)}</div><div class="muted">${escapeHtml(ad.accountId || "Chưa có mã")} · ${escapeHtml(bank?.name || "Chưa gắn ngân hàng")}</div></div><div class="right"><span class="badge ${st.cls}">${st.text}</span><span class="tx-amount">${money(getAdPaymentTotal(ad.id))}</span><button class="small secondary" data-edit-ad="${ad.id}">Sửa</button></div>`;
+    item.innerHTML = `<div class="tx-left"><div class="tx-title">${escapeHtml(ad.name)}</div><div class="muted">${escapeHtml(ad.accountId || "Chưa có mã")} · ${escapeHtml(bank?.name || "Chưa gắn ngân hàng")} · Cần đủ: ${money(getThresholdCharge(ad))}</div></div><div class="right"><span class="badge ${st.cls}">${st.text}</span><span class="tx-amount">${money(getAdPaymentTotal(ad.id))}</span><button class="small secondary" data-edit-ad="${ad.id}">Sửa</button></div>`;
     adMenuList.appendChild(item);
   });
 
@@ -534,7 +600,7 @@ function render() {
     const title = t.type === "bank_deposit" ? "Nạp vào ngân hàng" : "Thanh toán quảng cáo";
     const detail = t.type === "bank_deposit"
       ? `${bank ? bank.name : "Ngân hàng"}${t.note ? " · " + escapeHtml(t.note) : ""}`
-      : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}${t.fee ? " · Phí: " + money(t.fee) + " (" + Number(t.feePercent || 0) + "%)" : ""}`;
+      : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}${t.fee ? " · Phí: " + money(t.fee) + " (" + String(t.feePercent).replace(".", ",") + "%)" : ""}`;
     const item = document.createElement("div");
     item.className = "tx";
     item.innerHTML = `<div class="tx-left"><div class="tx-title">${title}</div><div class="muted">${detail}</div></div><div class="tx-amount">${money(t.amount)}</div>`;
@@ -545,7 +611,6 @@ function render() {
   document.querySelectorAll("[data-edit-ad]").forEach(btn => btn.onclick = () => openAdModal(btn.dataset.editAd));
   saveLocal();
 }
-
 function validateFirebaseConfig(cfg) {
   const required = ["apiKey","authDomain","projectId","appId"];
   const missing = required.filter(k => !cfg[k]);
@@ -562,8 +627,11 @@ async function connectFirebase() {
     db = getFirestore(app);
     localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
     localStorage.setItem(WORKSPACE_KEY, workspaceId);
+    setSyncIndicator("loading", "Đang kết nối cloud...");
     await pullCloud();
-    showStatus("Đã kết nối cloud. Có thể đồng bộ nhiều thiết bị.");
+    setupRealtimeSync();
+    showStatus("Đã kết nối cloud. Realtime sync đang bật.");
+    addSyncLog("Đã kết nối cloud");
   } catch (e) {
     console.error(e);
     showStatus(e?.message || "Không kết nối được Firebase.", true);
@@ -578,11 +646,26 @@ async function getCurrentCloudRef() {
   if (!db) throw new Error("Cloud chưa kết nối");
   return doc(db, "t_balance", workspaceId);
 }
+function applyIncomingData(incoming, statusMsg) {
+  isApplyingRemote = true;
+  data = {
+    banks: incoming.banks || [],
+    adAccounts: incoming.adAccounts || [],
+    transactions: incoming.transactions || [],
+    settings: incoming.settings || { cardFeePercent: 0 }
+  };
+  saveLocal();
+  render();
+  isApplyingRemote = false;
+  if (statusMsg) showStatus(statusMsg);
+}
 async function pushCloud() {
   if (!db) return alert("Kết nối cloud trước.");
   const legacyRef = await getLegacyCloudRef();
+  setSyncIndicator("loading", "Đang đẩy cloud...");
   await setDoc(legacyRef, { payload: data, updatedAt: serverTimestamp() });
   showStatus("Đã đẩy dữ liệu lên cloud.");
+  addSyncLog("Đã đẩy dữ liệu lên cloud");
 }
 async function pullCloud() {
   if (!db) return alert("Kết nối cloud trước.");
@@ -591,27 +674,45 @@ async function pullCloud() {
   if (legacySnap.exists()) {
     const raw = legacySnap.data() || {};
     const incoming = raw.payload ? raw.payload : raw;
-    data = { banks: incoming.banks || [], adAccounts: incoming.adAccounts || [], transactions: incoming.transactions || [], settings: incoming.settings || { cardFeePercent: 0 } };
-    persist();
-    showStatus("Đã tải dữ liệu cũ từ cloud.");
+    applyIncomingData(incoming, "Đã tải dữ liệu cũ từ cloud.");
+    addSyncLog("Đã tải dữ liệu cũ từ cloud");
     return;
   }
   const currentRef = await getCurrentCloudRef();
   const currentSnap = await getDoc(currentRef);
   if (currentSnap.exists()) {
-    const incoming = currentSnap.data() || {};
-    data = { banks: incoming.banks || [], adAccounts: incoming.adAccounts || [], transactions: incoming.transactions || [], settings: incoming.settings || { cardFeePercent: 0 } };
-    persist();
-    showStatus("Đã tải dữ liệu từ cloud.");
+    applyIncomingData(currentSnap.data() || {}, "Đã tải dữ liệu từ cloud.");
+    addSyncLog("Đã tải dữ liệu từ cloud");
     return;
   }
   await setDoc(legacyRef, { payload: data, updatedAt: serverTimestamp() });
   showStatus("Cloud mới được tạo. Dữ liệu hiện tại đã được lưu lên.");
+  addSyncLog("Cloud mới được tạo");
 }
-function validatePositiveAmount(raw, label) {
-  const amount = positiveInt(raw);
-  if (amount <= 0) { alert(label + " phải > 0 và chỉ nhập số."); return null; }
-  return amount;
+async function setupRealtimeSync() {
+  if (!db) return;
+  if (unsubscribeRealtime) unsubscribeRealtime();
+  const legacyRef = await getLegacyCloudRef();
+  unsubscribeRealtime = onSnapshot(legacyRef, (snap) => {
+    if (!snap.exists()) return;
+    const raw = snap.data() || {};
+    const incoming = raw.payload ? raw.payload : raw;
+    const currentJson = JSON.stringify(data);
+    const incomingJson = JSON.stringify({
+      banks: incoming.banks || [],
+      adAccounts: incoming.adAccounts || [],
+      transactions: incoming.transactions || [],
+      settings: incoming.settings || { cardFeePercent: 0 }
+    });
+    if (incomingJson !== currentJson) {
+      applyIncomingData(incoming, "Đã đồng bộ realtime từ cloud.");
+      addSyncLog("Đã cập nhật từ thiết bị khác");
+    }
+  }, (err) => {
+    console.error(err);
+    showStatus("Realtime sync bị lỗi.", true);
+    addSyncLog("Realtime sync bị lỗi");
+  });
 }
 function addBank() {
   const name = el("bankName").value.trim();
@@ -629,6 +730,11 @@ function addAd() {
   el("adName").value = ""; el("adCode").value = ""; el("adBankId").value = ""; el("adThreshold").value = "";
   persist();
 }
+function validatePositiveAmount(raw, label) {
+  const amount = positiveInt(raw);
+  if (amount <= 0) { alert(label + " phải > 0 và chỉ nhập số."); return null; }
+  return amount;
+}
 function addDeposit(prefix="") {
   const bankId = el("depositBankId" + prefix).value;
   if (!bankId) return alert("Chọn tài khoản ngân hàng.");
@@ -643,15 +749,10 @@ function addPayment(prefix="") {
   if (!adAccountId) return alert("Chọn tài khoản QC.");
   const rawAmount = validatePositiveAmount(el("paymentAmount" + prefix).value, "Số tiền thanh toán");
   if (rawAmount === null) return;
-  const feePercent = parseDecimalPercent(data.settings?.cardFeePercent || 0);
+  const feePercent = getCardFeePercent();
   const fee = Math.round(rawAmount * feePercent / 100);
   const total = rawAmount + fee;
-  data.transactions.unshift({
-    id: uid(), type: "ad_payment", adAccountId,
-    amount: total, rawAmount, fee, feePercent,
-    note: el("paymentNote" + prefix).value.trim(),
-    createdAt: new Date().toISOString()
-  });
+  data.transactions.unshift({ id: uid(), type: "ad_payment", adAccountId, amount: total, rawAmount, fee, feePercent: data.settings?.cardFeePercent || feePercent, note: el("paymentNote" + prefix).value.trim(), createdAt: new Date().toISOString() });
   el("paymentAdId" + prefix).value = ""; el("paymentAmount" + prefix).value = ""; el("paymentNote" + prefix).value = "";
   updatePaymentPreview("paymentAmount" + prefix, prefix === "Quick" ? "paymentFeePreviewQuick" : "paymentFeePreview");
   persist();
@@ -701,7 +802,7 @@ function saveAdEdit() {
 function seedDemo() {
   const bankId = uid(); const ad1 = uid(); const ad2 = uid();
   data = {
-    settings: { cardFeePercent: 3 },
+    settings: { cardFeePercent: "3" },
     banks: [{ id: bankId, name: "VPB Dương", number: "6087", initialBalance: 12000000 }],
     adAccounts: [
       { id: ad1, name: "LAN ANH", accountId: "25504752965857070", bankId, threshold: 5000000 },
@@ -709,15 +810,15 @@ function seedDemo() {
     ],
     transactions: [
       { id: uid(), type: "bank_deposit", bankId, amount: 5000000, note: "Nạp thêm", createdAt: new Date().toISOString() },
-      { id: uid(), type: "ad_payment", adAccountId: ad1, amount: 2795063, rawAmount: 2713653, fee: 81410, feePercent: 3, note: "Thanh toán ads", createdAt: new Date().toISOString() },
-      { id: uid(), type: "ad_payment", adAccountId: ad2, amount: 947600, rawAmount: 920000, fee: 27600, feePercent: 3, note: "Thanh toán ads", createdAt: new Date().toISOString() }
+      { id: uid(), type: "ad_payment", adAccountId: ad1, amount: 2795063, rawAmount: 2713653, fee: 81410, feePercent: "3", note: "Thanh toán ads", createdAt: new Date().toISOString() },
+      { id: uid(), type: "ad_payment", adAccountId: ad2, amount: 947600, rawAmount: 920000, fee: 27600, feePercent: "3", note: "Thanh toán ads", createdAt: new Date().toISOString() }
     ]
   };
   persist();
 }
 function clearAll() {
   if (!confirm("Xóa toàn bộ dữ liệu?")) return;
-  data = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: Number(data.settings?.cardFeePercent || 0) } };
+  data = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: data.settings?.cardFeePercent || 0 } };
   persist();
 }
 function bootSavedConfig() {
@@ -732,9 +833,7 @@ function bootSavedConfig() {
       appId: "1:215303379902:web:796c8fe085d31f997777ef",
       measurementId: "G-XM0D5N78FY"
     }, null, 2);
-  } catch {
-    el("firebaseConfig").value = "";
-  }
+  } catch { el("firebaseConfig").value = ""; }
   el("workspaceId").value = localStorage.getItem(WORKSPACE_KEY) || "tran-duc-tai-main";
 }
 async function autoConnectIfConfigured() {
@@ -750,7 +849,9 @@ async function autoConnectIfConfigured() {
     localStorage.setItem(WORKSPACE_KEY, workspaceId);
     showStatus("Đang tự động kết nối cloud...");
     await pullCloud();
-    showStatus("Đã tự động kết nối cloud thành công.");
+    await setupRealtimeSync();
+    showStatus("Đã tự động kết nối cloud thành công. Realtime sync đang bật.");
+    addSyncLog("Đã tự động kết nối cloud");
   } catch (e) {
     console.error(e);
     showStatus(e?.message || "Không tự động kết nối được Firebase.", true);
@@ -758,12 +859,10 @@ async function autoConnectIfConfigured() {
 }
 
 ["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold"].forEach(formatMoneyInput);
-
 el("cardFeePercent").addEventListener("input", () => {
-  const input = el("cardFeePercent");
-  input.value = formatDecimalPercent(input.value);
+  el("cardFeePercent").value = formatDecimalPercent(el("cardFeePercent").value);
   if (!data.settings) data.settings = { cardFeePercent: 0 };
-  data.settings.cardFeePercent = input.value;
+  data.settings.cardFeePercent = el("cardFeePercent").value;
   persist();
 });
 el("paymentAmount").addEventListener("input", () => updatePaymentPreview("paymentAmount", "paymentFeePreview"));
@@ -788,11 +887,26 @@ el("btnCloseAdModal").addEventListener("click", closeAdModal);
 el("btnSaveBankEdit").addEventListener("click", saveBankEdit);
 el("btnSaveAdEdit").addEventListener("click", saveAdEdit);
 document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => setSection(btn.dataset.section)));
+window.addEventListener("offline", () => {
+  setSyncIndicator("offline", "Mất kết nối");
+  addSyncLog("Mất kết nối internet");
+});
+window.addEventListener("online", () => {
+  setSyncIndicator("loading", "Đã online, đang đồng bộ...");
+  addSyncLog("Đã online trở lại");
+  if (db) {
+    pullCloud().catch(() => {});
+    setupRealtimeSync().catch(() => {});
+  }
+});
+
 renderMobileNav();
 el("mobileSectionSelect").addEventListener("change", (e) => setSection(e.target.value));
 
 bootSavedConfig();
+setSyncIndicator("loading", "Đang khởi tạo...");
 showStatus("Đang chuẩn bị kết nối cloud...");
+renderSyncLog();
 render();
 autoConnectIfConfigured();
 </script>
