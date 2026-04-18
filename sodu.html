@@ -1,806 +1,169 @@
-<!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>T Balance Online</title>
-  <style>
-    :root{
-      --bg:#f3f6fb;
-      --card:#ffffff;
-      --text:#15213a;
-      --muted:#6d7a96;
-      --line:#dfe6f2;
-      --brand:#2b78ff;
-      --brand-2:#0f5bdd;
-      --ok:#1f9d55;
-      --warn:#d28a00;
-      --bad:#df3f32;
-      --shadow:0 10px 30px rgba(19,33,58,.08);
-      --radius:20px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
-    .app{
-      max-width:1200px;
-      margin:0 auto;
-      padding:24px;
-    }
-    .topbar{
-      display:flex;
-      gap:16px;
-      justify-content:space-between;
-      align-items:flex-start;
-      margin-bottom:20px;
-      flex-wrap:wrap;
-    }
-    .brand{
-      display:flex; gap:14px; align-items:center;
-    }
-    .logo{
-      width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--brand),#32b3ff);
-      display:grid;place-items:center;color:white;font-size:30px;font-weight:800;
-      box-shadow:var(--shadow);
-    }
-    h1{margin:0;font-size:34px}
-    .sub{color:var(--muted);margin-top:6px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
-    button,.btn{
-      border:0;background:var(--brand);color:#fff;padding:12px 16px;border-radius:14px;
-      font-weight:700;cursor:pointer;transition:.18s transform,.18s opacity,.18s background;
-      text-decoration:none;display:inline-flex;align-items:center;gap:8px;
-    }
-    button:hover,.btn:hover{transform:translateY(-1px)}
-    button.secondary{background:#e9f1ff;color:var(--brand-2)}
-    button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
-    button.danger{background:#ffedea;color:var(--bad)}
-    button.small{padding:8px 12px;border-radius:12px;font-size:13px}
-    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .card{
-      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-      box-shadow:var(--shadow);
-    }
-    .metric{padding:22px}
-    .metric .label{color:var(--muted);font-size:14px}
-    .metric .value{font-size:42px;font-weight:800;margin-top:10px}
-    .section{padding:20px}
-    .section h2{margin:0 0 16px;font-size:20px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .field{display:flex;flex-direction:column;gap:8px;min-width:170px;flex:1}
-    .field label{font-size:14px;color:var(--muted);font-weight:600}
-    input,select,textarea{
-      width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);
-      outline:none;background:#fff;color:var(--text);font-size:15px;
-    }
-    textarea{min-height:96px;resize:vertical}
-    input:focus,select:focus,textarea:focus{border-color:#a7c5ff;box-shadow:0 0 0 4px rgba(43,120,255,.08)}
-    .bank-list,.tx-list,.ad-list{display:grid;gap:14px}
-    .bank-card{padding:20px}
-    .bank-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-    .bank-name{font-size:22px;font-weight:800}
-    .muted{color:var(--muted)}
-    .big-balance{
-      margin-top:14px;background:#f7faff;border:1px solid #e3edff;padding:18px;border-radius:18px
-    }
-    .big-balance .amount{font-size:34px;font-weight:800;margin-top:6px}
-    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-    .mini{
-      padding:14px;border-radius:16px;background:#fbfcfe;border:1px solid var(--line)
-    }
-    .mini .k{font-size:13px;color:var(--muted)}
-    .mini .v{font-size:18px;font-weight:700;margin-top:6px}
-    .badge{
-      padding:8px 12px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:6px
-    }
-    .ok{background:#ebfff1;color:var(--ok)}
-    .warn{background:#fff6dd;color:var(--warn)}
-    .bad{background:#ffeceb;color:var(--bad)}
-    .tag{background:#eef4ff;color:#315db6}
-    .empty{padding:28px;text-align:center;color:var(--muted)}
-    .tx{
-      padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap
-    }
-    .tx-left{display:grid;gap:4px}
-    .tx-title{font-weight:800}
-    .tx-amount{font-size:20px;font-weight:800}
-    .toolbar{
-      display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:14px
-    }
-    .right{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .notice{
-      padding:16px 18px;border-radius:16px;background:#fff9e9;color:#8a6700;border:1px solid #f3df9b
-    }
-    .footer-note{margin-top:10px;color:var(--muted);font-size:13px}
-    .hidden{display:none !important}
-    .divider{height:1px;background:var(--line);margin:16px 0}
-    @media (max-width:980px){
-      .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-2{grid-template-columns:1fr}
-      .mini-grid{grid-template-columns:1fr}
-      .metric .value{font-size:34px}
-    }
-    @media (max-width:640px){
-      .app{padding:14px}
-      .grid-4{grid-template-columns:1fr}
-      h1{font-size:28px}
-      .bank-name{font-size:20px}
-      .big-balance .amount{font-size:28px}
-    }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">T</div>
-        <div>
-          <h1>T Balance Online</h1>
-          <div class="sub">Xem số dư còn lại trong tài khoản ngân hàng. Nạp tiền chỉ vào ngân hàng, chi tiêu quảng cáo tự trừ theo ngân hàng liên kết.</div>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="secondary" id="btnDemo">Tạo dữ liệu mẫu</button>
-        <button class="ghost" id="btnPull">Tải từ cloud</button>
-        <button class="danger" id="btnClear">Xóa toàn bộ</button>
-      </div>
-    </div>
+from pathlib import Path
+import zipfile
+import re
 
-    <div class="card section" style="margin-bottom:16px">
-      <h2>Kết nối Firebase để đồng bộ nhiều thiết bị</h2>
-      <div class="notice">Chỉ cần bật Firebase Firestore, dán cấu hình JSON vào đây, rồi bấm Kết nối cloud. Sau đó bạn mở cùng file này ở thiết bị khác và dán cùng cấu hình là dữ liệu sẽ đồng bộ.</div>
-      <div class="row" style="margin-top:14px">
-        <div class="field" style="flex:2">
-          <label>Firebase config JSON</label>
-          <textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'>{
-  "apiKey": "AIzaSyAvrLb6ncx64RwSbmXWPTp7GdnpgOju80s",
-  "authDomain": "tran-duc-tai.firebaseapp.com",
-  "projectId": "tran-duc-tai",
-  "storageBucket": "tran-duc-tai.firebasestorage.app",
-  "messagingSenderId": "215303379902",
-  "appId": "1:215303379902:web:796c8fe085d31f997777ef",
-  "measurementId": "G-XM0D5N78FY"
-}</textarea>
-        </div>
-        <div class="field">
-          <label>Tên kho dữ liệu</label>
-          <input id="workspaceId" value="tran-duc-tai-main" placeholder="tbalance-main" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button id="btnConnect">Kết nối cloud</button>
-        <button class="ghost" id="btnPush">Đẩy dữ liệu lên cloud</button>
-        <div class="footer-note" id="syncStatus">Chưa kết nối cloud.</div>
-      </div>
-      <div class="footer-note">
-        Dán đúng object trong mục Firebase SDK setup and configuration. Ví dụ phải có: apiKey, authDomain, projectId, appId.
-        Trước khi kết nối, vào Firebase Console và tạo Firestore Database.
-      </div>
-    </div>
+src = Path('/mnt/data/t_balance_restored_menu_firebase_v3_edit_accounts_payment_logic.html').read_text(encoding='utf-8')
 
-    <div class="grid-4">
-      <div class="card metric">
-        <div class="label">Tài khoản ngân hàng</div>
-        <div class="value" id="mBankCount">0</div>
-      </div>
-      <div class="card metric">
-        <div class="label">Tài khoản quảng cáo</div>
-        <div class="value" id="mAdCount">0</div>
-      </div>
-      <div class="card metric">
-        <div class="label">Cần nạp ngay</div>
-        <div class="value" id="mNeedTopup" style="color:var(--bad)">0</div>
-      </div>
-      <div class="card metric">
-        <div class="label">Tổng số dư ngân hàng</div>
-        <div class="value" id="mTotalBank">0 đ</div>
-      </div>
-    </div>
+# Add settings to default data
+src = src.replace(
+    'const DEFAULT_DATA = { banks: [], adAccounts: [], transactions: [] };',
+    'const DEFAULT_DATA = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: 0 } };'
+)
 
-    <div class="grid-2" style="margin-top:16px">
-      <div class="card section">
-        <h2>Thêm tài khoản ngân hàng</h2>
-        <div class="row">
-          <div class="field">
-            <label>Tên ngân hàng / chủ thẻ</label>
-            <input id="bankName" placeholder="Ví dụ: VPB Dương" />
-          </div>
-          <div class="field">
-            <label>Số tài khoản / 4 số cuối</label>
-            <input id="bankNumber" placeholder="Ví dụ: 6087" />
-          </div>
-          <div class="field">
-            <label>Số dư ban đầu</label>
-            <input id="bankInitialBalance" inputmode="numeric" placeholder="Chỉ nhập số" />
-          </div>
-        </div>
-        <div class="row" style="margin-top:12px">
-          <button id="btnAddBank">Thêm ngân hàng</button>
-        </div>
-      </div>
+# Ensure loaded data includes settings in pullCloud and initial local load later in render/additions
+src = src.replace(
+    'let data = loadLocal(STORAGE_KEY, DEFAULT_DATA);',
+    'let data = (() => { const d = loadLocal(STORAGE_KEY, DEFAULT_DATA); if (!d.settings) d.settings = { cardFeePercent: 0 }; return d; })();'
+)
 
-      <div class="card section">
-        <h2>Thêm tài khoản quảng cáo</h2>
-        <div class="row">
-          <div class="field">
-            <label>Tên tài khoản QC</label>
-            <input id="adName" placeholder="Ví dụ: LAN ANH" />
-          </div>
-          <div class="field">
-            <label>Mã tài khoản</label>
-            <input id="adCode" placeholder="Ví dụ: 255047..." />
-          </div>
-          <div class="field">
-            <label>Ngân hàng liên kết</label>
-            <select id="adBankId"></select>
-          </div>
-        </div>
-        <div class="row" style="margin-top:12px">
-          <div class="field">
-            <label>Số dư ban đầu QC</label>
-            <input id="adInitialBalance" inputmode="numeric" placeholder="Chỉ nhập số" />
-          </div>
-          <div class="field">
-            <label>Ngưỡng thanh toán</label>
-            <input id="adThreshold" inputmode="numeric" placeholder="Chỉ nhập số" />
-          </div>
-          <div class="field" style="justify-content:flex-end">
-            <label>&nbsp;</label>
-            <button id="btnAddAd">Thêm tài khoản QC</button>
-          </div>
-        </div>
-      </div>
-    </div>
+src = src.replace(
+    'data = { banks: incoming.banks || [], adAccounts: incoming.adAccounts || [], transactions: incoming.transactions || [] };',
+    'data = { banks: incoming.banks || [], adAccounts: incoming.adAccounts || [], transactions: incoming.transactions || [], settings: incoming.settings || { cardFeePercent: 0 } };'
+)
 
-    <div class="grid-2" style="margin-top:16px">
-      <div class="card section">
-        <h2>Nạp tiền vào ngân hàng</h2>
-        <div class="row">
-          <div class="field">
-            <label>Chọn ngân hàng</label>
-            <select id="depositBankId"></select>
-          </div>
-          <div class="field">
-            <label>Số tiền nạp</label>
-            <input id="depositAmount" inputmode="numeric" placeholder="Chỉ nhập số, > 0" />
-          </div>
-          <div class="field">
-            <label>Ghi chú</label>
-            <input id="depositNote" placeholder="Không bắt buộc" />
-          </div>
-        </div>
-        <div class="row" style="margin-top:12px">
-          <button id="btnAddDeposit">Nạp vào ngân hàng</button>
-        </div>
-      </div>
+src = src.replace(
+    'data = { banks: [], adAccounts: [], transactions: [] };',
+    'data = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: 0 } };'
+)
 
-      <div class="card section">
-        <h2>Chi tiêu quảng cáo</h2>
-        <div class="row">
-          <div class="field">
-            <label>Chọn tài khoản QC</label>
-            <select id="spendAdId"></select>
-          </div>
-          <div class="field">
-            <label>Số tiền chi</label>
-            <input id="spendAmount" inputmode="numeric" placeholder="Chỉ nhập số, > 0" />
-          </div>
-          <div class="field">
-            <label>Ghi chú</label>
-            <input id="spendNote" placeholder="Không bắt buộc" />
-          </div>
-        </div>
-        <div class="row" style="margin-top:12px">
-          <button id="btnAddSpend">Ghi nhận chi tiêu</button>
-        </div>
-      </div>
-    </div>
+# Update clearAll second occurrence maybe already replaced above? Do targeted replace for function body
+src = src.replace(
+    '      data = { banks: [], adAccounts: [], transactions: [] };\n      persist();',
+    '      data = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: Number(data.settings?.cardFeePercent || 0) } };\n      persist();'
+)
 
-    <div class="card section" style="margin-top:16px">
-      <div class="toolbar">
-        <h2 style="margin:0">Số dư ngân hàng</h2>
-        <div class="right">
-          <input id="searchBox" placeholder="Tìm ngân hàng hoặc tài khoản QC" style="min-width:260px" />
-        </div>
-      </div>
-      <div id="bankList" class="bank-list"></div>
-    </div>
+# Add card fee field in settings section
+src = src.replace(
+    '<div class="field">\n                <label>Tên kho dữ liệu</label>\n                <input id="workspaceId" value="tran-duc-tai-main" placeholder="tran-duc-tai-main" />\n              </div>\n              <div class="row">',
+    '<div class="field">\n                <label>Tên kho dữ liệu</label>\n                <input id="workspaceId" value="tran-duc-tai-main" placeholder="tran-duc-tai-main" />\n              </div>\n              <div class="field">\n                <label>Phí thanh toán thẻ (%)</label>\n                <input id="cardFeePercent" inputmode="numeric" placeholder="Ví dụ: 3" />\n              </div>\n              <div class="row">'
+)
 
-    <div class="card section" style="margin-top:16px">
-      <h2>Lịch sử giao dịch</h2>
-      <div id="txList" class="tx-list"></div>
-    </div>
-  </div>
+# Add fee preview UI in quick payment and transaction payment
+src = src.replace(
+    '<div class="row" style="margin-top:12px">\n              <button id="btnAddPaymentQuick">Ghi nhận thanh toán</button>\n            </div>',
+    '<div class="footer-note" id="paymentFeePreviewQuick"></div>\n            <div class="row" style="margin-top:12px">\n              <button id="btnAddPaymentQuick">Ghi nhận thanh toán</button>\n            </div>'
+)
+src = src.replace(
+    '<div class="row" style="margin-top:12px">\n              <button id="btnAddPayment">Ghi nhận thanh toán</button>\n            </div>',
+    '<div class="footer-note" id="paymentFeePreview"></div>\n            <div class="row" style="margin-top:12px">\n              <button id="btnAddPayment">Ghi nhận thanh toán</button>\n            </div>'
+)
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+# Update bankPayments and ad totals to use amount
+# no change
 
-    const STORAGE_KEY = "tbalance_online_html_v1";
-    const CONFIG_KEY = "tbalance_online_firebase_cfg";
-    const WORKSPACE_KEY = "tbalance_online_workspace";
-    const DEFAULT_DATA = { banks: [], adAccounts: [], transactions: [] };
+# Change ad status based on payment totals vs threshold remains okay
 
-    let data = loadLocal(STORAGE_KEY, DEFAULT_DATA);
-    let db = null;
-    let workspaceId = localStorage.getItem(WORKSPACE_KEY) || "tbalance-main";
-
-    const el = (id) => document.getElementById(id);
-
-    function uid() {
-      return Math.random().toString(36).slice(2, 10);
-    }
-
-    function digitsOnly(v) {
-      return String(v || "").replace(/\D/g, "");
-    }
-
-    function money(n) {
-      return `${Number(n || 0).toLocaleString("vi-VN")} đ`;
-    }
-
-    function positiveInt(value) {
-      const cleaned = digitsOnly(value);
-      const n = Number(cleaned);
-      return Number.isFinite(n) ? n : 0;
-    }
-
-    function saveLocal(key, value) {
-      localStorage.setItem(key, JSON.stringify(value));
-    }
-
-    function loadLocal(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-      } catch {
-        return fallback;
+# Add render settings field and preview function before render end maybe after fillSelects
+insert_after = '    function render() {\n'
+replacement = '''    function updatePaymentPreview(inputId, outputId) {
+      const input = el(inputId);
+      const output = el(outputId);
+      if (!input || !output) return;
+      const rawAmount = positiveInt(input.value);
+      const feePercent = Number(data.settings?.cardFeePercent || 0);
+      if (!rawAmount) {
+        output.textContent = feePercent ? `Phí thẻ hiện tại: ${feePercent}%` : "";
+        return;
       }
+      const fee = Math.round(rawAmount * feePercent / 100);
+      const total = rawAmount + fee;
+      output.textContent = `Phí: ${money(fee)} (${feePercent}%) · Tổng trừ ngân hàng: ${money(total)}`;
     }
 
-    function bankDeposits(bankId) {
-      return data.transactions
-        .filter(t => t.type === "bank_deposit" && t.bankId === bankId)
-        .reduce((s, t) => s + Number(t.amount || 0), 0);
-    }
+    function render() {\n'''
+src = src.replace(insert_after, replacement, 1)
 
-    function bankSpend(bankId) {
-      return data.transactions
-        .filter(t => t.type === "ad_spend")
-        .filter(t => {
-          const ad = data.adAccounts.find(a => a.id === t.adAccountId);
-          return ad && ad.bankId === bankId;
-        })
-        .reduce((s, t) => s + Number(t.amount || 0), 0);
-    }
+# In render set cardFeePercent and previews
+src = src.replace(
+    '      el("mTotalBank").textContent = money(data.banks.reduce((s, b) => s + getBankBalance(b), 0));',
+    '      el("mTotalBank").textContent = money(data.banks.reduce((s, b) => s + getBankBalance(b), 0));\n      if (el("cardFeePercent")) el("cardFeePercent").value = Number(data.settings?.cardFeePercent || 0) ? Number(data.settings?.cardFeePercent || 0).toLocaleString("vi-VN") : "";\n      updatePaymentPreview("paymentAmountQuick", "paymentFeePreviewQuick");\n      updatePaymentPreview("paymentAmount", "paymentFeePreview");'
+)
 
-    function getBankBalance(bank) {
-      return Number(bank.initialBalance || 0) + bankDeposits(bank.id) - bankSpend(bank.id);
-    }
+# Modify transaction list rendering to show fee details
+src = src.replace(
+    '          const detail = t.type === "bank_deposit"\n            ? `${bank ? bank.name : "Ngân hàng"}${t.note ? " · " + escapeHtml(t.note) : ""}`\n            : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}`;',
+    '          const detail = t.type === "bank_deposit"\n            ? `${bank ? bank.name : "Ngân hàng"}${t.note ? " · " + escapeHtml(t.note) : ""}`\n            : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}${t.fee ? " · Phí: " + money(t.fee) + " (" + Number(t.feePercent || 0) + "%)" : ""}`;'
+)
 
-    function getAdSpend(adId) {
-      return data.transactions
-        .filter(t => t.type === "ad_spend" && t.adAccountId === adId)
-        .reduce((s, t) => s + Number(t.amount || 0), 0);
-    }
+# Modify adHtml and adMenuList totals perhaps okay; maybe better label "Đã thanh toán (gồm phí)"
+src = src.replace('Đã thanh toán: ${money(getAdPaymentTotal(ad.id))}', 'Đã thanh toán (gồm phí): ${money(getAdPaymentTotal(ad.id))}')
+src = src.replace('<span class="tx-amount">${money(getAdPaymentTotal(ad.id))}</span>', '<span class="tx-amount">${money(getAdPaymentTotal(ad.id))}</span>')
 
-    function getAdBalance(ad) {
-      return Number(ad.initialBalance || 0) - getAdSpend(ad.id);
-    }
-
-    function getAdStatus(ad) {
-      const bal = getAdBalance(ad);
-      const threshold = Number(ad.threshold || 0);
-      if (bal <= 0) return { text: "Hết tiền", cls: "bad" };
-      if (bal < threshold) return { text: "Thiếu tiền", cls: "bad" };
-      if (threshold > 0 && bal <= threshold * 1.2) return { text: "Gần ngưỡng", cls: "warn" };
-      return { text: "Ổn", cls: "ok" };
-    }
-
-    function persist() {
-      saveLocal(STORAGE_KEY, data);
-      render();
-    }
-
-    function fillSelect(selectEl, items, placeholder) {
-      const current = selectEl.value;
-      selectEl.innerHTML = "";
-      const empty = document.createElement("option");
-      empty.value = "";
-      empty.textContent = placeholder;
-      selectEl.appendChild(empty);
-      items.forEach(item => {
-        const o = document.createElement("option");
-        o.value = item.id;
-        o.textContent = item.label;
-        selectEl.appendChild(o);
-      });
-      if ([...selectEl.options].some(o => o.value === current)) selectEl.value = current;
-    }
-
-    function render() {
-      const q = el("searchBox").value.trim().toLowerCase();
-
-      fillSelect(el("adBankId"), data.banks.map(b => ({ id: b.id, label: `${b.name}${b.number ? " - " + b.number : ""}` })), "Chọn ngân hàng");
-      fillSelect(el("depositBankId"), data.banks.map(b => ({ id: b.id, label: `${b.name}${b.number ? " - " + b.number : ""}` })), "Chọn ngân hàng");
-      fillSelect(el("spendAdId"), data.adAccounts.map(a => ({ id: a.id, label: `${a.name}${a.accountId ? " - " + a.accountId : ""}` })), "Chọn tài khoản QC");
-
-      el("mBankCount").textContent = data.banks.length;
-      el("mAdCount").textContent = data.adAccounts.length;
-      el("mNeedTopup").textContent = data.adAccounts.filter(a => getAdStatus(a).text !== "Ổn").length;
-      el("mTotalBank").textContent = money(data.banks.reduce((s, b) => s + getBankBalance(b), 0));
-
-      const bankList = el("bankList");
-      bankList.innerHTML = "";
-      const filteredBanks = data.banks.filter(bank => {
-        if (!q) return true;
-        const linkedAds = data.adAccounts.filter(a => a.bankId === bank.id);
-        return [bank.name, bank.number, ...linkedAds.map(a => a.name), ...linkedAds.map(a => a.accountId)]
-          .join(" ")
-          .toLowerCase()
-          .includes(q);
-      });
-
-      if (!filteredBanks.length) {
-        bankList.innerHTML = '<div class="empty">Chưa có dữ liệu phù hợp.</div>';
-      } else {
-        filteredBanks.forEach(bank => {
-          const linkedAds = data.adAccounts.filter(a => a.bankId === bank.id);
-          const balance = getBankBalance(bank);
-
-          const wrap = document.createElement("div");
-          wrap.className = "card bank-card";
-
-          const adHtml = linkedAds.length
-            ? linkedAds.map(ad => {
-                const st = getAdStatus(ad);
-                return `
-                  <div class="tx">
-                    <div class="tx-left">
-                      <div class="tx-title">${escapeHtml(ad.name)}</div>
-                      <div class="muted">${escapeHtml(ad.accountId || "Chưa có mã")} · Số dư QC: ${money(getAdBalance(ad))}</div>
-                    </div>
-                    <div class="right">
-                      <span class="badge ${st.cls}">${st.text}</span>
-                      <span class="badge tag">Ngưỡng ${money(ad.threshold || 0)}</span>
-                    </div>
-                  </div>
-                `;
-              }).join("")
-            : '<div class="empty" style="padding:16px">Chưa có tài khoản QC nào dùng ngân hàng này.</div>';
-
-          wrap.innerHTML = `
-            <div class="bank-head">
-              <div>
-                <div class="bank-name">${escapeHtml(bank.name)}</div>
-                <div class="muted">${escapeHtml(bank.number || "Chưa có số tài khoản")}</div>
-              </div>
-              <div class="badge tag">${linkedAds.length} QC dùng chung</div>
-            </div>
-
-            <div class="big-balance">
-              <div class="muted">Số dư còn lại trong tài khoản ngân hàng</div>
-              <div class="amount">${money(balance)}</div>
-            </div>
-
-            <div class="mini-grid">
-              <div class="mini">
-                <div class="k">Số dư ban đầu</div>
-                <div class="v">${money(bank.initialBalance || 0)}</div>
-              </div>
-              <div class="mini">
-                <div class="k">Tổng đã nạp</div>
-                <div class="v">${money(bankDeposits(bank.id))}</div>
-              </div>
-              <div class="mini">
-                <div class="k">Tổng chi quảng cáo</div>
-                <div class="v">${money(bankSpend(bank.id))}</div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-            <div class="muted" style="margin-bottom:10px;font-weight:700">Tài khoản quảng cáo dùng chung</div>
-            <div class="ad-list">${adHtml}</div>
-          `;
-          bankList.appendChild(wrap);
-        });
-      }
-
-      const txList = el("txList");
-      txList.innerHTML = "";
-      if (!data.transactions.length) {
-        txList.innerHTML = '<div class="empty">Chưa có giao dịch.</div>';
-      } else {
-        data.transactions.forEach(t => {
-          const item = document.createElement("div");
-          item.className = "tx";
-          const bank = data.banks.find(b => b.id === t.bankId);
-          const ad = data.adAccounts.find(a => a.id === t.adAccountId);
-          const title = t.type === "bank_deposit" ? "Nạp vào ngân hàng" : "Chi tiêu quảng cáo";
-          const detail = t.type === "bank_deposit"
-            ? `${bank ? bank.name : "Ngân hàng"}${t.note ? " · " + escapeHtml(t.note) : ""}`
-            : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}`;
-          item.innerHTML = `
-            <div class="tx-left">
-              <div class="tx-title">${title}</div>
-              <div class="muted">${detail}</div>
-            </div>
-            <div class="tx-amount">${money(t.amount)}</div>
-          `;
-          txList.appendChild(item);
-        });
-      }
-
-      saveLocal(STORAGE_KEY, data);
-    }
-
-    function showStatus(msg, isError=false) {
-      const elStatus = el("syncStatus");
-      elStatus.textContent = msg;
-      elStatus.style.color = isError ? "var(--bad)" : "var(--muted)";
-    }
-
-    function validateFirebaseConfig(cfg) {
-      const required = ["apiKey", "authDomain", "projectId", "appId"];
-      const missing = required.filter(k => !cfg[k]);
-      if (missing.length) {
-        throw new Error("Thiếu trường trong Firebase config: " + missing.join(", "));
-      }
-    }
-
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-
-    async function connectFirebase() {
-      try {
-        const cfgText = el("firebaseConfig").value.trim();
-        if (!cfgText) {
-          alert("Dán Firebase config JSON trước.");
-          return;
-        }
-        const cfg = JSON.parse(cfgText);
-        workspaceId = (el("workspaceId").value || "tbalance-main").trim();
-        const app = initializeApp(cfg, "tb-" + Date.now());
-        db = getFirestore(app);
-        saveLocal(CONFIG_KEY, cfg);
-        localStorage.setItem(WORKSPACE_KEY, workspaceId);
-        validateFirebaseConfig(cfg);
-        el("syncStatus").textContent = "Đang kết nối cloud...";
-        await pullCloud();
-        showStatus("Đã kết nối cloud. Có thể đồng bộ nhiều thiết bị.");
-      } catch (e) {
-        console.error(e);
-        let msg = "Không kết nối được Firebase.";
-        if (String(e?.message || "").includes("projectId")) msg = e.message;
-        else if (String(e?.message || "").includes("authDomain")) msg = e.message;
-        else if (String(e?.message || "").includes("apiKey")) msg = e.message;
-        else if (String(e?.message || "").includes("appId")) msg = e.message;
-        else if (String(e?.message || "").includes("Missing or insufficient permissions")) {
-          msg = "Đã kết nối nhưng Firestore rules đang chặn quyền đọc/ghi.";
-        } else if (String(e?.message || "").includes("The database")) {
-          msg = "Firestore chưa được tạo trong project Firebase này.";
-        } else if (e?.message) {
-          msg = e.message;
-        }
-        showStatus(msg, true);
-        alert(msg);
-      }
-    }
-
-    async function getCloudRef() {
-      if (!db) throw new Error("Cloud chưa kết nối");
-      return doc(db, "t_balance_workspaces", workspaceId);
-    }
-
-    async function pushCloud() {
-      if (!db) return alert("Kết nối cloud trước.");
-      const ref = await getCloudRef();
-      await setDoc(ref, { payload: data, updatedAt: serverTimestamp() });
-      showStatus("Đã đẩy dữ liệu lên cloud.");
-    }
-
-    async function pullCloud() {
-      if (!db) return alert("Kết nối cloud trước.");
-      const ref = await getCloudRef();
-      const snap = await getDoc(ref);
-      if (snap.exists() && snap.data().payload) {
-        data = snap.data().payload;
-        persist();
-showStatus("Đã tải dữ liệu từ cloud.");
-      } else {
-        await setDoc(ref, { payload: data, updatedAt: serverTimestamp() });
-showStatus("Cloud mới được tạo. Dữ liệu hiện tại đã được lưu lên.");
-      }
-    }
-
-    function validatePositiveAmount(raw, label) {
-      if (String(raw).includes(",")) {
-        alert(label + " không được có dấu phẩy.");
-        return null;
-      }
-      const amount = positiveInt(raw);
-      if (amount <= 0) {
-        alert(label + " phải > 0 và chỉ nhập số.");
-        return null;
-      }
-      return amount;
-    }
-
-    function wireDigitsOnly(id) {
-      el(id).addEventListener("input", (e) => {
-        e.target.value = digitsOnly(e.target.value);
-      });
-    }
-
-    function addBank() {
-      const name = el("bankName").value.trim();
-      if (!name) return alert("Nhập tên tài khoản ngân hàng.");
-      data.banks.unshift({
-        id: uid(),
-        name,
-        number: el("bankNumber").value.trim(),
-        initialBalance: positiveInt(el("bankInitialBalance").value)
-      });
-      el("bankName").value = "";
-      el("bankNumber").value = "";
-      el("bankInitialBalance").value = "";
-      persist();
-    }
-
-    function addAd() {
-      const name = el("adName").value.trim();
-      const bankId = el("adBankId").value;
-      if (!name) return alert("Nhập tên tài khoản QC.");
-      if (!bankId) return alert("Chọn ngân hàng liên kết.");
-      data.adAccounts.unshift({
-        id: uid(),
-        name,
-        accountId: el("adCode").value.trim(),
-        bankId,
-        initialBalance: positiveInt(el("adInitialBalance").value),
-        threshold: positiveInt(el("adThreshold").value)
-      });
-      el("adName").value = "";
-      el("adCode").value = "";
-      el("adBankId").value = "";
-      el("adInitialBalance").value = "";
-      el("adThreshold").value = "";
-      persist();
-    }
-
-    function addDeposit() {
-      const bankId = el("depositBankId").value;
-      if (!bankId) return alert("Chọn tài khoản ngân hàng.");
-      const amount = validatePositiveAmount(el("depositAmount").value, "Số tiền nạp");
-      if (amount === null) return;
-      data.transactions.unshift({
-        id: uid(),
-        type: "bank_deposit",
-        bankId,
-        amount,
-        note: el("depositNote").value.trim(),
-        createdAt: new Date().toISOString()
-      });
-      el("depositBankId").value = "";
-      el("depositAmount").value = "";
-      el("depositNote").value = "";
-      persist();
-    }
-
-    function addSpend() {
-      const adAccountId = el("spendAdId").value;
-      if (!adAccountId) return alert("Chọn tài khoản QC.");
-      const amount = validatePositiveAmount(el("spendAmount").value, "Số tiền chi");
-      if (amount === null) return;
-      data.transactions.unshift({
-        id: uid(),
-        type: "ad_spend",
+# Modify addPayment function
+pattern = re.compile(r'''    function addPayment\(formPrefix=""\) \{
+      const adAccountId = el\("paymentAdId" \+ formPrefix\)\.value;
+      if \(!adAccountId\) return alert\("Chọn tài khoản QC\."\);
+      const amount = validatePositiveAmount\(el\("paymentAmount" \+ formPrefix\)\.value, "Số tiền thanh toán"\);
+      if \(amount === null\) return;
+      data\.transactions\.unshift\(\{
+        id: uid\(\),
+        type: "ad_payment",
         adAccountId,
         amount,
-        note: el("spendNote").value.trim(),
+        note: el\("paymentNote" \+ formPrefix\)\.value\.trim\(\),
+        createdAt: new Date\(\)\.toISOString\(\)
+      \}\);
+      el\("paymentAdId" \+ formPrefix\)\.value = "";
+      el\("paymentAmount" \+ formPrefix\)\.value = "";
+      el\("paymentNote" \+ formPrefix\)\.value = "";
+      persist\(\);
+    \}''', re.S)
+replacement = '''    function addPayment(formPrefix="") {
+      const adAccountId = el("paymentAdId" + formPrefix).value;
+      if (!adAccountId) return alert("Chọn tài khoản QC.");
+      const rawAmount = validatePositiveAmount(el("paymentAmount" + formPrefix).value, "Số tiền thanh toán");
+      if (rawAmount === null) return;
+      const feePercent = Number(data.settings?.cardFeePercent || 0);
+      const fee = Math.round(rawAmount * feePercent / 100);
+      const total = rawAmount + fee;
+      data.transactions.unshift({
+        id: uid(),
+        type: "ad_payment",
+        adAccountId,
+        amount: total,
+        rawAmount,
+        fee,
+        feePercent,
+        note: el("paymentNote" + formPrefix).value.trim(),
         createdAt: new Date().toISOString()
       });
-      el("spendAdId").value = "";
-      el("spendAmount").value = "";
-      el("spendNote").value = "";
+      el("paymentAdId" + formPrefix).value = "";
+      el("paymentAmount" + formPrefix).value = "";
+      el("paymentNote" + formPrefix).value = "";
+      updatePaymentPreview("paymentAmount" + formPrefix, formPrefix === "Quick" ? "paymentFeePreviewQuick" : "paymentFeePreview");
       persist();
-    }
+    }'''
+src = pattern.sub(replacement, src)
 
-    function seedDemo() {
-      const bankId = uid();
-      const ad1 = uid();
-      const ad2 = uid();
-      data = {
-        banks: [
-          { id: bankId, name: "VPB Dương", number: "6087", initialBalance: 3655444 }
-        ],
-        adAccounts: [
-          { id: ad1, name: "LAN ANH", accountId: "25504752965857070", bankId, initialBalance: 9713653, threshold: 5000000 },
-          { id: ad2, name: "SHOP A", accountId: "99112233", bankId, initialBalance: 4500000, threshold: 3000000 }
-        ],
-        transactions: [
-          { id: uid(), type: "bank_deposit", bankId, amount: 5000000, note: "Nạp thêm", createdAt: new Date().toISOString() },
-          { id: uid(), type: "ad_spend", adAccountId: ad1, amount: 2713653, note: "Chi tiêu ads", createdAt: new Date().toISOString() },
-          { id: uid(), type: "ad_spend", adAccountId: ad2, amount: 920000, note: "Chi tiêu ads", createdAt: new Date().toISOString() }
-        ]
-      };
-      persist();
-    }
+# Seed demo should include settings and fees in ad_payment
+src = src.replace(
+    '      data = {\n        banks: [{ id: bankId, name: "VPB Dương", number: "6087", initialBalance: 12000000 }],',
+    '      data = {\n        settings: { cardFeePercent: 3 },\n        banks: [{ id: bankId, name: "VPB Dương", number: "6087", initialBalance: 12000000 }],'
+)
+src = src.replace(
+    '{ id: uid(), type: "ad_payment", adAccountId: ad1, amount: 2713653, note: "Thanh toán ads", createdAt: new Date().toISOString() },\n          { id: uid(), type: "ad_payment", adAccountId: ad2, amount: 920000, note: "Thanh toán ads", createdAt: new Date().toISOString() }',
+    '{ id: uid(), type: "ad_payment", adAccountId: ad1, amount: 2795063, rawAmount: 2713653, fee: 81410, feePercent: 3, note: "Thanh toán ads", createdAt: new Date().toISOString() },\n          { id: uid(), type: "ad_payment", adAccountId: ad2, amount: 947600, rawAmount: 920000, fee: 27600, feePercent: 3, note: "Thanh toán ads", createdAt: new Date().toISOString() }'
+)
 
-    function clearAll() {
-      if (!confirm("Xóa toàn bộ dữ liệu?")) return;
-      data = { banks: [], adAccounts: [], transactions: [] };
-      persist();
-    }
+# Add card fee event listener and formatter
+src = src.replace(
+    '    ["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold"].forEach(formatMoneyInput);',
+    '    ["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold","cardFeePercent"].forEach(formatMoneyInput);'
+)
 
+src = src.replace(
+    '    el("btnAddBank").addEventListener("click", addBank);',
+    '    el("cardFeePercent").addEventListener("input", () => {\n      if (!data.settings) data.settings = { cardFeePercent: 0 };\n      data.settings.cardFeePercent = positiveInt(el("cardFeePercent").value);\n      persist();\n    });\n\n    el("paymentAmount").addEventListener("input", () => updatePaymentPreview("paymentAmount", "paymentFeePreview"));\n    el("paymentAmountQuick").addEventListener("input", () => updatePaymentPreview("paymentAmountQuick", "paymentFeePreviewQuick"));\n\n    el("btnAddBank").addEventListener("click", addBank);'
+)
 
-    async function autoConnectIfConfigured() {
-      const cfgText = el("firebaseConfig").value.trim();
-      if (!cfgText) return;
-      try {
-        const cfg = JSON.parse(cfgText);
-        validateFirebaseConfig(cfg);
-        workspaceId = (el("workspaceId").value || "tran-duc-tai-main").trim();
-        const app = initializeApp(cfg, "tb-auto-" + Date.now());
-        db = getFirestore(app);
-        saveLocal(CONFIG_KEY, cfg);
-        localStorage.setItem(WORKSPACE_KEY, workspaceId);
-        showStatus("Đang tự động kết nối cloud...");
-        await pullCloud();
-        showStatus("Đã tự động kết nối cloud thành công.");
-      } catch (e) {
-        console.error(e);
-        let msg = "Không tự động kết nối được Firebase.";
-        if (String(e?.message || "").includes("Missing or insufficient permissions")) {
-          msg = "Đã kết nối Firebase nhưng Firestore rules đang chặn quyền đọc/ghi.";
-        } else if (String(e?.message || "").includes("offline")) {
-          msg = "Không chạm được tới Firestore. Hãy tạo Firestore Database và mở trang bằng hosting hoặc localhost.";
-        } else if (e?.message) {
-          msg = e.message;
-        }
-        showStatus(msg, true);
-      }
-    }
+# Ensure boot config render works maybe no change
 
-    function bootSavedConfig() {
-      const savedCfg = loadLocal(CONFIG_KEY, null);
-      const savedWorkspace = localStorage.getItem(WORKSPACE_KEY);
-      if (savedCfg) el("firebaseConfig").value = JSON.stringify(savedCfg, null, 2);
-      if (savedWorkspace) el("workspaceId").value = savedWorkspace;
-    }
+out = Path('/mnt/data/t_balance_restored_menu_firebase_v4_1_card_fee.html')
+out.write_text(src, encoding='utf-8')
 
-    wireDigitsOnly("bankInitialBalance");
-    wireDigitsOnly("adInitialBalance");
-    wireDigitsOnly("adThreshold");
-    wireDigitsOnly("depositAmount");
-    wireDigitsOnly("spendAmount");
+zip_path = Path('/mnt/data/t_balance_restored_menu_firebase_v4_1_card_fee.zip')
+with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+    zf.write(out, arcname='t_balance_restored_menu_firebase_v4_1_card_fee.html')
 
-    el("btnAddBank").addEventListener("click", addBank);
-    el("btnAddAd").addEventListener("click", addAd);
-    el("btnAddDeposit").addEventListener("click", addDeposit);
-    el("btnAddSpend").addEventListener("click", addSpend);
-    el("btnDemo").addEventListener("click", seedDemo);
-    el("btnClear").addEventListener("click", clearAll);
-    el("btnConnect").addEventListener("click", connectFirebase);
-    el("btnPush").addEventListener("click", pushCloud);
-    el("btnPull").addEventListener("click", pullCloud);
-    el("searchBox").addEventListener("input", render);
-
-    bootSavedConfig();
-    showStatus("Đang chuẩn bị kết nối cloud...");
-    render();
-    autoConnectIfConfigured();
-  </script>
-</body>
-</html>
+print(str(out))
+print(str(zip_path))
