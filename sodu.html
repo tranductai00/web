@@ -258,7 +258,7 @@
           <div class="setting-box" style="margin-top:14px">
             <div class="field"><label>Firebase config JSON</label><textarea id="firebaseConfig"></textarea></div>
             <div class="field"><label>Tên kho dữ liệu</label><input id="workspaceId" value="tran-duc-tai-main" placeholder="tran-duc-tai-main" /></div>
-            <div class="field"><label>Phí thanh toán thẻ (%)</label><input id="cardFeePercent" inputmode="numeric" placeholder="Ví dụ: 3" /></div>
+            <div class="field"><label>Phí thanh toán thẻ (%)</label><input id="cardFeePercent" inputmode="decimal" placeholder="Ví dụ: 0,0121 hoặc 1,21" /></div>
             <div class="row">
               <button id="btnConnect">Kết nối cloud</button>
               <button class="ghost" id="btnPush">Đẩy dữ liệu lên cloud</button>
@@ -272,7 +272,7 @@
           <div class="setting-box">
             <button class="secondary" id="btnDemo">Tạo dữ liệu mẫu</button>
             <button class="danger" id="btnClear">Xóa toàn bộ</button>
-            <div class="helper-note">Phí thẻ chỉ nhập 1 lần ở đây. Khi thanh toán, hệ thống sẽ tự tính: số tiền thanh toán + phí thẻ.</div>
+            <div class="helper-note">Phí thẻ chỉ nhập 1 lần ở đây. Có thể nhập số thập phân như 0,0121 hoặc 1,21. Khi thanh toán, hệ thống sẽ tự tính: số tiền thanh toán + phí thẻ.</div>
           </div>
         </div>
       </div>
@@ -336,6 +336,22 @@ const money = (n) => `${Number(n || 0).toLocaleString("vi-VN")} đ`;
 const positiveInt = (v) => {
   const n = Number(digitsOnly(v));
   return Number.isFinite(n) ? n : 0;
+};
+const parseDecimalPercent = (v) => {
+  const cleaned = String(v || "")
+    .replace(/\s+/g, "")
+    .replace(/[^0-9,.-]/g, "")
+    .replace(",", ".");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+};
+const formatDecimalPercent = (v) => {
+  const cleaned = String(v || "")
+    .replace(/\s+/g, "")
+    .replace(/[^0-9,.-]/g, "")
+    .replace(",", ".");
+  if (!cleaned || cleaned === "." || cleaned === "-" || cleaned === "-.") return "";
+  return cleaned.replace(".", ",");
 };
 const saveLocal = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
@@ -404,7 +420,7 @@ function showStatus(msg, isError=false) {
 }
 function updatePaymentPreview(inputId, outputId) {
   const rawAmount = positiveInt(el(inputId)?.value || "");
-  const feePercent = Number(data.settings?.cardFeePercent || 0);
+  const feePercent = parseDecimalPercent(data.settings?.cardFeePercent || 0);
   const output = el(outputId);
   if (!output) return;
   if (!rawAmount) {
@@ -435,7 +451,7 @@ function render() {
   el("mAdCount").textContent = data.adAccounts.length;
   el("mNeedTopup").textContent = data.adAccounts.filter(a => getAdStatus(a).text !== "Ổn").length;
   el("mTotalBank").textContent = money(data.banks.reduce((s,b) => s + getBankBalance(b), 0));
-  el("cardFeePercent").value = Number(data.settings?.cardFeePercent || 0) ? Number(data.settings.cardFeePercent).toLocaleString("vi-VN") : "";
+  el("cardFeePercent").value = data.settings?.cardFeePercent ? formatDecimalPercent(data.settings.cardFeePercent) : "";
   updatePaymentPreview("paymentAmount", "paymentFeePreview");
   updatePaymentPreview("paymentAmountQuick", "paymentFeePreviewQuick");
 
@@ -627,7 +643,7 @@ function addPayment(prefix="") {
   if (!adAccountId) return alert("Chọn tài khoản QC.");
   const rawAmount = validatePositiveAmount(el("paymentAmount" + prefix).value, "Số tiền thanh toán");
   if (rawAmount === null) return;
-  const feePercent = Number(data.settings?.cardFeePercent || 0);
+  const feePercent = parseDecimalPercent(data.settings?.cardFeePercent || 0);
   const fee = Math.round(rawAmount * feePercent / 100);
   const total = rawAmount + fee;
   data.transactions.unshift({
@@ -741,11 +757,13 @@ async function autoConnectIfConfigured() {
   }
 }
 
-["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold","cardFeePercent"].forEach(formatMoneyInput);
+["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold"].forEach(formatMoneyInput);
 
 el("cardFeePercent").addEventListener("input", () => {
+  const input = el("cardFeePercent");
+  input.value = formatDecimalPercent(input.value);
   if (!data.settings) data.settings = { cardFeePercent: 0 };
-  data.settings.cardFeePercent = positiveInt(el("cardFeePercent").value);
+  data.settings.cardFeePercent = input.value;
   persist();
 });
 el("paymentAmount").addEventListener("input", () => updatePaymentPreview("paymentAmount", "paymentFeePreview"));
