@@ -56,7 +56,7 @@
     .muted{color:var(--muted)}
     .big-balance{margin-top:12px;background:#f7faff;border:1px solid #e3edff;padding:16px;border-radius:18px}
     .big-balance .amount{font-size:30px;font-weight:800;margin-top:6px}
-    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
     .mini{padding:14px;border-radius:16px;background:#fbfcfe;border:1px solid var(--line)}
     .mini .k{font-size:13px;color:var(--muted)}
     .mini .v{font-size:18px;font-weight:700;margin-top:6px}
@@ -79,7 +79,7 @@
     .compact-bank{padding:16px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);min-height:130px}
     .compact-bank .name{font-size:16px;font-weight:800;line-height:1.3}
     .compact-bank .num{font-size:12px;color:var(--muted);margin-top:4px}
-    .compact-bank .amt{font-size:28px;font-weight:800;margin-top:14px;line-height:1.1;word-break:break-word}
+    .compact-bank .amt{font-size:30px;font-weight:800;margin-top:10px;line-height:1.1;word-break:break-word}
     .compact-bank .meta{font-size:12px;color:var(--muted);margin-top:8px}
     .setting-box{display:grid;gap:14px}
     .mobile-nav{display:none;margin-bottom:14px}
@@ -88,6 +88,11 @@
     .modal{width:min(720px,100%);background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:20px;border:1px solid var(--line)}
     .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modal-head h3{margin:0}
+
+    .filter-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .filter-tab{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
+    .filter-tab.active{background:#eef4ff;color:#315db6;border-color:#cfe0ff}
+    .tx-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     @media (max-width:1100px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-2{grid-template-columns:1fr}
@@ -147,12 +152,26 @@
         <div class="card metric"><div class="label">Tổng số dư ngân hàng</div><div class="value" id="mTotalBank">0 đ</div></div>
       </div>
 
-      <div class="grid-2" style="margin-top:16px">
+      
+
+      <div class="card section-card" style="margin-top:12px">
+        <div class="toolbar">
+          <h2 style="margin:0">Số dư từng tài khoản ngân hàng</h2>
+          <div class="right"><input id="searchBox" placeholder="Tìm ngân hàng hoặc tài khoản QC" style="min-width:260px" /></div>
+        </div>
+        <div id="bankBalanceGrid" class="bank-balance-grid"></div>
+      </div>
+
+      <div class="card section-card" style="margin-top:16px">
+        <div class="toolbar"><h2 style="margin:0">Chi tiết số dư ngân hàng</h2></div><div class="footer-note">Đã ẩn số dư ban đầu để giao diện gọn và tập trung vào số dư hiện tại.</div>
+        <div id="bankList" class="bank-list"></div>
+      </div><div class="grid-2" style="margin-top:16px">
         <div class="card section-card">
           <h2>Nạp tiền vào ngân hàng</h2>
           <div class="row">
             <div class="field"><label>Chọn ngân hàng</label><select id="depositBankIdQuick"></select></div>
             <div class="field"><label>Số tiền nạp</label><input id="depositAmountQuick" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
+            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="depositTxIdQuick" placeholder="VD: FT241234..." /></div>
             <div class="field"><label>Ghi chú</label><input id="depositNoteQuick" placeholder="Không bắt buộc" /></div>
           </div>
           <div class="row" style="margin-top:12px"><button id="btnAddDepositQuick">Nạp vào ngân hàng</button></div>
@@ -162,24 +181,12 @@
           <div class="row">
             <div class="field"><label>Chọn tài khoản QC</label><select id="paymentAdIdQuick"></select></div>
             <div class="field"><label>Số tiền thanh toán</label><input id="paymentAmountQuick" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
+            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="paymentTxIdQuick" placeholder="VD: invoice-2026-001" /></div>
             <div class="field"><label>Ghi chú</label><input id="paymentNoteQuick" placeholder="Không bắt buộc" /></div>
           </div>
           <div class="footer-note" id="paymentFeePreviewQuick"></div>
           <div class="row" style="margin-top:12px"><button id="btnAddPaymentQuick">Ghi nhận thanh toán</button></div>
         </div>
-      </div>
-
-      <div class="card section-card" style="margin-top:16px">
-        <div class="toolbar">
-          <h2 style="margin:0">Số dư từng tài khoản ngân hàng</h2>
-          <div class="right"><input id="searchBox" placeholder="Tìm ngân hàng hoặc tài khoản QC" style="min-width:260px" /></div>
-        </div>
-        <div id="bankBalanceGrid" class="bank-balance-grid"></div>
-      </div>
-
-      <div class="card section-card" style="margin-top:16px">
-        <div class="toolbar"><h2 style="margin:0">Chi tiết số dư ngân hàng</h2></div>
-        <div id="bankList" class="bank-list"></div>
       </div>
     </section>
 
@@ -229,6 +236,7 @@
           <div class="row">
             <div class="field"><label>Chọn ngân hàng</label><select id="depositBankId"></select></div>
             <div class="field"><label>Số tiền nạp</label><input id="depositAmount" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
+            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="depositTxId" placeholder="VD: FT241234..." /></div>
             <div class="field"><label>Ghi chú</label><input id="depositNote" placeholder="Không bắt buộc" /></div>
           </div>
           <div class="row" style="margin-top:12px"><button id="btnAddDeposit">Nạp vào ngân hàng</button></div>
@@ -238,6 +246,7 @@
           <div class="row">
             <div class="field"><label>Chọn tài khoản QC</label><select id="paymentAdId"></select></div>
             <div class="field"><label>Số tiền thanh toán</label><input id="paymentAmount" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
+            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="paymentTxId" placeholder="VD: invoice-2026-001" /></div>
             <div class="field"><label>Ghi chú</label><input id="paymentNote" placeholder="Không bắt buộc" /></div>
           </div>
           <div class="footer-note" id="paymentFeePreview"></div>
@@ -251,7 +260,7 @@
           <div class="field">
             <label>Chọn file bill / hóa đơn</label>
             <input id="billFile" type="file" accept=".txt,.pdf,.csv,.json,.log,.md,.html,.htm,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*" />
-            <div class="ocr-status">Hỗ trợ thêm ảnh chụp màn hình, ảnh scan, JPG/PNG/WebP.</div>
+            <div class="ocr-status">Đã tối ưu đọc ảnh chụp màn hình, ảnh scan, JPG/PNG/WebP. Ảnh càng rõ thì đọc ID giao dịch càng chính xác.</div>
           </div>
           <div class="field">
             <label>Dán text hoặc dán ảnh trực tiếp</label>
@@ -269,6 +278,13 @@
       </div>
       <div class="card section-card" style="margin-top:16px">
         <h2>Lịch sử giao dịch</h2>
+        <div class="footer-note">Lọc theo ngày và sửa/xóa từng giao dịch ngay trong danh sách.</div>
+        <div class="filter-tabs" id="dateFilterTabs">
+          <button class="filter-tab active" data-filter="all">Tất cả</button>
+          <button class="filter-tab" data-filter="today">Hôm nay</button>
+          <button class="filter-tab" data-filter="7days">7 ngày</button>
+          <button class="filter-tab" data-filter="30days">30 ngày</button>
+        </div>
         <div id="txList" class="tx-list"></div>
       </div>
     </section>
@@ -326,6 +342,22 @@
     <div class="row" style="margin-top:14px"><div class="field"><label>Ngưỡng sẽ bị thu tiền</label><input id="editAdThreshold" inputmode="numeric" /></div></div>
     <div class="row" style="margin-top:14px"><button id="btnSaveAdEdit">Lưu thay đổi</button></div>
   </div>
+
+<div class="modal-backdrop" id="txModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Sửa giao dịch</h3><button class="ghost small" id="btnCloseTxModal">Đóng</button></div>
+    <div class="row">
+      <div class="field"><label>Loại giao dịch</label><select id="editTxType"><option value="bank_deposit">Nạp tiền</option><option value="ad_payment">Thanh toán quảng cáo</option></select></div>
+      <div class="field"><label>ID giao dịch</label><input id="editTxId" placeholder="Có thể để trống" /></div>
+      <div class="field"><label>Số tiền gốc</label><input id="editTxAmount" inputmode="numeric" placeholder="Chỉ nhập số" /></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="field"><label>Ngân hàng</label><select id="editTxBankId"></select></div>
+      <div class="field"><label>Tài khoản QC</label><select id="editTxAdId"></select></div>
+      <div class="field"><label>Ghi chú</label><input id="editTxNote" /></div>
+    </div>
+    <div class="row" style="margin-top:14px"><button id="btnSaveTxEdit">Lưu thay đổi</button></div>
+  </div>
 </div>
 
 <script type="module">
@@ -350,6 +382,8 @@ let db = null;
 let workspaceId = localStorage.getItem(WORKSPACE_KEY) || "tran-duc-tai-main";
 let editingBankId = null;
 let editingAdId = null;
+let editingTxId = null;
+let currentDateFilter = "all";
 let unsubscribeRealtime = null;
 let autoSaveTimer = null;
 let isApplyingRemote = false;
@@ -518,13 +552,39 @@ async function extractTextFromImage(file) {
   try {
     setOcrStatus("Đang OCR ảnh bill...");
     const Tesseract = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/+esm");
-    const result = await Tesseract.recognize(file, "eng", {
+
+    const img = new Image();
+    const blobUrl = URL.createObjectURL(file);
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = blobUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    const scale = Math.max(2, Math.min(3, 1600 / Math.max(img.width, 1)));
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imageData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      const v = gray > 145 ? 255 : 0;
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    const result = await Tesseract.recognize(canvas, "eng", {
       logger: m => {
         if (m.status === "recognizing text" && typeof m.progress === "number") {
           setOcrStatus(`Đang OCR ảnh bill... ${Math.round(m.progress * 100)}%`);
         }
       }
     });
+    URL.revokeObjectURL(blobUrl);
     setOcrStatus("Đã OCR xong ảnh bill.");
     return result?.data?.text || "";
   } catch (e) {
@@ -591,57 +651,35 @@ function extractLargestAmount(text) {
     if (!Number.isFinite(n) || n <= 0) return;
 
     let score = scoreBase;
-
-    // Loại trừ số quá dài kiểu mã giao dịch / reference
     const digitCount = cleaned.length;
     if (digitCount >= 13) score -= 100;
-
-    // Ưu tiên khoảng tiền hợp lý cho bill ads
     if (n >= 1000 && n <= 1000000000) score += 8;
     if (n > 100000000000) score -= 50;
-
     candidates.push({ value: n, score, raw: numStr });
   }
 
-  // 1) Ưu tiên số đi kèm VND/VNĐ/đ
   const currencyPatterns = [
     /(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)\s*(?:vnd|vnđ|đ)\b/gi,
     /(?:vnd|vnđ|đ)\s*(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)/gi
   ];
   for (const pattern of currencyPatterns) {
     let m;
-    while ((m = pattern.exec(raw)) !== null) {
-      addCandidate(m[1], 100);
-    }
+    while ((m = pattern.exec(raw)) !== null) addCandidate(m[1], 120);
   }
 
-  // 2) Ưu tiên gần các cụm hay gặp trên bill
   const keywordPatterns = [
-    /(?:so tien|số tiền|tong thanh toan|tổng thanh toán|so tien da lap hoa don|số tiền đã lập hóa đơn)[^\d]{0,20}(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)/gi
+    /(?:so tien da lap hoa don|số tiền đã lập hóa đơn|so tien|số tiền|tong thanh toan|tổng thanh toán|da gui thanh cong|đã gửi thành công)[^\d]{0,30}(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)/gi
   ];
   for (const pattern of keywordPatterns) {
     let m;
-    while ((m = pattern.exec(raw)) !== null) {
-      addCandidate(m[1], 80);
-    }
+    while ((m = pattern.exec(raw)) !== null) addCandidate(m[1], 90);
   }
 
-  // 3) Dự phòng: các số có format tiền chuẩn
-  const genericMoney = raw.match(/\b\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?\b/g) || [];
-  genericMoney.forEach(v => addCandidate(v, 20));
+  (raw.match(/\b\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?\b/g) || []).forEach(v => addCandidate(v, 20));
+  (raw.match(/\b\d{4,12}\b/g) || []).forEach(v => addCandidate(v, 0));
 
-  // 4) Chỉ fallback số trơn vừa phải, tránh mã dài
-  const plainNums = raw.match(/\b\d{4,12}\b/g) || [];
-  plainNums.forEach(v => addCandidate(v, 0));
-
-  if (!candidates.length) return 0;
-
-  candidates.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    return b.value - a.value;
-  });
-
-  return candidates[0].value || 0;
+  candidates.sort((a, b) => (b.score !== a.score ? b.score - a.score : b.value - a.value));
+  return candidates[0]?.value || 0;
 }
 
 function scoreBankMatch(bank, textNorm) {
@@ -673,6 +711,54 @@ function scoreAdMatch(ad, textNorm) {
   return score;
 }
 
+
+function extractTransactionId(text) {
+  const raw = String(text || "");
+
+  const labeledPatterns = [
+    /(?:id giao dich|id giao dịch|ma giao dich|mã giao dịch|transaction id|reference|ref no|ref|so tham chieu|số tham chiếu)[:\s#-]*([A-Z0-9\-_.]{6,80})/i,
+  ];
+  for (const p of labeledPatterns) {
+    const m = raw.match(p);
+    if (m && m[1]) return m[1];
+  }
+
+  // Ưu tiên chuỗi số dài ở gần chữ ID giao dịch
+  const nearby = raw.match(/id giao d(?:i|ị)ch[\s\S]{0,60}?(\d{12,40}(?:-\d{6,40})?)/i);
+  if (nearby && nearby[1]) return nearby[1];
+
+  // Chuỗi FT hoặc mã tham chiếu chữ+số
+  const generic = raw.match(/\b(FT\d{6,40}|[A-Z]{2,10}\d{6,40}|[A-Z0-9]{8,30})\b/);
+  if (generic && generic[1]) return generic[1];
+
+  return "";
+}
+
+function txIdExists(txId, ignoreId=null) {
+  const norm = String(txId || "").trim().toLowerCase();
+  if (!norm) return false;
+  return data.transactions.some(t => t.id !== ignoreId && String(t.txId || "").trim().toLowerCase() === norm);
+}
+
+function validateTxId(txId, ignoreId=null) {
+  if (!txId) return true;
+  if (txIdExists(txId, ignoreId)) {
+    alert("ID giao dịch này đã tồn tại, tránh bị trùng.");
+    return false;
+  }
+  return true;
+}
+
+function applyDateFilter(items) {
+  if (currentDateFilter === "all") return items;
+  const now = new Date();
+  const start = new Date();
+  if (currentDateFilter === "today") start.setHours(0,0,0,0);
+  if (currentDateFilter === "7days") start.setDate(now.getDate() - 7);
+  if (currentDateFilter === "30days") start.setDate(now.getDate() - 30);
+  return items.filter(t => new Date(t.createdAt || Date.now()) >= start);
+}
+
 function detectTransferBill(textNorm, bestBank) {
   const transferKeywords = [
     "da gui thanh cong", "đã gửi thành công", "chuyen tien", "chuyển tiền",
@@ -680,17 +766,22 @@ function detectTransferBill(textNorm, bestBank) {
     "mã giao dịch", "loi nhan", "lời nhắn", "thoi gian", "thời gian"
   ];
   const hasKeyword = transferKeywords.some(k => textNorm.includes(normalizeText(k)));
-  const hasBankNumber = bestBank?.number && textNorm.includes(normalizeText(bestBank.number));
+  const hasBankNumber = bestBank?.number && (
+    textNorm.includes(normalizeText(bestBank.number)) ||
+    textNorm.replace(/\s+/g, "").includes(normalizeText(bestBank.number).replace(/\s+/g, ""))
+  );
   return Boolean(hasKeyword && hasBankNumber);
 }
 
 function findBestBankByRecipient(textNorm) {
+  const compactNorm = textNorm.replace(/\s+/g, "");
   const bankCandidates = data.banks
     .map(b => {
       let score = scoreBankMatch(b, textNorm);
       const num = normalizeText(b.number || "");
       const name = normalizeText(b.name || "");
       if (num && textNorm.includes(num)) score += 20;
+      if (num && compactNorm.includes(num.replace(/\s+/g, ""))) score += 18;
       if (name && textNorm.includes(name)) score += 8;
       return { ...b, _score: score };
     })
@@ -705,11 +796,11 @@ function renderBillAnalysis(result) {
     wrap.innerHTML = ""; setOcrStatus("");
     return;
   }
-  const { amount, fee, total, bestBank, bestAd, rawTextPreview, mode } = result;
+  const { amount, fee, total, bestBank, bestAd, rawTextPreview, mode, txId } = result;
 
   const summary = mode === "transfer"
-    ? `Tiền bill: ${amount ? money(amount) : "Chưa đọc được"} · Hệ thống nhận diện đây là bill chuyển khoản đến tài khoản nhận`
-    : `Tiền bill: ${amount ? money(amount) : "Chưa đọc được"} · Phí thẻ: ${money(fee)} · Tổng trừ ngân hàng: ${money(total)}`;
+    ? `Tiền bill: ${amount ? money(amount) : "Chưa đọc được"} · ID giao dịch: ${txId || "Chưa đọc được"} · Hệ thống nhận diện đây là bill chuyển khoản đến tài khoản nhận`
+    : `Tiền bill: ${amount ? money(amount) : "Chưa đọc được"} · ID giao dịch: ${txId || "Chưa đọc được"} · Phí thẻ: ${money(fee)} · Tổng trừ ngân hàng: ${money(total)}`;
 
   const bankHtml = bestBank ? `
     <div class="match-card">
@@ -741,19 +832,21 @@ function renderBillAnalysis(result) {
 
   const btnPay = el("btnApplyBillMatch");
   if (btnPay && bestAd && total > 0) {
-    btnPay.onclick = () => applyBillMatch(bestAd.id, amount, total, fee);
+    btnPay.onclick = () => applyBillMatch(bestAd.id, amount, total, fee, txId);
   }
   const btnDeposit = el("btnApplyBillDeposit");
   if (btnDeposit && bestBank && amount > 0) {
-    btnDeposit.onclick = () => applyBillDeposit(bestBank.id, amount);
+    btnDeposit.onclick = () => applyBillDeposit(bestBank.id, amount, txId);
   }
 }
 
-function applyBillMatch(adAccountId, rawAmount, totalAmount, fee) {
+function applyBillMatch(adAccountId, rawAmount, totalAmount, fee, txId="") {
+  if (!validateTxId(txId)) return;
   data.transactions.unshift({
     id: uid(),
     type: "ad_payment",
     adAccountId,
+    txId,
     amount: totalAmount,
     rawAmount,
     fee,
@@ -767,6 +860,23 @@ function applyBillMatch(adAccountId, rawAmount, totalAmount, fee) {
   clearBillInputState();
 }
 
+function applyBillDeposit(bankId, amount, txId="") {
+  if (!validateTxId(txId)) return;
+  data.transactions.unshift({
+    id: uid(),
+    type: "bank_deposit",
+    bankId,
+    txId,
+    amount,
+    note: "Tự nhận diện từ bill chuyển khoản",
+    createdAt: new Date().toISOString()
+  });
+  persist();
+  addSyncLog("Đã ghi nhận bill chuyển khoản vào tài khoản ngân hàng phù hợp");
+  renderBillAnalysis(null);
+  clearBillInputState();
+}
+
 async function analyzeBill() {
   try {
     const manualText = el("billTextInput").value.trim();
@@ -776,6 +886,7 @@ async function analyzeBill() {
     if (!text) return alert("Chọn file hoặc dán nội dung bill trước.");
     const textNorm = normalizeText(text);
     const amount = extractLargestAmount(text);
+    const txId = extractTransactionId(text);
 
     const bestBank = findBestBankByRecipient(textNorm);
     const mode = detectTransferBill(textNorm, bestBank) ? "transfer" : "payment";
@@ -789,7 +900,7 @@ async function analyzeBill() {
       .sort((a,b) => b._score - a._score);
     const bestAd = mode === "payment" && adCandidates[0] && adCandidates[0]._score > 0 ? adCandidates[0] : null;
 
-    renderBillAnalysis({ amount, fee, total, bestBank, bestAd, rawTextPreview: text, mode });
+    renderBillAnalysis({ amount, fee, total, bestBank, bestAd, rawTextPreview: text, mode, txId });
     addSyncLog(mode === "transfer" ? "Đã phân tích bill chuyển khoản" : "Đã phân tích bill thanh toán");
   } catch (e) {
     console.error(e);
@@ -876,7 +987,6 @@ function render() {
       </div>
       <div class="big-balance"><div class="muted">Số dư còn lại trong tài khoản ngân hàng</div><div class="amount">${money(getBankBalance(bank))}</div></div>
       <div class="mini-grid">
-        <div class="mini"><div class="k">Số dư ban đầu</div><div class="v">${money(bank.initialBalance || 0)}</div></div>
         <div class="mini"><div class="k">Tổng đã nạp</div><div class="v">${money(bankDeposits(bank.id))}</div></div>
         <div class="mini"><div class="k">Tổng thanh toán QC</div><div class="v">${money(bankPayments(bank.id))}</div></div>
       </div>
@@ -907,22 +1017,25 @@ function render() {
   });
 
   const txList = el("txList");
-  txList.innerHTML = data.transactions.length ? "" : '<div class="empty">Chưa có giao dịch.</div>';
-  data.transactions.forEach(t => {
+  const filteredTransactions = applyDateFilter(data.transactions);
+  txList.innerHTML = filteredTransactions.length ? "" : '<div class="empty">Chưa có giao dịch.</div>';
+  filteredTransactions.forEach(t => {
     const bank = data.banks.find(b => b.id === t.bankId);
     const ad = data.adAccounts.find(a => a.id === t.adAccountId);
     const title = t.type === "bank_deposit" ? "Nạp vào ngân hàng" : "Thanh toán quảng cáo";
     const detail = t.type === "bank_deposit"
-      ? `${bank ? bank.name : "Ngân hàng"}${t.note ? " · " + escapeHtml(t.note) : ""}`
-      : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}${t.fee ? " · Phí: " + money(t.fee) + " (" + String(t.feePercent).replace(".", ",") + "%)" : ""}`;
+      ? `${bank ? bank.name : "Ngân hàng"}${t.note ? " · " + escapeHtml(t.note) : ""}${t.txId ? " · ID: " + escapeHtml(t.txId) : ""}`
+      : `${ad ? ad.name : "Tài khoản QC"}${t.note ? " · " + escapeHtml(t.note) : ""}${t.fee ? " · Phí: " + money(t.fee) + " (" + String(t.feePercent).replace(".", ",") + "%)" : ""}${t.txId ? " · ID: " + escapeHtml(t.txId) : ""}`;
     const item = document.createElement("div");
     item.className = "tx";
-    item.innerHTML = `<div class="tx-left"><div class="tx-title">${title}</div><div class="muted">${detail}</div></div><div class="tx-amount">${money(t.amount)}</div>`;
+    item.innerHTML = `<div class="tx-left"><div class="tx-title">${title}</div><div class="muted">${detail}</div></div><div class="tx-actions"><div class="tx-amount">${money(t.amount)}</div><button class="small secondary" data-edit-tx="${t.id}">Sửa</button><button class="small danger" data-delete-tx="${t.id}">Xóa</button></div>`;
     txList.appendChild(item);
   });
 
   document.querySelectorAll("[data-edit-bank]").forEach(btn => btn.onclick = () => openBankModal(btn.dataset.editBank));
   document.querySelectorAll("[data-edit-ad]").forEach(btn => btn.onclick = () => openAdModal(btn.dataset.editAd));
+  document.querySelectorAll("[data-edit-tx]").forEach(btn => btn.onclick = () => openTxModal(btn.dataset.editTx));
+  document.querySelectorAll("[data-delete-tx]").forEach(btn => btn.onclick = () => deleteTransaction(btn.dataset.deleteTx));
   saveLocal();
 }
 function validateFirebaseConfig(cfg) {
@@ -1042,23 +1155,27 @@ function validatePositiveAmount(raw, label) {
 }
 function addDeposit(prefix="") {
   const bankId = el("depositBankId" + prefix).value;
+  const txId = el("depositTxId" + prefix).value.trim();
   if (!bankId) return alert("Chọn tài khoản ngân hàng.");
+  if (!validateTxId(txId)) return;
   const amount = validatePositiveAmount(el("depositAmount" + prefix).value, "Số tiền nạp");
   if (amount === null) return;
-  data.transactions.unshift({ id: uid(), type: "bank_deposit", bankId, amount, note: el("depositNote" + prefix).value.trim(), createdAt: new Date().toISOString() });
-  el("depositBankId" + prefix).value = ""; el("depositAmount" + prefix).value = ""; el("depositNote" + prefix).value = "";
+  data.transactions.unshift({ id: uid(), type: "bank_deposit", bankId, txId, amount, note: el("depositNote" + prefix).value.trim(), createdAt: new Date().toISOString() });
+  el("depositBankId" + prefix).value = ""; el("depositAmount" + prefix).value = ""; el("depositTxId" + prefix).value = ""; el("depositNote" + prefix).value = "";
   persist();
 }
 function addPayment(prefix="") {
   const adAccountId = el("paymentAdId" + prefix).value;
+  const txId = el("paymentTxId" + prefix).value.trim();
   if (!adAccountId) return alert("Chọn tài khoản QC.");
+  if (!validateTxId(txId)) return;
   const rawAmount = validatePositiveAmount(el("paymentAmount" + prefix).value, "Số tiền thanh toán");
   if (rawAmount === null) return;
   const feePercent = getCardFeePercent();
   const fee = Math.round(rawAmount * feePercent / 100);
   const total = rawAmount + fee;
-  data.transactions.unshift({ id: uid(), type: "ad_payment", adAccountId, amount: total, rawAmount, fee, feePercent: data.settings?.cardFeePercent || feePercent, note: el("paymentNote" + prefix).value.trim(), createdAt: new Date().toISOString() });
-  el("paymentAdId" + prefix).value = ""; el("paymentAmount" + prefix).value = ""; el("paymentNote" + prefix).value = "";
+  data.transactions.unshift({ id: uid(), type: "ad_payment", adAccountId, txId, amount: total, rawAmount, fee, feePercent: data.settings?.cardFeePercent || feePercent, note: el("paymentNote" + prefix).value.trim(), createdAt: new Date().toISOString() });
+  el("paymentAdId" + prefix).value = ""; el("paymentAmount" + prefix).value = ""; el("paymentTxId" + prefix).value = ""; el("paymentNote" + prefix).value = "";
   updatePaymentPreview("paymentAmount" + prefix, prefix === "Quick" ? "paymentFeePreviewQuick" : "paymentFeePreview");
   persist();
 }
@@ -1084,6 +1201,63 @@ function openAdModal(id) {
 }
 function closeBankModal() { editingBankId = null; el("bankModal").classList.remove("open"); }
 function closeAdModal() { editingAdId = null; el("adModal").classList.remove("open"); }
+
+function openTxModal(id) {
+  const tx = data.transactions.find(t => t.id === id);
+  if (!tx) return;
+  editingTxId = id;
+  fillSelect(el("editTxBankId"), data.banks.map(b => ({ id: b.id, label: `${b.name}${b.number ? " - " + b.number : ""}` })), "Chọn ngân hàng");
+  fillSelect(el("editTxAdId"), data.adAccounts.map(a => ({ id: a.id, label: `${a.name}${a.accountId ? " - " + a.accountId : ""}` })), "Chọn tài khoản QC");
+  el("editTxType").value = tx.type || "bank_deposit";
+  el("editTxId").value = tx.txId || "";
+  el("editTxAmount").value = Number(tx.rawAmount || tx.amount || 0).toLocaleString("vi-VN");
+  el("editTxBankId").value = tx.bankId || "";
+  el("editTxAdId").value = tx.adAccountId || "";
+  el("editTxNote").value = tx.note || "";
+  el("txModal").classList.add("open");
+}
+function closeTxModal() { editingTxId = null; el("txModal").classList.remove("open"); }
+function saveTxEdit() {
+  const tx = data.transactions.find(t => t.id === editingTxId);
+  if (!tx) return;
+  const type = el("editTxType").value;
+  const txId = el("editTxId").value.trim();
+  if (!validateTxId(txId, editingTxId)) return;
+  const rawAmount = validatePositiveAmount(el("editTxAmount").value, "Số tiền");
+  if (rawAmount === null) return;
+  tx.type = type;
+  tx.txId = txId;
+  tx.note = el("editTxNote").value.trim();
+  if (type === "bank_deposit") {
+    const bankId = el("editTxBankId").value;
+    if (!bankId) return alert("Chọn ngân hàng.");
+    tx.bankId = bankId;
+    delete tx.adAccountId;
+    delete tx.rawAmount;
+    delete tx.fee;
+    delete tx.feePercent;
+    tx.amount = rawAmount;
+  } else {
+    const adId = el("editTxAdId").value;
+    if (!adId) return alert("Chọn tài khoản QC.");
+    const feePercent = getCardFeePercent();
+    const fee = Math.round(rawAmount * feePercent / 100);
+    tx.adAccountId = adId;
+    delete tx.bankId;
+    tx.rawAmount = rawAmount;
+    tx.fee = fee;
+    tx.feePercent = data.settings?.cardFeePercent || feePercent;
+    tx.amount = rawAmount + fee;
+  }
+  closeTxModal();
+  persist();
+}
+function deleteTransaction(id) {
+  if (!confirm("Xóa giao dịch này?")) return;
+  data.transactions = data.transactions.filter(t => t.id !== id);
+  persist();
+}
+
 function saveBankEdit() {
   const bank = data.banks.find(b => b.id === editingBankId);
   if (!bank) return;
@@ -1114,9 +1288,9 @@ function seedDemo() {
       { id: ad2, name: "SHOP A", accountId: "99112233", bankId, threshold: 3000000 }
     ],
     transactions: [
-      { id: uid(), type: "bank_deposit", bankId, amount: 5000000, note: "Nạp thêm", createdAt: new Date().toISOString() },
-      { id: uid(), type: "ad_payment", adAccountId: ad1, amount: 2795063, rawAmount: 2713653, fee: 81410, feePercent: "3", note: "Thanh toán ads", createdAt: new Date().toISOString() },
-      { id: uid(), type: "ad_payment", adAccountId: ad2, amount: 947600, rawAmount: 920000, fee: 27600, feePercent: "3", note: "Thanh toán ads", createdAt: new Date().toISOString() }
+      { id: uid(), type: "bank_deposit", bankId, txId: "FT240001", amount: 5000000, note: "Nạp thêm", createdAt: new Date().toISOString() },
+      { id: uid(), type: "ad_payment", adAccountId: ad1, txId: "INV001", amount: 2795063, rawAmount: 2713653, fee: 81410, feePercent: "3", note: "Thanh toán ads", createdAt: new Date().toISOString() },
+      { id: uid(), type: "ad_payment", adAccountId: ad2, txId: "INV002", amount: 947600, rawAmount: 920000, fee: 27600, feePercent: "3", note: "Thanh toán ads", createdAt: new Date().toISOString() }
     ]
   };
   persist();
@@ -1162,7 +1336,7 @@ async function autoConnectIfConfigured() {
   }
 }
 
-["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold"].forEach(formatMoneyInput);
+["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold","editTxAmount"].forEach(formatMoneyInput);
 el("cardFeePercent").addEventListener("input", () => {
   el("cardFeePercent").value = formatDecimalPercent(el("cardFeePercent").value);
   if (!data.settings) data.settings = { cardFeePercent: 0 };
@@ -1188,8 +1362,10 @@ el("btnPushTop").addEventListener("click", pushCloud);
 el("searchBox").addEventListener("input", render);
 el("btnCloseBankModal").addEventListener("click", closeBankModal);
 el("btnCloseAdModal").addEventListener("click", closeAdModal);
+el("btnCloseTxModal").addEventListener("click", closeTxModal);
 el("btnSaveBankEdit").addEventListener("click", saveBankEdit);
 el("btnSaveAdEdit").addEventListener("click", saveAdEdit);
+el("btnSaveTxEdit").addEventListener("click", saveTxEdit);
 el("btnAnalyzeBill").addEventListener("click", analyzeBill);
 el("btnClearBillInput").addEventListener("click", clearBillInputState);
 el("billFile").addEventListener("change", (e) => {
@@ -1226,6 +1402,7 @@ el("billFile").addEventListener("change", (e) => {
   });
 });
 document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => setSection(btn.dataset.section)));
+document.querySelectorAll(".filter-tab").forEach(btn => btn.addEventListener("click", () => { currentDateFilter = btn.dataset.filter; render(); }));
 renderMobileNav();
 el("mobileSectionSelect").addEventListener("change", (e) => setSection(e.target.value));
 
