@@ -88,15 +88,6 @@
     .modal{width:min(720px,100%);background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:20px;border:1px solid var(--line)}
     .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modal-head h3{margin:0}
-.sync-pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px;font-weight:700;color:var(--text)}
-.sync-dot{width:10px;height:10px;border-radius:999px;background:var(--muted);display:inline-block;flex:0 0 auto}
-.sync-pill.success .sync-dot{background:var(--ok)}
-.sync-pill.error .sync-dot{background:var(--bad)}
-.sync-pill.loading .sync-dot{background:var(--brand);animation:pulse 1s infinite}
-.sync-pill.offline .sync-dot{background:var(--warn)}
-.sync-log{display:grid;gap:8px;margin-top:10px}
-.sync-log-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;color:var(--muted)}
-@keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.55}100%{transform:scale(1);opacity:1}}
     @media (max-width:1100px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-2{grid-template-columns:1fr}
@@ -143,7 +134,6 @@
         <div class="sub">Tự động đẩy dữ liệu lên cloud sau khi điền và đồng bộ realtime giữa các thiết bị.</div>
       </div>
       <div class="actions">
-        <div id="syncIndicator" class="sync-pill loading"><span class="sync-dot"></span><span id="syncIndicatorText">Đang khởi tạo...</span></div>
         <button class="secondary" id="btnPullTop">Lấy dữ liệu</button>
         <button class="ghost" id="btnPushTop">Đẩy dữ liệu lên cloud</button>
       </div>
@@ -255,6 +245,29 @@
         </div>
       </div>
       <div class="card section-card" style="margin-top:16px">
+        <h2>Upload bill / hóa đơn thanh toán</h2>
+        <div class="notice">Semi-auto: hệ thống đọc text trong file rồi gợi ý tài khoản phù hợp. Với bill chuyển khoản, hệ thống ưu tiên nhận diện số tài khoản nhận trùng khớp trong hệ thống và xem số tiền bill là tiền nạp vào ngân hàng. Với hóa đơn thanh toán, hệ thống ghi nhận là thanh toán quảng cáo.</div>
+        <div class="row" style="margin-top:14px">
+          <div class="field">
+            <label>Chọn file bill / hóa đơn</label>
+            <input id="billFile" type="file" accept=".txt,.pdf,.csv,.json,.log,.md,.html,.htm,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*" />
+            <div class="ocr-status">Hỗ trợ thêm ảnh chụp màn hình, ảnh scan, JPG/PNG/WebP.</div>
+          </div>
+          <div class="field">
+            <label>Dán text hoặc dán ảnh trực tiếp</label>
+            <textarea id="billTextInput" placeholder="Dán nội dung bill / hóa đơn vào đây hoặc bấm vào đây rồi Ctrl+V ảnh..."></textarea>
+            <div id="billPasteZone" class="paste-zone">Có thể dán ảnh trực tiếp vào đây mà không cần tải lên</div>
+            <img id="billImagePreview" class="bill-preview" style="display:none" />
+            <div id="ocrStatus" class="ocr-status"></div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button id="btnAnalyzeBill">Phân tích bill</button>
+          <button class="ghost" id="btnClearBillInput">Xóa bill đang chọn</button>
+        </div>
+        <div id="billAnalysisResult" class="sync-log" style="margin-top:14px"></div>
+      </div>
+      <div class="card section-card" style="margin-top:16px">
         <h2>Lịch sử giao dịch</h2>
         <div id="txList" class="tx-list"></div>
       </div>
@@ -282,11 +295,7 @@
           <div class="setting-box">
             <button class="secondary" id="btnDemo">Tạo dữ liệu mẫu</button>
             <button class="danger" id="btnClear">Xóa toàn bộ</button>
-            <div class="helper-note">Sau khi nhập dữ liệu, hệ thống sẽ tự lưu local và tự đẩy lên Firebase. Thiết bị khác đang mở cùng workspace sẽ tự cập nhật.</div>
-            <div>
-              <h2 style="margin:10px 0 8px;font-size:18px">Log đồng bộ</h2>
-              <div id="syncLog" class="sync-log"></div>
-            </div>
+            <div class="helper-note">Sau khi nhập dữ liệu, hệ thống sẽ tự lưu local và tự đẩy lên Firebase. Thiết bị khác đang mở cùng workspace sẽ tự cập nhật.</div><div><h2 style="margin:10px 0 8px;font-size:18px">Log đồng bộ</h2><div id="syncLog" class="sync-log"></div></div>
           </div>
         </div>
       </div>
@@ -320,6 +329,7 @@
 </div>
 
 <script type="module">
+if (typeof globalThis.addSyncLog !== "function") { globalThis.addSyncLog = function() {}; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -435,13 +445,6 @@ function escapeHtml(str) {
 }
 let syncLogs = [];
 
-function addSyncLog(message) {
-  const time = new Date().toLocaleTimeString("vi-VN");
-  syncLogs.unshift(`${time} · ${message}`);
-  syncLogs = syncLogs.slice(0, 8);
-  renderSyncLog();
-}
-
 function renderSyncLog() {
   const wrap = el("syncLog");
   if (!wrap) return;
@@ -452,18 +455,20 @@ function renderSyncLog() {
   wrap.innerHTML = syncLogs.map(item => `<div class="sync-log-item">${item}</div>`).join("");
 }
 
-function setSyncIndicator(type, msg) {
-  const pill = el("syncIndicator");
-  const text = el("syncIndicatorText");
-  if (!pill || !text) return;
-  pill.className = `sync-pill ${type}`;
-  text.textContent = msg;
+function addSyncLog(message) {
+  try {
+    const time = new Date().toLocaleTimeString("vi-VN");
+    syncLogs.unshift(`${time} · ${message}`);
+    syncLogs = syncLogs.slice(0, 10);
+    renderSyncLog();
+  } catch (e) {
+    console.error("SyncLog error:", e);
+  }
 }
 
 function showStatus(msg, isError=false) {
   el("syncStatus").textContent = msg;
   el("syncStatus").style.color = isError ? "var(--bad)" : "var(--muted)";
-  setSyncIndicator(isError ? "error" : "success", msg);
 }
 function updatePaymentPreview(inputId, outputId) {
   const rawAmount = positiveInt(el(inputId)?.value || "");
@@ -478,21 +483,330 @@ function updatePaymentPreview(inputId, outputId) {
   const total = rawAmount + fee;
   output.textContent = `Phí: ${money(fee)} (${String(data.settings?.cardFeePercent || feePercent).replace(".", ",")}%) · Tổng trừ ngân hàng: ${money(total)}`;
 }
+
+let pastedBillImageFile = null;
+
+function setOcrStatus(msg) {
+  const wrap = el("ocrStatus");
+  if (wrap) wrap.textContent = msg || "";
+}
+
+function clearBillInputState() {
+  pastedBillImageFile = null;
+  if (el("billFile")) el("billFile").value = "";
+  if (el("billTextInput")) el("billTextInput").value = "";
+  if (el("billImagePreview")) {
+    el("billImagePreview").src = "";
+    el("billImagePreview").style.display = "none";
+  }
+  setOcrStatus("");
+  renderBillAnalysis(null);
+}
+
+function showBillImagePreview(file) {
+  const img = el("billImagePreview");
+  if (!img || !file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    img.src = reader.result;
+    img.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extractTextFromImage(file) {
+  try {
+    setOcrStatus("Đang OCR ảnh bill...");
+    const Tesseract = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/+esm");
+    const result = await Tesseract.recognize(file, "eng", {
+      logger: m => {
+        if (m.status === "recognizing text" && typeof m.progress === "number") {
+          setOcrStatus(`Đang OCR ảnh bill... ${Math.round(m.progress * 100)}%`);
+        }
+      }
+    });
+    setOcrStatus("Đã OCR xong ảnh bill.");
+    return result?.data?.text || "";
+  } catch (e) {
+    console.error(e);
+    setOcrStatus("OCR ảnh bị lỗi.");
+    throw new Error("Không OCR được ảnh. Hãy thử ảnh rõ hơn hoặc dán nội dung text.");
+  }
+}
+
+async function extractTextFromFile(file) {
+  if (!file) return "";
+  const name = (file.name || "").toLowerCase();
+  const type = (file.type || "").toLowerCase();
+
+  if (type.startsWith("image/") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".webp")) {
+    showBillImagePreview(file);
+    return await extractTextFromImage(file);
+  }
+
+  if (name.endsWith(".txt") || name.endsWith(".csv") || name.endsWith(".json") || name.endsWith(".log") || name.endsWith(".md") || name.endsWith(".html") || name.endsWith(".htm")) {
+    return await file.text();
+  }
+
+  if (name.endsWith(".pdf")) {
+    try {
+      setOcrStatus("Đang đọc PDF...");
+      const pdfjsLib = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs";
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      let text = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += "\n" + content.items.map(it => it.str).join(" ");
+      }
+      setOcrStatus("Đã đọc xong PDF.");
+      return text;
+    } catch (e) {
+      console.error(e);
+      throw new Error("Không đọc được PDF text. Hãy dùng PDF có text hoặc dán nội dung bill.");
+    }
+  }
+
+  try {
+    return await file.text();
+  } catch {
+    throw new Error("Định dạng file này chưa được hỗ trợ trong bản semi-auto.");
+  }
+}
+
+function normalizeText(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function extractLargestAmount(text) {
+  const raw = String(text || "");
+  const candidates = [];
+
+  function addCandidate(numStr, scoreBase=0) {
+    if (!numStr) return;
+    const cleaned = String(numStr).replace(/[^\d.,]/g, "").replace(/\./g, "").replace(/,/g, "");
+    const n = Number(cleaned);
+    if (!Number.isFinite(n) || n <= 0) return;
+
+    let score = scoreBase;
+
+    // Loại trừ số quá dài kiểu mã giao dịch / reference
+    const digitCount = cleaned.length;
+    if (digitCount >= 13) score -= 100;
+
+    // Ưu tiên khoảng tiền hợp lý cho bill ads
+    if (n >= 1000 && n <= 1000000000) score += 8;
+    if (n > 100000000000) score -= 50;
+
+    candidates.push({ value: n, score, raw: numStr });
+  }
+
+  // 1) Ưu tiên số đi kèm VND/VNĐ/đ
+  const currencyPatterns = [
+    /(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)\s*(?:vnd|vnđ|đ)\b/gi,
+    /(?:vnd|vnđ|đ)\s*(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)/gi
+  ];
+  for (const pattern of currencyPatterns) {
+    let m;
+    while ((m = pattern.exec(raw)) !== null) {
+      addCandidate(m[1], 100);
+    }
+  }
+
+  // 2) Ưu tiên gần các cụm hay gặp trên bill
+  const keywordPatterns = [
+    /(?:so tien|số tiền|tong thanh toan|tổng thanh toán|so tien da lap hoa don|số tiền đã lập hóa đơn)[^\d]{0,20}(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)/gi
+  ];
+  for (const pattern of keywordPatterns) {
+    let m;
+    while ((m = pattern.exec(raw)) !== null) {
+      addCandidate(m[1], 80);
+    }
+  }
+
+  // 3) Dự phòng: các số có format tiền chuẩn
+  const genericMoney = raw.match(/\b\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?\b/g) || [];
+  genericMoney.forEach(v => addCandidate(v, 20));
+
+  // 4) Chỉ fallback số trơn vừa phải, tránh mã dài
+  const plainNums = raw.match(/\b\d{4,12}\b/g) || [];
+  plainNums.forEach(v => addCandidate(v, 0));
+
+  if (!candidates.length) return 0;
+
+  candidates.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return b.value - a.value;
+  });
+
+  return candidates[0].value || 0;
+}
+
+function scoreBankMatch(bank, textNorm) {
+  let score = 0;
+  const bankNum = normalizeText(bank.number || "");
+  const bankName = normalizeText(bank.name || "");
+  if (bankNum && textNorm.includes(bankNum)) score += 12;
+  if (bankName && textNorm.includes(bankName)) score += 6;
+
+  // ưu tiên match số tài khoản dạng tách khoảng trắng
+  const compactNorm = textNorm.replace(/\s+/g, "");
+  const compactBankNum = bankNum.replace(/\s+/g, "");
+  if (compactBankNum && compactNorm.includes(compactBankNum)) score += 10;
+
+  // ưu tiên một số từ khóa bill chuyển khoản phổ biến
+  const transferHints = ["vpbank", "mbbank", "techcombank", "bidv", "vietcombank", "acb", "tpbank"];
+  if (transferHints.some(k => compactNorm.includes(k)) && bankName && compactNorm.includes(bankName.replace(/\s+/g, ""))) score += 4;
+
+  return score;
+}
+
+function scoreAdMatch(ad, textNorm) {
+  let score = 0;
+  if (ad.accountId && textNorm.includes(normalizeText(ad.accountId))) score += 12;
+  if (ad.name && textNorm.includes(normalizeText(ad.name))) score += 7;
+  const bank = data.banks.find(b => b.id === ad.bankId);
+  if (bank?.number && textNorm.includes(normalizeText(bank.number))) score += 5;
+  if (bank?.name && textNorm.includes(normalizeText(bank.name))) score += 3;
+  return score;
+}
+
+function detectTransferBill(textNorm, bestBank) {
+  const transferKeywords = [
+    "da gui thanh cong", "đã gửi thành công", "chuyen tien", "chuyển tiền",
+    "thanh cong", "thành công", "nguoi nhan", "người nhận", "ma giao dich",
+    "mã giao dịch", "loi nhan", "lời nhắn", "thoi gian", "thời gian"
+  ];
+  const hasKeyword = transferKeywords.some(k => textNorm.includes(normalizeText(k)));
+  const hasBankNumber = bestBank?.number && textNorm.includes(normalizeText(bestBank.number));
+  return Boolean(hasKeyword && hasBankNumber);
+}
+
+function findBestBankByRecipient(textNorm) {
+  const bankCandidates = data.banks
+    .map(b => {
+      let score = scoreBankMatch(b, textNorm);
+      const num = normalizeText(b.number || "");
+      const name = normalizeText(b.name || "");
+      if (num && textNorm.includes(num)) score += 20;
+      if (name && textNorm.includes(name)) score += 8;
+      return { ...b, _score: score };
+    })
+    .sort((a,b) => b._score - a._score);
+  return bankCandidates[0] && bankCandidates[0]._score > 0 ? bankCandidates[0] : null;
+}
+
+function renderBillAnalysis(result) {
+  const wrap = el("billAnalysisResult");
+  if (!wrap) return;
+  if (!result) {
+    wrap.innerHTML = ""; setOcrStatus("");
+    return;
+  }
+  const { amount, fee, total, bestBank, bestAd, rawTextPreview, mode } = result;
+
+  const summary = mode === "transfer"
+    ? `Tiền bill: ${amount ? money(amount) : "Chưa đọc được"} · Hệ thống nhận diện đây là bill chuyển khoản đến tài khoản nhận`
+    : `Tiền bill: ${amount ? money(amount) : "Chưa đọc được"} · Phí thẻ: ${money(fee)} · Tổng trừ ngân hàng: ${money(total)}`;
+
+  const bankHtml = bestBank ? `
+    <div class="match-card">
+      <div class="match-title">Ngân hàng gợi ý: ${escapeHtml(bestBank.name)}</div>
+      <div class="match-meta">${escapeHtml(bestBank.number || "Chưa có số tài khoản")} · Độ khớp ${bestBank._score}</div>
+      ${mode === "transfer" ? `<div class="row"><button id="btnApplyBillDeposit">Ghi nhận nạp vào tài khoản này</button></div>` : ``}
+    </div>` : `<div class="match-card"><div class="match-title">Chưa tìm được ngân hàng phù hợp</div></div>`;
+
+  const adHtml = mode === "payment"
+    ? (bestAd ? `
+      <div class="match-card">
+        <div class="match-title">Tài khoản QC gợi ý: ${escapeHtml(bestAd.name)}</div>
+        <div class="match-meta">${escapeHtml(bestAd.accountId || "Chưa có mã")} · Độ khớp ${bestAd._score}</div>
+        <div class="row"><button id="btnApplyBillMatch">Ghi nhận thanh toán vào tài khoản này</button></div>
+      </div>` : `<div class="match-card"><div class="match-title">Chưa tìm được tài khoản QC phù hợp</div></div>`)
+    : `<div class="match-card"><div class="match-title">Loại bill: Chuyển khoản nạp tiền</div><div class="match-meta">Số tiền bill sẽ được cộng vào số dư ngân hàng nhận.</div></div>`;
+
+  wrap.innerHTML = `
+    <div class="match-card">
+      <div class="match-title">Kết quả đọc bill</div>
+      <div class="match-meta">${summary}</div>
+    </div>
+    ${bankHtml}
+    ${adHtml}
+    <div class="match-card">
+      <div class="match-title">Nội dung nhận diện</div>
+      <div class="match-meta">${escapeHtml((rawTextPreview || "").slice(0, 1200))}</div>
+    </div>`;
+
+  const btnPay = el("btnApplyBillMatch");
+  if (btnPay && bestAd && total > 0) {
+    btnPay.onclick = () => applyBillMatch(bestAd.id, amount, total, fee);
+  }
+  const btnDeposit = el("btnApplyBillDeposit");
+  if (btnDeposit && bestBank && amount > 0) {
+    btnDeposit.onclick = () => applyBillDeposit(bestBank.id, amount);
+  }
+}
+
+function applyBillMatch(adAccountId, rawAmount, totalAmount, fee) {
+  data.transactions.unshift({
+    id: uid(),
+    type: "ad_payment",
+    adAccountId,
+    amount: totalAmount,
+    rawAmount,
+    fee,
+    feePercent: data.settings?.cardFeePercent || 0,
+    note: "Tự nhận diện từ bill",
+    createdAt: new Date().toISOString()
+  });
+  persist();
+  addSyncLog("Đã ghi nhận bill vào tài khoản QC phù hợp");
+  renderBillAnalysis(null);
+  clearBillInputState();
+}
+
+async function analyzeBill() {
+  try {
+    const manualText = el("billTextInput").value.trim();
+    const file = pastedBillImageFile || el("billFile").files?.[0];
+    let text = manualText;
+    if (!text && file) text = await extractTextFromFile(file);
+    if (!text) return alert("Chọn file hoặc dán nội dung bill trước.");
+    const textNorm = normalizeText(text);
+    const amount = extractLargestAmount(text);
+
+    const bestBank = findBestBankByRecipient(textNorm);
+    const mode = detectTransferBill(textNorm, bestBank) ? "transfer" : "payment";
+
+    const feePercent = getCardFeePercent();
+    const fee = mode === "payment" ? Math.round(amount * feePercent / 100) : 0;
+    const total = mode === "payment" ? amount + fee : amount;
+
+    const adCandidates = data.adAccounts
+      .map(a => ({ ...a, _score: scoreAdMatch(a, textNorm) }))
+      .sort((a,b) => b._score - a._score);
+    const bestAd = mode === "payment" && adCandidates[0] && adCandidates[0]._score > 0 ? adCandidates[0] : null;
+
+    renderBillAnalysis({ amount, fee, total, bestBank, bestAd, rawTextPreview: text, mode });
+    addSyncLog(mode === "transfer" ? "Đã phân tích bill chuyển khoản" : "Đã phân tích bill thanh toán");
+  } catch (e) {
+    console.error(e);
+    alert(e?.message || "Không phân tích được bill.");
+  }
+}
 async function scheduleCloudSave() {
   if (!db || isApplyingRemote) return;
   clearTimeout(autoSaveTimer);
-  setSyncIndicator("loading", "Đang chờ lưu...");
   autoSaveTimer = setTimeout(async () => {
     try {
-      setSyncIndicator("loading", "Đang lưu cloud...");
       const ref = await getLegacyCloudRef();
       await setDoc(ref, { payload: data, updatedAt: serverTimestamp() });
       showStatus("Đã tự động lưu cloud.");
-      addSyncLog("Đã tự động lưu cloud");
     } catch (e) {
       console.error(e);
       showStatus("Lỗi auto sync cloud.", true);
-      addSyncLog("Lỗi auto sync cloud");
     }
   }, 500);
 }
@@ -627,11 +941,9 @@ async function connectFirebase() {
     db = getFirestore(app);
     localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
     localStorage.setItem(WORKSPACE_KEY, workspaceId);
-    setSyncIndicator("loading", "Đang kết nối cloud...");
     await pullCloud();
     setupRealtimeSync();
     showStatus("Đã kết nối cloud. Realtime sync đang bật.");
-    addSyncLog("Đã kết nối cloud");
   } catch (e) {
     console.error(e);
     showStatus(e?.message || "Không kết nối được Firebase.", true);
@@ -662,10 +974,8 @@ function applyIncomingData(incoming, statusMsg) {
 async function pushCloud() {
   if (!db) return alert("Kết nối cloud trước.");
   const legacyRef = await getLegacyCloudRef();
-  setSyncIndicator("loading", "Đang đẩy cloud...");
   await setDoc(legacyRef, { payload: data, updatedAt: serverTimestamp() });
   showStatus("Đã đẩy dữ liệu lên cloud.");
-  addSyncLog("Đã đẩy dữ liệu lên cloud");
 }
 async function pullCloud() {
   if (!db) return alert("Kết nối cloud trước.");
@@ -675,19 +985,16 @@ async function pullCloud() {
     const raw = legacySnap.data() || {};
     const incoming = raw.payload ? raw.payload : raw;
     applyIncomingData(incoming, "Đã tải dữ liệu cũ từ cloud.");
-    addSyncLog("Đã tải dữ liệu cũ từ cloud");
     return;
   }
   const currentRef = await getCurrentCloudRef();
   const currentSnap = await getDoc(currentRef);
   if (currentSnap.exists()) {
     applyIncomingData(currentSnap.data() || {}, "Đã tải dữ liệu từ cloud.");
-    addSyncLog("Đã tải dữ liệu từ cloud");
     return;
   }
   await setDoc(legacyRef, { payload: data, updatedAt: serverTimestamp() });
   showStatus("Cloud mới được tạo. Dữ liệu hiện tại đã được lưu lên.");
-  addSyncLog("Cloud mới được tạo");
 }
 async function setupRealtimeSync() {
   if (!db) return;
@@ -706,12 +1013,10 @@ async function setupRealtimeSync() {
     });
     if (incomingJson !== currentJson) {
       applyIncomingData(incoming, "Đã đồng bộ realtime từ cloud.");
-      addSyncLog("Đã cập nhật từ thiết bị khác");
     }
   }, (err) => {
     console.error(err);
     showStatus("Realtime sync bị lỗi.", true);
-    addSyncLog("Realtime sync bị lỗi");
   });
 }
 function addBank() {
@@ -851,7 +1156,6 @@ async function autoConnectIfConfigured() {
     await pullCloud();
     await setupRealtimeSync();
     showStatus("Đã tự động kết nối cloud thành công. Realtime sync đang bật.");
-    addSyncLog("Đã tự động kết nối cloud");
   } catch (e) {
     console.error(e);
     showStatus(e?.message || "Không tự động kết nối được Firebase.", true);
@@ -886,27 +1190,47 @@ el("btnCloseBankModal").addEventListener("click", closeBankModal);
 el("btnCloseAdModal").addEventListener("click", closeAdModal);
 el("btnSaveBankEdit").addEventListener("click", saveBankEdit);
 el("btnSaveAdEdit").addEventListener("click", saveAdEdit);
-document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => setSection(btn.dataset.section)));
-window.addEventListener("offline", () => {
-  setSyncIndicator("offline", "Mất kết nối");
-  addSyncLog("Mất kết nối internet");
-});
-window.addEventListener("online", () => {
-  setSyncIndicator("loading", "Đã online, đang đồng bộ...");
-  addSyncLog("Đã online trở lại");
-  if (db) {
-    pullCloud().catch(() => {});
-    setupRealtimeSync().catch(() => {});
+el("btnAnalyzeBill").addEventListener("click", analyzeBill);
+el("btnClearBillInput").addEventListener("click", clearBillInputState);
+el("billFile").addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  pastedBillImageFile = null;
+  if (file && ((file.type || "").startsWith("image/") || /\.(png|jpg|jpeg|webp)$/i.test(file.name || ""))) {
+    showBillImagePreview(file);
+    setOcrStatus("Ảnh đã chọn. Bấm Phân tích bill để OCR.");
+  } else if (file) {
+    if (el("billImagePreview")) {
+      el("billImagePreview").style.display = "none";
+      el("billImagePreview").src = "";
+    }
+    setOcrStatus("File đã chọn. Bấm Phân tích bill.");
   }
 });
-
+["billTextInput", "billPasteZone"].forEach(id => {
+  const node = el(id);
+  if (!node) return;
+  node.addEventListener("paste", (e) => {
+    const items = e.clipboardData?.items || [];
+    for (const item of items) {
+      if (item.type && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          pastedBillImageFile = new File([file], "pasted-bill.png", { type: file.type || "image/png" });
+          showBillImagePreview(pastedBillImageFile);
+          setOcrStatus("Đã dán ảnh bill. Bấm Phân tích bill để OCR.");
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+  });
+});
+document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => setSection(btn.dataset.section)));
 renderMobileNav();
 el("mobileSectionSelect").addEventListener("change", (e) => setSection(e.target.value));
 
 bootSavedConfig();
-setSyncIndicator("loading", "Đang khởi tạo...");
 showStatus("Đang chuẩn bị kết nối cloud...");
-renderSyncLog();
 render();
 autoConnectIfConfigured();
 </script>
