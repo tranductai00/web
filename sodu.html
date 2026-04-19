@@ -93,6 +93,8 @@
     .filter-tab{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
     .filter-tab.active{background:#eef4ff;color:#315db6;border-color:#cfe0ff}
     .tx-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .upload-status{padding:10px 12px;border:1px dashed var(--line);border-radius:12px;background:#f8fbff;color:var(--muted);font-size:13px;margin-top:8px}
+    .paste-zone{border:1px dashed #c9d7f2;border-radius:14px;padding:12px;background:#f8fbff;color:var(--muted)}
     @media (max-width:1100px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-2{grid-template-columns:1fr}
@@ -102,6 +104,8 @@
       .sidebar{display:none}
       .mobile-nav{display:block}
     }
+
+    
     @media (max-width:640px){
       .content{padding:14px}
       .grid-4{grid-template-columns:1fr}
@@ -136,7 +140,7 @@
     <div class="topbar">
       <div>
         <h1>Quản lý số dư Facebook Ads</h1>
-        <div class="sub">Tự động đẩy dữ liệu lên cloud sau khi điền và đồng bộ realtime giữa các thiết bị.</div>
+        <div class="sub">Tự động đẩy dữ liệu lên cloud sau khi điền và đồng bộ realtime giữa các thiết bị. Ưu tiên hiển thị số dư hiện tại và đọc bill Meta chính xác hơn.</div>
       </div>
       <div class="actions">
         <button class="secondary" id="btnPullTop">Lấy dữ liệu</button>
@@ -260,14 +264,13 @@
           <div class="field">
             <label>Chọn file bill / hóa đơn</label>
             <input id="billFile" type="file" accept=".txt,.pdf,.csv,.json,.log,.md,.html,.htm,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*" />
-            <div class="ocr-status">Đã tối ưu đọc ảnh chụp màn hình, ảnh scan, JPG/PNG/WebP. Ảnh càng rõ thì đọc ID giao dịch càng chính xác.</div>
+            <div class="ocr-status">Đã tối ưu đọc ảnh chụp màn hình, ảnh scan, JPG/PNG/WebP. Bill Meta sẽ ưu tiên ID giao dịch dạng dài có dấu gạch (-). Hệ thống đã ưu tiên lấy giá trị nằm dưới dòng "ID giao dịch", bỏ qua số tài khoản quảng cáo trong ngoặc, và tăng độ chính xác OCR ảnh.</div>
           </div>
           <div class="field">
             <label>Dán text hoặc dán ảnh trực tiếp</label>
             <textarea id="billTextInput" placeholder="Dán nội dung bill / hóa đơn vào đây hoặc bấm vào đây rồi Ctrl+V ảnh..."></textarea>
-            <div id="billPasteZone" class="paste-zone">Có thể dán ảnh trực tiếp vào đây mà không cần tải lên</div>
-            <img id="billImagePreview" class="bill-preview" style="display:none" />
-            <div id="ocrStatus" class="ocr-status"></div>
+            <div id="billPasteZone" class="paste-zone">Có thể dán ảnh trực tiếp vào đây mà không cần tải lên. Ảnh sẽ không hiển thị preview để giao diện gọn hơn.</div>
+            <div id="ocrStatus" class="upload-status">Chưa có bill nào được tải lên.</div>
           </div>
         </div>
         <div class="row" style="margin-top:12px">
@@ -358,6 +361,8 @@
     </div>
     <div class="row" style="margin-top:14px"><button id="btnSaveTxEdit">Lưu thay đổi</button></div>
   </div>
+</div>
+
 </div>
 
 <script type="module">
@@ -529,28 +534,20 @@ function clearBillInputState() {
   pastedBillImageFile = null;
   if (el("billFile")) el("billFile").value = "";
   if (el("billTextInput")) el("billTextInput").value = "";
-  if (el("billImagePreview")) {
-    el("billImagePreview").src = "";
-    el("billImagePreview").style.display = "none";
-  }
-  setOcrStatus("");
+  setOcrStatus("Chưa có bill nào được tải lên.");
   renderBillAnalysis(null);
 }
 
 function showBillImagePreview(file) {
-  const img = el("billImagePreview");
-  if (!img || !file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    img.src = reader.result;
-    img.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+  const name = file?.name || "bill";
+  setOcrStatus(`✅ Đã tải bill thành công: ${name}`);
 }
+
+
 
 async function extractTextFromImage(file) {
   try {
-    setOcrStatus("Đang OCR ảnh bill...");
+    setOcrStatus("🧠 Đang phân tích ảnh bill...");
     const Tesseract = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/+esm");
 
     const img = new Image();
@@ -562,7 +559,7 @@ async function extractTextFromImage(file) {
     });
 
     const canvas = document.createElement("canvas");
-    const scale = Math.max(2, Math.min(3, 1600 / Math.max(img.width, 1)));
+    const scale = Math.max(3, Math.min(4, 2200 / Math.max(img.width, 1)));
     canvas.width = Math.max(1, Math.round(img.width * scale));
     canvas.height = Math.max(1, Math.round(img.height * scale));
     const ctx = canvas.getContext("2d");
@@ -572,7 +569,7 @@ async function extractTextFromImage(file) {
     const d = imageData.data;
     for (let i = 0; i < d.length; i += 4) {
       const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      const v = gray > 145 ? 255 : 0;
+      const v = gray > 135 ? 255 : 0;
       d[i] = d[i + 1] = d[i + 2] = v;
     }
     ctx.putImageData(imageData, 0, 0);
@@ -585,11 +582,11 @@ async function extractTextFromImage(file) {
       }
     });
     URL.revokeObjectURL(blobUrl);
-    setOcrStatus("Đã OCR xong ảnh bill.");
+    setOcrStatus("✅ Đã phân tích xong bill.");
     return result?.data?.text || "";
   } catch (e) {
     console.error(e);
-    setOcrStatus("OCR ảnh bị lỗi.");
+    setOcrStatus("❌ OCR ảnh bị lỗi.");
     throw new Error("Không OCR được ảnh. Hãy thử ảnh rõ hơn hoặc dán nội dung text.");
   }
 }
@@ -610,7 +607,7 @@ async function extractTextFromFile(file) {
 
   if (name.endsWith(".pdf")) {
     try {
-      setOcrStatus("Đang đọc PDF...");
+      setOcrStatus("🧠 Đang phân tích PDF bill...");
       const pdfjsLib = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs");
       pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs";
       const buf = await file.arrayBuffer();
@@ -621,7 +618,7 @@ async function extractTextFromFile(file) {
         const content = await page.getTextContent();
         text += "\n" + content.items.map(it => it.str).join(" ");
       }
-      setOcrStatus("Đã đọc xong PDF.");
+      setOcrStatus("✅ Đã phân tích xong PDF bill.");
       return text;
     } catch (e) {
       console.error(e);
@@ -714,22 +711,71 @@ function scoreAdMatch(ad, textNorm) {
 
 function extractTransactionId(text) {
   const raw = String(text || "");
+  const flat = raw.replace(/\s+/g, " ");
 
-  const labeledPatterns = [
-    /(?:id giao dich|id giao dịch|ma giao dich|mã giao dịch|transaction id|reference|ref no|ref|so tham chieu|số tham chiếu)[:\s#-]*([A-Z0-9\-_.]{6,80})/i,
-  ];
-  for (const p of labeledPatterns) {
-    const m = raw.match(p);
-    if (m && m[1]) return m[1];
+  function clean(v) {
+    return String(v || "").trim().replace(/^[^A-Z0-9]+/i, "").replace(/[^A-Z0-9\-_.]+$/i, "");
   }
 
-  // Ưu tiên chuỗi số dài ở gần chữ ID giao dịch
-  const nearby = raw.match(/id giao d(?:i|ị)ch[\s\S]{0,60}?(\d{12,40}(?:-\d{6,40})?)/i);
-  if (nearby && nearby[1]) return nearby[1];
+  function looksLikeAdAccountId(v) {
+    const s = clean(v);
+    if (!s) return false;
+    if (/^\d{10,20}$/.test(s)) {
+      if (new RegExp(`giao dich cua[^\\n]{0,120}\\(${s}\\)`, "i").test(raw)) return true;
+      if (new RegExp(`vh\\s*\\d+[^\\n]{0,120}\\(${s}\\)`, "i").test(raw)) return true;
+      if (new RegExp(`\\(${s}\\)`).test(raw)) return true;
+    }
+    return false;
+  }
 
-  // Chuỗi FT hoặc mã tham chiếu chữ+số
-  const generic = raw.match(/\b(FT\d{6,40}|[A-Z]{2,10}\d{6,40}|[A-Z0-9]{8,30})\b/);
-  if (generic && generic[1]) return generic[1];
+  function isValidTx(v) {
+    const s = clean(v);
+    if (!s) return false;
+    if (s.length < 8) return false;
+    if (looksLikeAdAccountId(s)) return false;
+    return true;
+  }
+
+  // 1. Ưu tiên bill Meta: ngay sau chữ "ID giao dịch", trong phạm vi gần
+  const idx = flat.toLowerCase().indexOf("id giao");
+  if (idx >= 0) {
+    const win = flat.slice(idx, idx + 240);
+
+    // Ưu tiên mã có dấu gạch nối, rất hay gặp ở Meta
+    let m = win.match(/\d{10,40}-\d{6,40}/);
+    if (m && isValidTx(m[0])) return clean(m[0]);
+
+    // Sau đó tới chuỗi chữ-số có dấu gạch
+    m = win.match(/[A-Z0-9]{6,50}-[A-Z0-9\-]{4,80}/i);
+    if (m && isValidTx(m[0])) return clean(m[0]);
+
+    // Rồi mới lấy số dài
+    const longs = win.match(/\d{12,50}/g) || [];
+    const filteredLongs = longs.filter(v => !looksLikeAdAccountId(v)).sort((a, b) => b.length - a.length);
+    if (filteredLongs.length) return clean(filteredLongs[0]);
+  }
+
+  // 2. Cùng dòng / gần nhãn
+  const sameLinePatterns = [
+    /(?:id giao dich|id giao dịch|ma giao dich|mã giao dịch|transaction id|reference|ref no|ref|so tham chieu|số tham chiếu)\s*[:#-]?\s*([A-Z0-9][A-Z0-9\-_.]{6,120})/i
+  ];
+  for (const p of sameLinePatterns) {
+    const m = raw.match(p);
+    if (m && m[1] && isValidTx(m[1])) return clean(m[1]);
+  }
+
+  // 3. Fallback toàn bộ text: ưu tiên mã có dấu gạch
+  const allDashed = flat.match(/\d{10,40}-\d{6,40}/g) || [];
+  const goodDashed = allDashed.filter(isValidTx).sort((a, b) => b.length - a.length);
+  if (goodDashed.length) return clean(goodDashed[0]);
+
+  const allGeneric = flat.match(/\b(FT\d{6,40}|[A-Z]{2,10}\d{6,40}|[A-Z0-9]{8,30})\b/g) || [];
+  const goodGeneric = allGeneric.filter(isValidTx).sort((a, b) => b.length - a.length);
+  if (goodGeneric.length) return clean(goodGeneric[0]);
+
+  const allLong = flat.match(/\d{12,50}/g) || [];
+  const goodLong = allLong.filter(isValidTx).sort((a, b) => b.length - a.length);
+  if (goodLong.length) return clean(goodLong[0]);
 
   return "";
 }
@@ -822,6 +868,7 @@ function renderBillAnalysis(result) {
     <div class="match-card">
       <div class="match-title">Kết quả đọc bill</div>
       <div class="match-meta">${summary}</div>
+      <div class="match-meta">Loại bill: ${mode === "transfer" ? "Chuyển khoản ngân hàng" : "Hóa đơn / thanh toán Meta"}</div>
     </div>
     ${bankHtml}
     ${adHtml}
@@ -1371,15 +1418,8 @@ el("btnClearBillInput").addEventListener("click", clearBillInputState);
 el("billFile").addEventListener("change", (e) => {
   const file = e.target.files?.[0];
   pastedBillImageFile = null;
-  if (file && ((file.type || "").startsWith("image/") || /\.(png|jpg|jpeg|webp)$/i.test(file.name || ""))) {
+  if (file) {
     showBillImagePreview(file);
-    setOcrStatus("Ảnh đã chọn. Bấm Phân tích bill để OCR.");
-  } else if (file) {
-    if (el("billImagePreview")) {
-      el("billImagePreview").style.display = "none";
-      el("billImagePreview").src = "";
-    }
-    setOcrStatus("File đã chọn. Bấm Phân tích bill.");
   }
 });
 ["billTextInput", "billPasteZone"].forEach(id => {
@@ -1393,7 +1433,7 @@ el("billFile").addEventListener("change", (e) => {
         if (file) {
           pastedBillImageFile = new File([file], "pasted-bill.png", { type: file.type || "image/png" });
           showBillImagePreview(pastedBillImageFile);
-          setOcrStatus("Đã dán ảnh bill. Bấm Phân tích bill để OCR.");
+          setOcrStatus("✅ Đã nhận ảnh từ clipboard.");
           e.preventDefault();
           return;
         }
@@ -1407,6 +1447,7 @@ renderMobileNav();
 el("mobileSectionSelect").addEventListener("change", (e) => setSection(e.target.value));
 
 bootSavedConfig();
+setOcrStatus("Chưa có bill nào được tải lên.");
 showStatus("Đang chuẩn bị kết nối cloud...");
 render();
 autoConnectIfConfigured();
