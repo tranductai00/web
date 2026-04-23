@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>XỬ LÍ ĐƠN HÀNG BY TAIDEPTRAI</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <meta property="og:title" content="T Order Processor">
-  <meta property="og:description" content="Xử lý đơn hàng tự động">
+  <meta property="og:title" content="T Đ T">
+  <meta property="og:description" content="XỬ LÍ ĐƠN HÀNG BY TAIDEPTRAI">
   <meta property="og:image" content="preview.png">
   <meta property="og:type" content="website">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -162,7 +162,7 @@
     }
     html[data-theme="dark"] .compare-wrap{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.10)}
     .compare-scroll{overflow:auto; max-height:620px}
-    .compare-table{width:100%; border-collapse:collapse; min-width:1400px; font-size:13px}
+    .compare-table{width:100%; border-collapse:collapse; min-width:1560px; font-size:13px}
     .compare-table th,.compare-table td{border:2px solid var(--table-border); padding:8px 10px; text-align:center; vertical-align:middle}
     .compare-table thead th{background:#f3f3f3; font-weight:900; font-size:15px}
     html[data-theme="dark"] .compare-table thead th{background:#131d30}
@@ -304,7 +304,7 @@
         <div class="logo">T</div>
         <div>
           <div class="brand-title">T Đ T</div>
-          <h1>Xử lí đơn hàng</h1>
+          <h1>XỬ LÍ ĐƠN HÀNG</h1>
         </div>
       </div>
       <button id="themeToggle" class="mode-toggle" type="button">
@@ -318,7 +318,7 @@
     <div class="card main-card">
       <div class="hero" id="section-upload">
         <h2>Xử lí nhanh trong 1 nốt nhạc</h2>
-        <p>0 Cko tk Toan dung caj nay,, lewlew.</p>
+        <p>0 Cko tk Toan dung caj nay,, lewlew..</p>
       </div>
 
       <div class="drop-shell">
@@ -343,6 +343,7 @@
               </label>
             </div>
             <div class="upload-tip">Bấm icon, nút chọn file hoặc kéo thả file vào đây.</div>
+            <div class="upload-tip">@tranductai.</div>
 
             <div id="selectedFiles" class="selected-files"></div>
 
@@ -382,8 +383,8 @@
       <div id="stats" class="stats" style="display:none">
         <div class="stat"><div class="stat-label">Số file</div><div id="statFiles" class="stat-value">0</div></div>
         <div class="stat"><div class="stat-label">Số mã sản phẩm</div><div id="statProducts" class="stat-value">0</div></div>
-        <div class="stat"><div class="stat-label">Tổng SL A</div><div id="statOrdersA" class="stat-value">0</div></div>
-        <div class="stat"><div class="stat-label">Tổng SL B</div><div id="statOrdersB" class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Tổng đơn A</div><div id="statOrdersA" class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Tổng đơn B</div><div id="statOrdersB" class="stat-value">0</div></div>
       </div>
 
       <div id="section-preview" class="compare-shell" style="display:none">
@@ -395,7 +396,7 @@
             </table>
           </div>
         </div>
-        <div class="section-note">Nếu bạn xử lý 1 file, bảng xem trước sẽ là tổng hợp chuẩn. Nếu xử lý từ 2 file trở lên, bảng xem trước sẽ là bảng so sánh.</div>
+        <div class="section-note">Tổng đơn: tất cả trạng thái; Đã gửi: Đã nhận + Đã hoàn; Đã nhận: Đã nhận; Đã hoàn: hoàn + đang hoàn + huỷ; Mới: nhóm trạng thái chưa xử lý.</div>
       </div>
       <div class="credit">@tranductai</div>
     </div>
@@ -427,7 +428,7 @@
         <div class="cat-whiskers left"><span></span><span></span><span></span></div>
         <div class="cat-whiskers right"><span></span><span></span><span></span></div>
       </div>
-      <div class="splash-title">TRẦN ĐỨC TÀI</div>
+      <div class="splash-title">TRAN DUC TAI</div>
       <div class="splash-subtitle">Mèo Zo đang chạy khởi động...</div>
     </div>
   </div>
@@ -465,6 +466,67 @@
 
   function normalizeKey(v){ return String(v ?? '').trim(); }
   function normalizeStatus(v){ return String(v ?? '').trim().toLowerCase(); }
+
+
+  function escapeHtml(value){
+    return String(value ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  function suggestLabel(filename){
+    const clean = String(filename || '').replace(/\.xlsx?$/i, '').trim();
+    return clean.slice(0, 30) || 'Kỳ dữ liệu';
+  }
+
+  function renderSelectedFiles(){
+    selectedFilesEl.innerHTML = '';
+
+    selectedFiles.forEach((file, idx) => {
+      const pill = document.createElement('div');
+      pill.className = 'pill';
+      pill.innerHTML = `
+        <svg viewBox="0 0 24 24">
+          <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"></path>
+          <path d="M14 5h5v5"></path>
+          <path d="M10 14 19 5"></path>
+        </svg>
+        <span>${idx + 1}. ${escapeHtml(file.name)}</span>
+      `;
+      selectedFilesEl.appendChild(pill);
+    });
+
+    if(selectedFiles[0] && !labelAInput.value.trim()){
+      labelAInput.value = suggestLabel(selectedFiles[0].name);
+    }
+    if(selectedFiles[1] && !labelBInput.value.trim()){
+      labelBInput.value = suggestLabel(selectedFiles[1].name);
+    }
+  }
+
+  function setFiles(fileList){
+    selectedFiles = Array.from(fileList || []);
+    hideMessages();
+    stats.style.display = 'none';
+    previewWrap.style.display = 'none';
+    compareHead.innerHTML = '';
+    compareBody.innerHTML = '';
+    lastDownloadBlob = null;
+    lastDownloadName = '';
+    renderSelectedFiles();
+
+    const metaForm = document.getElementById('metaForm');
+    if(metaForm){
+      metaForm.style.display = selectedFiles.length >= 2 ? 'grid' : 'none';
+    }
+
+    if(selectedFiles.length){
+      showOk(`Đã chọn ${selectedFiles.length} file. Bấm "Xử lý file" để tiếp tục.`);
+    }
+  }
 
   function setActiveTab(tab){
     [tabUpload, tabPreview, tabDownload].forEach(t => t.classList.remove('active'));
@@ -513,12 +575,37 @@
     return Object.entries(freq).sort((a,b) => b[1]-a[1] || a[0].length-b[0].length)[0][0];
   }
 
+  function normalizeHeader(value){
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
   function findColumn(columns, candidates){
-    const map = new Map(columns.map(c => [String(c).trim().toLowerCase(), c]));
-    for(const c of candidates){
-      const found = map.get(c.toLowerCase());
-      if(found) return found;
+    const normalizedColumns = columns.map(col => ({
+      raw: col,
+      norm: normalizeHeader(col)
+    }));
+
+    const normalizedCandidates = candidates.map(c => normalizeHeader(c));
+
+    // exact normalized match first
+    for(const candidate of normalizedCandidates){
+      const exact = normalizedColumns.find(col => col.norm === candidate);
+      if(exact) return exact.raw;
     }
+
+    // contains match as fallback
+    for(const candidate of normalizedCandidates){
+      const contains = normalizedColumns.find(col => col.norm.includes(candidate) || candidate.includes(col.norm));
+      if(contains) return contains.raw;
+    }
+
     return null;
   }
 
@@ -526,17 +613,50 @@
     if(!rows.length) throw new Error('File không có dữ liệu.');
 
     const columns = Object.keys(rows[0] || {});
-    const productCodeCol = findColumn(columns, ['Mã sản phẩm','Ma san pham','SKU','Product Code','Mã SP']);
-    const productNameCol = findColumn(columns, ['Tên sản phẩm','Ten san pham','Product Name','Tên SP']);
-    const orderCodeCol = findColumn(columns, ['Mã đơn','Mã đơn hàng','Ma don','Ma don hang','Order ID','Order Code']);
-    const statusCol = findColumn(columns, ['Trạng thái','Trang thai','Status','Tình trạng']);
+    const productCodeCol = findColumn(columns, [
+      'Mã sản phẩm','Ma san pham','SKU','Product Code','Mã SP','Ma SP','Mã hàng','Ma hang','Mã SKU'
+    ]);
+    const productNameCol = findColumn(columns, [
+      'Tên sản phẩm','Ten san pham','Product Name','Tên SP','Ten SP','Sản phẩm','San pham','Tên hàng','Ten hang'
+    ]);
+    const orderCodeCol = findColumn(columns, [
+      'Mã đơn','Mã đơn hàng','Ma don','Ma don hang','Order ID','Order Code','Mã DH','Ma DH','Mã vận đơn','Ma van don'
+    ]);
+    const statusCol = findColumn(columns, [
+      'Trạng thái','Trang thai','Status','Tình trạng','Tinh trang','Trạng thái đơn','Trang thai don'
+    ]);
 
     if(!productCodeCol || !orderCodeCol || !statusCol){
-      throw new Error('Không tìm thấy đủ cột bắt buộc. Cần có ít nhất: Mã sản phẩm, Mã đơn hàng, Trạng thái.');
+      throw new Error('Không tìm thấy đủ cột bắt buộc. Cần có ít nhất: Mã sản phẩm, Mã đơn/Mã đơn hàng, Trạng thái. Website đã tự nhận nhiều biến thể tên cột nhưng file này vẫn chưa khớp.');
     }
 
-    const RECEIVED = new Set([normalizeStatus('Đã nhận')]);
-    const RETURNED = new Set([normalizeStatus('Đang hoàn'), normalizeStatus('Đã hoàn')]);
+    const STATUS_RECEIVED = new Set([
+      normalizeStatus('Đã nhận')
+    ]);
+
+    const STATUS_RETURNED = new Set([
+      normalizeStatus('Đã hoàn'),
+      normalizeStatus('Đang hoàn'),
+      normalizeStatus('Đã huỷ'),
+      normalizeStatus('Đã hủy')
+    ]);
+
+    const STATUS_NEW = new Set([
+      normalizeStatus('Mới'),
+      normalizeStatus('Chờ in'),
+      normalizeStatus('Đã in'),
+      normalizeStatus('Đã xác nhận'),
+      normalizeStatus('Đang đóng hàng')
+    ]);
+
+    const STATUS_SHIPPED = new Set([
+      normalizeStatus('Đã gửi hàng'),
+      normalizeStatus('Đang hoàn'),
+      normalizeStatus('Đã hoàn'),
+      normalizeStatus('Đã huỷ'),
+      normalizeStatus('Đã hủy'),
+      normalizeStatus('Đã nhận')
+    ]);
 
     const grouped = new Map();
 
@@ -547,15 +667,17 @@
       const productName = productNameCol ? row[productNameCol] : '';
 
       if(!productCode || !orderCode) continue;
+      if(!status) continue;
 
       if(!grouped.has(productCode)){
         grouped.set(productCode, {
           productCode,
           productNames: [],
           totalOrders: new Set(),
+          newOrders: new Set(),
+          shippedOrders: new Set(),
           receivedOrders: new Set(),
-          returnedOrders: new Set(),
-          shippedOrders: new Set()
+          returnedOrders: new Set()
         });
       }
 
@@ -563,30 +685,29 @@
       item.productNames.push(productName);
       item.totalOrders.add(orderCode);
 
-      if(RECEIVED.has(status)) item.receivedOrders.add(orderCode);
-      if(RETURNED.has(status)) item.returnedOrders.add(orderCode);
-      item.shippedOrders.add(orderCode);
+      if(STATUS_NEW.has(status)) item.newOrders.add(orderCode);
+      if(STATUS_SHIPPED.has(status)) item.shippedOrders.add(orderCode);
+      if(STATUS_RECEIVED.has(status)) item.receivedOrders.add(orderCode);
+      if(STATUS_RETURNED.has(status)) item.returnedOrders.add(orderCode);
     }
 
     const summary = Array.from(grouped.values())
-      .map(item => {
-        const total = item.totalOrders.size;
-        const shipped = Math.min(item.shippedOrders.size, total);
-        return {
-          code: item.productCode,
-          name: pickRepresentativeName(item.productNames),
-          total: total,
-          shipped: shipped,
-          received: item.receivedOrders.size,
-          returned: item.returnedOrders.size
-        };
-      })
+      .map(item => ({
+        code: item.productCode,
+        name: pickRepresentativeName(item.productNames),
+        total: item.totalOrders.size,
+        newCount: item.newOrders.size,
+        shipped: item.shippedOrders.size,
+        received: item.receivedOrders.size,
+        returned: item.returnedOrders.size
+      }))
       .filter(r => r.total > 0)
       .sort((a,b) =>
         (b.total - a.total) ||
         (b.shipped - a.shipped) ||
         (b.received - a.received) ||
         (b.returned - a.returned) ||
+        (b.newCount - a.newCount) ||
         String(a.code).localeCompare(String(b.code), 'vi')
       );
 
@@ -596,6 +717,7 @@
       map,
       totals: {
         total: summary.reduce((acc, r) => acc + r.total, 0),
+        newCount: summary.reduce((acc, r) => acc + r.newCount, 0),
         shipped: summary.reduce((acc, r) => acc + r.shipped, 0),
         received: summary.reduce((acc, r) => acc + r.received, 0),
         returned: summary.reduce((acc, r) => acc + r.returned, 0)
@@ -610,8 +732,8 @@
     ]));
 
     const rows = unionCodes.map(code => {
-      const l = left.map.get(code) || { code, name:'', total:0, shipped:0, received:0, returned:0 };
-      const r = right.map.get(code) || { code, name:'', total:0, shipped:0, received:0, returned:0 };
+      const l = left.map.get(code) || { code, name:'', total:0, newCount:0, shipped:0, received:0, returned:0 };
+      const r = right.map.get(code) || { code, name:'', total:0, newCount:0, shipped:0, received:0, returned:0 };
       return {
         code,
         name: l.name || r.name || '',
@@ -625,6 +747,7 @@
       ((b.left.shipped + b.right.shipped) - (a.left.shipped + a.right.shipped)) ||
       ((b.left.received + b.right.received) - (a.left.received + a.right.received)) ||
       ((b.left.returned + b.right.returned) - (a.left.returned + a.right.returned)) ||
+      ((b.left.newCount + b.right.newCount) - (a.left.newCount + a.right.newCount)) ||
       String(a.code).localeCompare(String(b.code), 'vi')
     );
 
@@ -637,10 +760,11 @@
         <th class="head-main">STT</th>
         <th class="head-main">Mã SP</th>
         <th class="head-main name-head">Tên SP</th>
-        <th class="head-main">Tổng SL đơn</th>
-        <th class="head-main">SL đơn đã gửi</th>
-        <th class="head-main">SL đơn đã giao TC</th>
-        <th class="head-main">SL đơn đã hoàn</th>
+        <th class="head-main">Tổng đơn</th>
+        <th class="head-main">Mới</th>
+        <th class="head-main">Đã gửi hàng</th>
+        <th class="head-main">Đã nhận</th>
+        <th class="head-main">Đã hoàn</th>
       </tr>
     `;
 
@@ -650,6 +774,7 @@
         <td></td>
         <td class="name-cell">Tổng cộng</td>
         <td>${result.totals.total}</td>
+        <td>${result.totals.newCount}</td>
         <td>${result.totals.shipped}</td>
         <td>${result.totals.received}</td>
         <td>${result.totals.returned}</td>
@@ -663,6 +788,7 @@
         <td>${escapeHtml(row.code)}</td>
         <td class="name-cell">${escapeHtml(row.name)}</td>
         <td>${row.total}</td>
+        <td>${row.newCount}</td>
         <td>${row.shipped}</td>
         <td>${row.received}</td>
         <td>${row.returned}</td>
@@ -678,21 +804,22 @@
       'STT': idx + 2,
       'Mã SP': r.code,
       'Tên SP': r.name,
-      'Tổng SL đơn': r.total,
-      'SL đơn đã gửi': r.shipped,
-      'SL đơn đã giao TC': r.received,
-      'SL đơn đã hoàn': r.returned
+      'Tổng đơn': r.total,
+      'Mới': r.newCount,
+      'Đã gửi hàng': r.shipped,
+      'Đã nhận': r.received,
+      'Đã hoàn': r.returned
     }));
 
     const wsSummary = XLSX.utils.json_to_sheet(summaryRows, { origin: 'A3' });
     XLSX.utils.sheet_add_aoa(wsSummary, [[
-      'STT','Mã SP','Tên SP','Tổng SL đơn','SL đơn đã gửi','SL đơn đã giao TC','SL đơn đã hoàn'
+      'STT','Mã SP','Tên SP','Tổng đơn','Mới','Đã gửi hàng','Đã nhận','Đã hoàn'
     ]], { origin: 'A2' });
     XLSX.utils.sheet_add_aoa(wsSummary, [[
       '', '', 'Tổng cộng',
-      result.totals.total, result.totals.shipped, result.totals.received, result.totals.returned
+      result.totals.total, result.totals.newCount, result.totals.shipped, result.totals.received, result.totals.returned
     ]], { origin: 'A3' });
-    wsSummary['!cols'] = [{wch:8},{wch:18},{wch:34},{wch:14},{wch:14},{wch:16},{wch:14}];
+    wsSummary['!cols'] = [{wch:8},{wch:18},{wch:34},{wch:14},{wch:12},{wch:14},{wch:14},{wch:14}];
 
     const wsRaw = XLSX.utils.json_to_sheet(originalRows);
 
@@ -701,60 +828,6 @@
 
     const array = XLSX.write(wb, { bookType:'xlsx', type:'array' });
     return new Blob([array], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  }
-
-  function escapeHtml(value){
-    return String(value ?? '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#039;');
-  }
-
-  function renderSelectedFiles(){
-    selectedFilesEl.innerHTML = '';
-    selectedFiles.forEach((file, idx) => {
-      const pill = document.createElement('div');
-      pill.className = 'pill';
-      pill.innerHTML = `
-        <svg viewBox="0 0 24 24">
-          <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"></path>
-          <path d="M14 5h5v5"></path>
-          <path d="M10 14 19 5"></path>
-        </svg>
-        <span>${idx + 1}. ${escapeHtml(file.name)}</span>
-      `;
-      selectedFilesEl.appendChild(pill);
-    });
-
-    if(selectedFiles[0] && !labelAInput.value.trim()){
-      labelAInput.value = suggestLabel(selectedFiles[0].name);
-    }
-    if(selectedFiles[1] && !labelBInput.value.trim()){
-      labelBInput.value = suggestLabel(selectedFiles[1].name);
-    }
-  }
-
-  function suggestLabel(filename){
-    const clean = String(filename || '').replace(/\.xlsx?$/i,'').trim();
-    return clean.slice(0, 30) || 'Kỳ dữ liệu';
-  }
-
-  function setFiles(fileList){
-    selectedFiles = Array.from(fileList || []);
-    hideMessages();
-    stats.style.display = 'none';
-    previewWrap.style.display = 'none';
-    compareHead.innerHTML = '';
-    compareBody.innerHTML = '';
-    lastDownloadBlob = null;
-    lastDownloadName = '';
-    renderSelectedFiles();
-    const metaForm = document.getElementById('metaForm');
-    if(metaForm){
-      metaForm.style.display = selectedFiles.length >= 2 ? 'grid' : 'none';
-    }
   }
 
   function triggerDownload(blob, filename){
@@ -775,42 +848,40 @@
       'STT': row.stt,
       'Mã SP': row.code,
       'Tên SP': row.name,
-      [`${leftLabel} - Tổng SL đơn`]: row.left.total,
-      [`${leftLabel} - SL đơn đã gửi`]: row.left.shipped,
-      [`${leftLabel} - SL đơn đã giao TC`]: row.left.received,
-      [`${leftLabel} - SL đơn đã hoàn`]: row.left.returned,
-      [`${rightLabel} - Tổng SL đơn`]: row.right.total,
-      [`${rightLabel} - SL đơn đã gửi`]: row.right.shipped,
-      [`${rightLabel} - SL đơn đã giao TC`]: row.right.received,
-      [`${rightLabel} - SL đơn đã hoàn`]: row.right.returned
+      [`${leftLabel} - Tổng đơn`]: row.left.total,
+      [`${leftLabel} - Mới`]: row.left.newCount,
+      [`${leftLabel} - Đã gửi hàng`]: row.left.shipped,
+      [`${leftLabel} - Đã nhận`]: row.left.received,
+      [`${leftLabel} - Đã hoàn`]: row.left.returned,
+      [`${rightLabel} - Tổng đơn`]: row.right.total,
+      [`${rightLabel} - Mới`]: row.right.newCount,
+      [`${rightLabel} - Đã gửi hàng`]: row.right.shipped,
+      [`${rightLabel} - Đã nhận`]: row.right.received,
+      [`${rightLabel} - Đã hoàn`]: row.right.returned
     }));
 
     const wsCompare = XLSX.utils.json_to_sheet(compareRows, { origin: 'A3' });
-    const monthRow = [
-      '', '', '',
-      leftLabel, '', '', '',
-      rightLabel, '', '', ''
-    ];
+    const monthRow = ['', '', '', leftLabel, '', '', '', '', rightLabel, '', '', '', ''];
     XLSX.utils.sheet_add_aoa(wsCompare, [monthRow], { origin: 'A1' });
     XLSX.utils.sheet_add_aoa(wsCompare, [[
       'STT','Mã SP','Tên SP',
-      'Tổng SL đơn','SL đơn đã gửi','SL đơn đã giao TC','SL đơn đã hoàn',
-      'Tổng SL đơn','SL đơn đã gửi','SL đơn đã giao TC','SL đơn đã hoàn'
+      'Tổng đơn','Mới','Đã gửi hàng','Đã nhận','Đã hoàn',
+      'Tổng đơn','Mới','Đã gửi hàng','Đã nhận','Đã hoàn'
     ]], { origin: 'A2' });
     XLSX.utils.sheet_add_aoa(wsCompare, [[
       '', '', 'Tổng cộng',
-      leftResult.totals.total, leftResult.totals.shipped, leftResult.totals.received, leftResult.totals.returned,
-      rightResult.totals.total, rightResult.totals.shipped, rightResult.totals.received, rightResult.totals.returned
+      leftResult.totals.total, leftResult.totals.newCount, leftResult.totals.shipped, leftResult.totals.received, leftResult.totals.returned,
+      rightResult.totals.total, rightResult.totals.newCount, rightResult.totals.shipped, rightResult.totals.received, rightResult.totals.returned
     ]], { origin: 'A3' });
 
     wsCompare['!cols'] = [
       {wch:8},{wch:18},{wch:34},
-      {wch:14},{wch:14},{wch:16},{wch:14},
-      {wch:14},{wch:14},{wch:16},{wch:14}
+      {wch:14},{wch:12},{wch:14},{wch:14},{wch:14},
+      {wch:14},{wch:12},{wch:14},{wch:14},{wch:14}
     ];
     wsCompare['!merges'] = [
-      {s:{r:0,c:3}, e:{r:0,c:6}},
-      {s:{r:0,c:7}, e:{r:0,c:10}},
+      {s:{r:0,c:3}, e:{r:0,c:7}},
+      {s:{r:0,c:8}, e:{r:0,c:12}},
       {s:{r:1,c:0}, e:{r:1,c:0}},
       {s:{r:1,c:1}, e:{r:1,c:1}},
       {s:{r:1,c:2}, e:{r:1,c:2}}
@@ -819,10 +890,10 @@
     const wsLeftRaw = XLSX.utils.json_to_sheet(originalLeftRows);
     const wsRightRaw = XLSX.utils.json_to_sheet(originalRightRows);
     const wsLeftSummary = XLSX.utils.json_to_sheet(leftResult.summary.map(r => ({
-      'Mã SP': r.code, 'Tên SP': r.name, 'Tổng SL đơn': r.total, 'SL đơn đã gửi': r.shipped, 'SL đơn đã giao TC': r.received, 'SL đơn đã hoàn': r.returned
+      'Mã SP': r.code, 'Tên SP': r.name, 'Tổng đơn': r.total, 'Mới': r.newCount, 'Đã gửi hàng': r.shipped, 'Đã nhận': r.received, 'Đã hoàn': r.returned
     })));
     const wsRightSummary = XLSX.utils.json_to_sheet(rightResult.summary.map(r => ({
-      'Mã SP': r.code, 'Tên SP': r.name, 'Tổng SL đơn': r.total, 'SL đơn đã gửi': r.shipped, 'SL đơn đã giao TC': r.received, 'SL đơn đã hoàn': r.returned
+      'Mã SP': r.code, 'Tên SP': r.name, 'Tổng đơn': r.total, 'Mới': r.newCount, 'Đã gửi hàng': r.shipped, 'Đã nhận': r.received, 'Đã hoàn': r.returned
     })));
 
     XLSX.utils.book_append_sheet(wb, wsCompare, 'So_sanh');
@@ -839,22 +910,24 @@
     compareHead.innerHTML = `
       <tr>
         <th class="left-head"></th>
-        <th class="month" colspan="4">${escapeHtml(leftLabel)}</th>
+        <th class="month" colspan="5">${escapeHtml(leftLabel)}</th>
         <th class="left-head"></th>
-        <th class="month" colspan="4">${escapeHtml(rightLabel)}</th>
+        <th class="month" colspan="5">${escapeHtml(rightLabel)}</th>
       </tr>
       <tr>
         <th class="head-main">STT</th>
         <th class="head-main">Mã SP</th>
         <th class="head-main name-head">Tên SP</th>
-        <th class="head-main">Tổng SL đơn</th>
-        <th class="head-main">SL đơn đã gửi</th>
-        <th class="head-main">SL đơn đã giao TC</th>
-        <th class="head-main">SL đơn đã hoàn</th>
-        <th class="head-main">Tổng SL đơn</th>
-        <th class="head-main">SL đơn đã gửi</th>
-        <th class="head-main">SL đơn đã giao TC</th>
-        <th class="head-main">SL đơn đã hoàn</th>
+        <th class="head-main">Tổng đơn</th>
+        <th class="head-main">Mới</th>
+        <th class="head-main">Đã gửi hàng</th>
+        <th class="head-main">Đã nhận</th>
+        <th class="head-main">Đã hoàn</th>
+        <th class="head-main">Tổng đơn</th>
+        <th class="head-main">Mới</th>
+        <th class="head-main">Đã gửi hàng</th>
+        <th class="head-main">Đã nhận</th>
+        <th class="head-main">Đã hoàn</th>
       </tr>
     `;
 
@@ -864,10 +937,12 @@
         <td></td>
         <td class="name-cell">Tổng cộng</td>
         <td>${leftResult.totals.total}</td>
+        <td>${leftResult.totals.newCount}</td>
         <td>${leftResult.totals.shipped}</td>
         <td>${leftResult.totals.received}</td>
         <td>${leftResult.totals.returned}</td>
         <td>${rightResult.totals.total}</td>
+        <td>${rightResult.totals.newCount}</td>
         <td>${rightResult.totals.shipped}</td>
         <td>${rightResult.totals.received}</td>
         <td>${rightResult.totals.returned}</td>
@@ -881,10 +956,12 @@
         <td>${escapeHtml(row.code)}</td>
         <td class="name-cell">${escapeHtml(row.name)}</td>
         <td>${row.left.total}</td>
+        <td>${row.left.newCount}</td>
         <td>${row.left.shipped}</td>
         <td>${row.left.received}</td>
         <td>${row.left.returned}</td>
         <td>${row.right.total}</td>
+        <td>${row.right.newCount}</td>
         <td>${row.right.shipped}</td>
         <td>${row.right.received}</td>
         <td>${row.right.returned}</td>
@@ -909,7 +986,11 @@
     setTimeout(() => splash.remove(), 500);
   }
 
-  fileInput.addEventListener('change', e => setFiles(e.target.files));
+  fileInput.addEventListener('change', e => {
+    if(e.target.files && e.target.files.length){
+      setFiles(e.target.files);
+    }
+  });
 
   ['dragenter','dragover'].forEach(evt => {
     dropzone.addEventListener(evt, e => {
