@@ -6,86 +6,93 @@
   <title>T Balance v4.3 realtime</title>
   <style>
     :root{
-      --bg:#f3f6fb; --card:#fff; --text:#15213a; --muted:#6d7a96; --line:#dfe6f2;
+      --bg:#edf3fb; --bg-2:#f7faff; --card:rgba(255,255,255,.48); --card-2:rgba(255,255,255,.34); --text:#10203d; --muted:#6c7b96; --line:rgba(255,255,255,.62);
       --brand:#2b78ff; --brand-2:#0f5bdd; --ok:#1f9d55; --warn:#d28a00; --bad:#df3f32;
-      --shadow:0 10px 30px rgba(19,33,58,.08); --radius:20px; --sidebar:#0f1b36; --sidebar-2:#132247; --sidebar-text:#d8e1f5;
+      --shadow:0 24px 70px rgba(23,43,85,.14); --shadow-soft:0 10px 24px rgba(23,43,85,.06); --radius:26px; --sidebar:#0d1730; --sidebar-2:#13244a; --sidebar-text:#d8e1f5;
+      --panel:#ffffff; --panel-text:#10203d;
+    }
+    body.dark{
+      --bg:#0b1220; --bg-2:#121b2f; --card:rgba(18,27,47,.52); --card-2:rgba(24,35,61,.34); --text:#edf4ff; --muted:#9cb0d3; --line:rgba(255,255,255,.10);
+      --brand:#5d9cff; --brand-2:#2f6fff; --ok:#42c27b; --warn:#e6aa2d; --bad:#ff6b63;
+      --shadow:0 24px 70px rgba(0,0,0,.34); --shadow-soft:0 10px 24px rgba(0,0,0,.18); --sidebar:#0a1020; --sidebar-2:#111b33; --sidebar-text:#dbe6ff;
+      --panel:#111b2f; --panel-text:#edf4ff;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    .layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
-    .sidebar{background:linear-gradient(180deg,var(--sidebar),var(--sidebar-2));color:var(--sidebar-text);padding:22px 16px;position:sticky;top:0;height:100vh}
-    .brand{display:flex;gap:14px;align-items:center;margin-bottom:22px;padding:8px 6px}
-    .logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--brand),#32b3ff);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;box-shadow:var(--shadow)}
-    .brand-title{font-size:20px;font-weight:800;color:#fff}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at top left, rgba(130,182,255,.22), transparent 28%),radial-gradient(circle at top right, rgba(173,210,255,.18), transparent 24%),linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 100%);color:var(--text);transition:background .25s ease,color .25s ease}
+    .layout{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+    .sidebar{background:linear-gradient(180deg,rgba(13,23,48,.94),rgba(19,36,74,.92));color:var(--sidebar-text);padding:14px 12px;position:sticky;top:0;height:100vh;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    .brand{display:flex;gap:14px;align-items:center;margin-bottom:16px;padding:8px 6px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+    .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--brand),#32b3ff);display:grid;place-items:center;color:#fff;font-size:24px;font-weight:800;box-shadow:var(--shadow)}
+    .brand-title{font-size:18px;font-weight:800;color:#fff}
     .brand-sub{font-size:13px;color:#b6c6e8;margin-top:3px}
     .nav{display:grid;gap:8px;margin-top:10px}
-    .nav button{border:0;background:transparent;color:var(--sidebar-text);padding:14px;border-radius:14px;text-align:left;font-size:15px;font-weight:700;cursor:pointer}
-    .nav button.active{background:rgba(255,255,255,.12);color:#fff}
-    .nav small{display:block;margin-top:18px;padding:0 12px;color:#9eb1da;font-size:12px;line-height:1.5}
-    .content{padding:24px}
-    .topbar{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
-    h1{margin:0;font-size:34px}
-    .sub{color:var(--muted);margin-top:6px}
+    .nav button{border:0;background:transparent;color:var(--sidebar-text);padding:11px 12px;border-radius:12px;text-align:left;font-size:14px;font-weight:700;cursor:pointer}
+    .nav button.active{background:rgba(255,255,255,.15);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+    .nav small{display:block;margin-top:12px;padding:0 10px;color:#9eb1da;font-size:11px;line-height:1.4}
+    .content{padding:16px}
+    .topbar{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px}
+    h1{margin:0;font-size:30px}
+    .sub{color:var(--muted);margin-top:4px}
     .actions{display:flex;gap:10px;flex-wrap:wrap}
-    button,.btn{border:0;background:var(--brand);color:#fff;padding:12px 16px;border-radius:14px;font-weight:700;cursor:pointer;transition:.18s transform,.18s opacity,.18s background;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+    button,.btn{border:0;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;padding:12px 16px;border-radius:16px;font-weight:700;cursor:pointer;transition:.18s transform,.18s opacity,.18s background,.2s box-shadow;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 10px 24px rgba(43,120,255,.22)}
     button:hover,.btn:hover{transform:translateY(-1px)}
-    button.secondary{background:#e9f1ff;color:var(--brand-2)}
-    button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
-    button.danger{background:#ffedea;color:var(--bad)}
+    button.secondary{background:rgba(255,255,255,.72);color:var(--brand-2);box-shadow:var(--shadow-soft)}
+    button.ghost{background:rgba(255,255,255,.66);color:var(--text);border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow-soft)}
+    button.danger{background:rgba(255,107,99,.12);color:var(--bad);box-shadow:none}
     button.small{padding:8px 12px;border-radius:12px;font-size:13px}
     .section{display:none}
     .section.active{display:block}
     .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
     .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .metric{padding:22px}
-    .metric .label{color:var(--muted);font-size:14px}
-    .metric .value{font-size:42px;font-weight:800;margin-top:10px}
-    .section-card{padding:20px}
-    .section-card h2{margin:0 0 16px;font-size:20px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .field{display:flex;flex-direction:column;gap:8px;min-width:170px;flex:1}
-    .field label{font-size:14px;color:var(--muted);font-weight:600}
-    input,select,textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);outline:none;background:#fff;color:var(--text);font-size:15px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card-2));backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.22)}
+    .metric{padding:16px 18px}
+    .metric .label{color:var(--muted);font-size:14px;font-weight:600}
+    .metric .value{font-size:34px;font-weight:800;margin-top:8px;letter-spacing:-.02em}
+    .section-card{padding:16px}
+    .section-card h2{margin:0 0 14px;font-size:18px;letter-spacing:-.02em}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .field{display:flex;flex-direction:column;gap:8px;min-width:150px;flex:1}
+    .field label{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.01em}
+    input,select,textarea{width:100%;padding:11px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.88);outline:none;background:rgba(255,255,255,.58);color:var(--text);font-size:15px;font-weight:600;backdrop-filter:blur(16px) saturate(145%);-webkit-backdrop-filter:blur(16px) saturate(145%);box-shadow:inset 0 1px 0 rgba(255,255,255,.34)}
     textarea{min-height:140px;resize:vertical}
-    input:focus,select:focus,textarea:focus{border-color:#a7c5ff;box-shadow:0 0 0 4px rgba(43,120,255,.08)}
+    input:focus,select:focus,textarea:focus{border-color:#a7c5ff;box-shadow:0 0 0 4px rgba(43,120,255,.10), inset 0 1px 0 rgba(255,255,255,.7)}
     .bank-list,.tx-list,.ad-list{display:grid;gap:14px}
-    .bank-card{padding:18px}
+    .bank-card{padding:16px}
     .bank-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-    .bank-name{font-size:20px;font-weight:800}
+    .bank-name{font-size:17px;font-weight:800}
     .muted{color:var(--muted)}
-    .big-balance{margin-top:12px;background:#f7faff;border:1px solid #e3edff;padding:16px;border-radius:18px}
-    .big-balance .amount{font-size:30px;font-weight:800;margin-top:6px}
-    .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
-    .mini{padding:14px;border-radius:16px;background:#fbfcfe;border:1px solid var(--line)}
+    .big-balance{margin-top:12px;background:linear-gradient(180deg,rgba(255,255,255,.60),rgba(255,255,255,.42));border:1px solid rgba(255,255,255,.76);padding:14px;border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+    .big-balance .amount{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+    .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+    .mini{padding:12px;border-radius:18px;background:#fbfdff;border:1px solid #e6eefb;box-shadow:none}
     .mini .k{font-size:13px;color:var(--muted)}
-    .mini .v{font-size:18px;font-weight:700;margin-top:6px}
-    .badge{padding:8px 12px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:6px}
+    .mini .v{font-size:18px;font-weight:700;margin-top:4px}
+    .badge{padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px}
     .ok{background:#ebfff1;color:var(--ok)}
     .warn{background:#fff6dd;color:var(--warn)}
     .bad{background:#ffeceb;color:var(--bad)}
     .tag{background:#eef4ff;color:#315db6}
-    .empty{padding:28px;text-align:center;color:var(--muted)}
-    .tx{padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+    .empty{padding:16px;text-align:center;color:var(--muted)}
+    .tx{padding:14px 16px;border:1px solid rgba(255,255,255,.62);border-radius:14px;background:rgba(255,255,255,.62);display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .tx-left{display:grid;gap:4px}
     .tx-title{font-weight:800}
-    .tx-amount{font-size:20px;font-weight:800}
+    .tx-amount{font-size:17px;font-weight:800}
     .toolbar{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:14px}
     .right{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
     .notice{padding:16px 18px;border-radius:16px;background:#fff9e9;color:#8a6700;border:1px solid #f3df9b}
     .footer-note,.helper-note{margin-top:10px;color:var(--muted);font-size:13px}
     .divider{height:1px;background:var(--line);margin:16px 0}
     .bank-balance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
-    .compact-bank{padding:16px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);min-height:130px}
+    .compact-bank{padding:18px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,var(--card),var(--card-2));box-shadow:var(--shadow-soft);min-height:126px;backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
     .compact-bank .name{font-size:16px;font-weight:800;line-height:1.3}
     .compact-bank .num{font-size:12px;color:var(--muted);margin-top:4px}
-    .compact-bank .amt{font-size:30px;font-weight:800;margin-top:10px;line-height:1.1;word-break:break-word}
+    .compact-bank .amt{font-size:24px;font-weight:800;margin-top:10px;line-height:1.1;word-break:break-word;letter-spacing:-.02em}
     .compact-bank .meta{font-size:12px;color:var(--muted);margin-top:8px}
     .setting-box{display:grid;gap:14px}
     .mobile-nav{display:none;margin-bottom:14px}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(15,27,54,.35);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,27,54,.35);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
     .modal-backdrop.open{display:flex}
-    .modal{width:min(720px,100%);background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:20px;border:1px solid var(--line)}
+    .modal{width:min(720px,100%);background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:16px;border:1px solid var(--line)}
     .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modal-head h3{margin:0}
 
@@ -94,22 +101,162 @@
     .filter-tab.active{background:#eef4ff;color:#315db6;border-color:#cfe0ff}
     .tx-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .upload-status{padding:10px 12px;border:1px dashed var(--line);border-radius:12px;background:#f8fbff;color:var(--muted);font-size:13px;margin-top:8px}
+    .sync-pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.86);box-shadow:var(--shadow);font-size:13px;font-weight:700;color:var(--text);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+    .sync-dot{width:10px;height:10px;border-radius:999px;background:#6f7f9c}
+    .sync-pill.ok .sync-dot{background:#1f9d55}
+    .sync-pill.loading .sync-dot{background:#2b78ff}
+    .sync-pill.error .sync-dot{background:#df3f32}
     .paste-zone{border:1px dashed #c9d7f2;border-radius:14px;padding:12px;background:#f8fbff;color:var(--muted)}
+
+    .toolbar{display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+    .notice{padding:14px 16px;border-radius:18px;background:#edf4ff;color:#35519a;border:1px solid #d9e5ff}
+    .footer-note,.helper-note{margin-top:10px;color:var(--muted);font-size:12px}
+    .modal{width:min(720px,100%);background:linear-gradient(180deg,rgba(255,255,255,.84),rgba(255,255,255,.68));border-radius:26px;box-shadow:var(--shadow);padding:16px;border:1px solid rgba(255,255,255,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+
+
+    .actions button,.actions .btn{padding:10px 12px;font-size:13px}
+    .metric .label{font-size:12px}
+    .compact-bank .meta,.compact-bank .num,.footer-note,.helper-note,.muted{font-size:12px}
+    .section-card h2{margin-bottom:10px}
+    .nav button{letter-spacing:0}
+
+
+    .theme-toggle{min-width:108px;justify-content:center}
+    .theme-toggle .mode-dot{width:10px;height:10px;border-radius:999px;background:currentColor;opacity:.8}
+    .metric,.section-card,.compact-bank,.tx,.mini,.big-balance,.sync-pill,input,select,textarea,button{transition:background .25s ease,border-color .25s ease,color .25s ease,box-shadow .25s ease}
+
+
+    .dashboard-grid{display:grid;grid-template-columns:repeat(12, minmax(0, 1fr));gap:16px}
+    .dashboard-block{grid-column:span 12;position:relative}
+    .dashboard-block[data-size="half"]{grid-column:span 6}
+    .dashboard-block[data-size="full"]{grid-column:span 12}
+    .dashboard-block.dragging{opacity:.55;transform:scale(.995)}
+    .dashboard-toolbar{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:8px;align-items:center}
+    .dashboard-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.62);border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-soft);user-select:none}
+    .dashboard-chip:active{transform:translateY(1px)}
+    .drop-marker{height:10px;border-radius:999px;background:linear-gradient(90deg, rgba(43,120,255,.18), rgba(43,120,255,.55), rgba(43,120,255,.18));border:1px dashed rgba(43,120,255,.45);display:none}
+    .dashboard-block.drop-before .drop-marker.top,
+    .dashboard-block.drop-after .drop-marker.bottom{display:block}
+    .glass-hero{background:linear-gradient(180deg,rgba(255,255,255,.70),rgba(255,255,255,.32));border:1px solid rgba(255,255,255,.84);box-shadow:0 24px 70px rgba(23,43,85,.14), inset 0 1px 0 rgba(255,255,255,.28);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%)}
+    .resize-label{min-width:62px;justify-content:center}
+    body.dark .dashboard-chip{background:rgba(20,30,52,.70)}
+    body.dark .glass-hero{background:linear-gradient(180deg,rgba(20,30,52,.66),rgba(18,27,47,.34));border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)}
+
+
+    .mac-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .mac-dots{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:999px;background:rgba(11,24,10,.88);border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow-soft)}
+    .mac-dot{width:16px;height:16px;border-radius:999px;display:inline-block;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 8px rgba(0,0,0,.18)}
+    .mac-dot.red{background:#ff5f57}
+    .mac-dot.yellow{background:#febc2e}
+    .mac-dot.green{background:#28c840}
+    .icon-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .icon-btn{width:42px;height:42px;border-radius:14px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1;min-width:42px;box-shadow:var(--shadow-soft);position:relative}
+    .icon-btn span{display:none}
+    .icon-btn[title]:hover::after{content:attr(title);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;padding:6px 8px;border-radius:10px;font-size:11px;white-space:nowrap;box-shadow:var(--shadow-soft)}
+    .sync-pill{padding:10px 12px;border-radius:16px}
+    h1{font-weight:900;letter-spacing:-.03em}
+    .sub{color:color-mix(in srgb, var(--text) 62%, transparent);font-weight:600}
+    .metric .label,.field label,.muted,.compact-bank .meta,.compact-bank .num,.footer-note,.helper-note{color:#6f7c96!important}
+    .metric .value,.bank-name,.tx-title,.big-balance .amount,.compact-bank .amt,.section-card h2{color:#14213d;text-shadow:none}
+    body.dark .metric .value, body.dark .bank-name, body.dark .tx-title, body.dark .big-balance .amount, body.dark .compact-bank .amt, body.dark .section-card h2, body.dark h1 {text-shadow:none}
+    .card{border:1px solid rgba(255,255,255,.88)}
+    body.dark .card{border:1px solid rgba(255,255,255,.12)}
+    .dashboard-chip{padding:7px 9px;border-radius:12px;font-size:11px}
+    .dashboard-toolbar{top:10px;right:10px}
+    .notice{font-weight:600}
+
+
+    .mac-toolbar{padding:10px 12px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.58),rgba(255,255,255,.34));border:1px solid rgba(255,255,255,.88);box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.34);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)}
+    body.dark .mac-toolbar{background:linear-gradient(180deg,rgba(19,28,48,.74),rgba(16,24,42,.44));border:1px solid rgba(255,255,255,.10);box-shadow:0 22px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05)}
+    .mac-dots{padding:10px 12px;border-radius:999px;background:rgba(15,23,20,.92);border:1px solid rgba(255,255,255,.06)}
+    .icon-actions{gap:8px}
+    .icon-btn{width:40px;height:40px;min-width:40px;border-radius:13px;font-size:0;overflow:hidden}
+    .icon-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s ease, opacity .18s ease}
+    .icon-btn:hover svg{transform:scale(1.08)}
+    .icon-btn:active svg{transform:scale(.96)}
+    .icon-btn[title]:hover::after{top:calc(100% + 10px);padding:7px 9px;border-radius:11px;background:rgba(15,23,42,.96)}
+    .sync-pill{padding:10px 14px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.48));border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow-soft)}
+    body.dark .sync-pill{background:linear-gradient(180deg,rgba(20,30,52,.74),rgba(18,27,47,.42));border:1px solid rgba(255,255,255,.10)}
+    .topbar{align-items:center}
+    .card{box-shadow:0 24px 70px rgba(23,43,85,.12), inset 0 1px 0 rgba(255,255,255,.38)}
+    .dashboard-chip{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.42));border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow-soft)}
+    body.dark .dashboard-chip{background:linear-gradient(180deg,rgba(20,30,52,.74),rgba(18,27,47,.42));border:1px solid rgba(255,255,255,.10)}
+
+
+    .window-shell{position:relative}
+    body.dark .window-header{background:linear-gradient(180deg,rgba(19,28,48,.78),rgba(16,24,42,.48));border:1px solid rgba(255,255,255,.10);box-shadow:0 22px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05)}
+    .window-header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .window-title-wrap{display:flex;flex-direction:column;gap:4px}
+    .window-title{font-size:34px;font-weight:900;letter-spacing:-.04em;color:#14213d}
+    .window-subtitle{font-size:14px;font-weight:500;color:#6e7b95}
+    .dashboard-toolbar{opacity:.18;transition:opacity .2s ease, transform .2s ease}
+    .dashboard-block:hover .dashboard-toolbar,
+    .dashboard-block:focus-within .dashboard-toolbar{opacity:1}
+    .resize-label{opacity:0;pointer-events:none;transform:translateY(-2px);transition:opacity .18s ease, transform .18s ease}
+    .dashboard-block:hover .resize-label,
+    .dashboard-block:focus-within .resize-label{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .drag-chip{opacity:1}
+    .dashboard-chip{min-width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center}
+    .dashboard-chip.resize-label{min-width:34px;padding:0 10px}
+    body, .card, .compact-bank, .big-balance, .mini, .tx, .sync-pill, .mac-toolbar, .window-header, input, select, textarea, button{transition:background .35s ease,border-color .35s ease,color .35s ease,box-shadow .35s ease,transform .2s ease,opacity .2s ease}
+
+
+    .layout{transition:grid-template-columns .35s cubic-bezier(.2,.8,.2,1)}
+    .sidebar{transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .28s ease, width .35s cubic-bezier(.2,.8,.2,1), padding .35s cubic-bezier(.2,.8,.2,1)}
+    body.sidebar-collapsed .layout{grid-template-columns:84px 1fr}
+    body.sidebar-collapsed .sidebar{padding-left:10px;padding-right:10px}
+    body.sidebar-collapsed .brand-title,
+    body.sidebar-collapsed .nav button span,
+    body.sidebar-collapsed .nav small{display:none}
+    body.sidebar-collapsed .brand{justify-content:center}
+    body.sidebar-collapsed .nav button{display:flex;justify-content:center;align-items:center}
+    .sidebar-toggle{width:40px;height:40px;min-width:40px;border-radius:14px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+    .sidebar-toggle svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .window-header,.card,.compact-bank,.tx,.mini,.big-balance,.dashboard-chip,.sync-pill,.sidebar,input,select,textarea,button{transition:background .38s cubic-bezier(.2,.8,.2,1),border-color .38s cubic-bezier(.2,.8,.2,1),color .3s ease,box-shadow .38s cubic-bezier(.2,.8,.2,1),transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s ease}
+    .dashboard-toolbar{opacity:.12;transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1)}
+    .dashboard-block:hover .dashboard-toolbar,
+    .dashboard-block:focus-within .dashboard-toolbar{opacity:1;transform:translateY(0)}
+    .drag-chip{width:30px;min-width:30px;height:30px;padding:0;border-radius:11px;font-size:12px;opacity:.92}
+    .drag-chip:hover{transform:translateY(-1px)}
+    .resize-label{min-width:30px;height:30px;padding:0 8px;border-radius:11px;font-size:11px}
+
+
+    .window-header-inner{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+    .window-title-wrap{display:flex;flex-direction:column;gap:6px}
+    .window-title{font-size:34px;font-weight:900;letter-spacing:-.04em;color:#14213d}
+    .window-subtitle{font-size:14px;font-weight:500;color:#6e7b95}
+    .metric{padding:18px 20px}
+    .metric .label{font-size:13px}
+    .metric .value{font-size:36px;font-weight:900}
+    .section-card h2{font-size:20px;font-weight:800}
+    .icon-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .icon-btn,.sidebar-toggle{width:42px;height:42px;min-width:42px;border-radius:14px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+    .icon-btn svg,.sidebar-toggle svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .sync-pill{padding:10px 14px;border-radius:16px;background:#f4f9ff;border:1px solid #dfe9fb;box-shadow:none}
+    body.dark .window-header, body.dark .card, body.dark .compact-bank, body.dark .tx, body.dark .mini, body.dark .big-balance{background:var(--card);border-color:var(--line)}
+
     @media (max-width:1100px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-2{grid-template-columns:1fr}
       .mini-grid{grid-template-columns:1fr}
-      .metric .value{font-size:34px}
+      .metric .value{font-size:30px}
       .layout{grid-template-columns:1fr}
       .sidebar{display:none}
       .mobile-nav{display:block}
+      .dashboard-grid{grid-template-columns:1fr}
+      .dashboard-block[data-size="half"], .dashboard-block[data-size="full"]{grid-column:span 1}
+      .mac-toolbar{width:auto;justify-content:flex-start}
+      .window-header-inner{align-items:flex-start}
+      .window-title{font-size:22px}
+      .dashboard-toolbar{opacity:1}
+      .resize-label{opacity:1;pointer-events:auto;transform:none}
     }
 
     
     @media (max-width:640px){
       .content{padding:14px}
       .grid-4{grid-template-columns:1fr}
-      h1{font-size:28px}
+      h1{font-size:24px}
       .big-balance .amount,.compact-bank .amt{font-size:24px}
     }
   </style>
@@ -121,86 +268,148 @@
       <div class="logo">T</div>
       <div>
         <div class="brand-title">T Balance</div>
-        <div class="brand-sub">Facebook Ads Dashboard</div>
+        
       </div>
     </div>
     <div class="nav">
-      <button class="nav-btn active" data-section="overview">Tổng quan</button>
-      <button class="nav-btn" data-section="banks">Tài khoản ngân hàng</button>
-      <button class="nav-btn" data-section="ads">Tài khoản QC</button>
-      <button class="nav-btn" data-section="transactions">Thanh toán</button>
-      <button class="nav-btn" data-section="settings">Cài đặt</button>
-      <small>Tự động lưu cloud sau khi nhập. Realtime sync giữa các thiết bị bằng Firestore snapshot. Tài khoản quảng cáo không có số dư riêng.</small>
+      <button class="nav-btn active" data-section="overview">🏠<span style="margin-left:8px">Tổng quan</span></button>
+      <button class="nav-btn" data-section="banks">🏦<span style="margin-left:8px">Tài khoản ngân hàng</span></button>
+      <button class="nav-btn" data-section="ads">📣<span style="margin-left:8px">Tài khoản QC</span></button>
+      <button class="nav-btn" data-section="transactions">💳<span style="margin-left:8px">Thanh toán</span></button>
+      <button class="nav-btn" data-section="settings">⚙️<span style="margin-left:8px">Cài đặt</span></button>
+      <small>Realtime cloud sync.</small>
     </div>
   </aside>
 
   <main class="content">
     <div class="mobile-nav"><select id="mobileSectionSelect"></select></div>
 
-    <div class="topbar">
-      <div>
-        <h1>Quản lý số dư Facebook Ads</h1>
-        <div class="sub">Tự động đẩy dữ liệu lên cloud sau khi điền và đồng bộ realtime giữa các thiết bị. Ưu tiên hiển thị số dư hiện tại và đọc bill Meta chính xác hơn.</div>
-      </div>
-      <div class="actions">
-        <button class="secondary" id="btnPullTop">Lấy dữ liệu</button>
-        <button class="ghost" id="btnPushTop">Đẩy dữ liệu lên cloud</button>
+    
+
+
+<div class="window-shell">
+    <div class="window-header">
+      <div class="window-header-inner">
+        <div class="window-title-wrap">
+          <div class="window-title">T Balance</div>
+          <div class="window-subtitle">Tươi mới hơn, rõ ràng hơn, ưu tiên số dư và thao tác nhanh.</div>
+        </div>
+        <div class="icon-actions">
+          <button class="ghost sidebar-toggle" id="btnSidebarToggle" title="Ẩn/hiện menu" aria-label="Ẩn/hiện menu"><svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h12"/><path d="M4 18h16"/></svg></button>
+          <button class="ghost icon-btn" id="btnThemeToggle" title="Dark mode" aria-label="Dark mode">
+            <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9A7 7 0 1 1 12 3z"/></svg>
+            <span id="themeToggleText">Dark mode</span>
+          </button>
+          <button class="ghost icon-btn" id="btnResetLayout" title="Reset layout" aria-label="Reset layout">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg>
+            <span>Reset layout</span>
+          </button>
+          <button class="secondary icon-btn" id="btnPullTop" title="Lấy dữ liệu" aria-label="Lấy dữ liệu">
+            <svg viewBox="0 0 24 24"><path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M4 20h16"/></svg>
+            <span>Lấy dữ liệu</span>
+          </button>
+          <button class="ghost icon-btn" id="btnPushTop" title="Đẩy dữ liệu lên cloud" aria-label="Đẩy dữ liệu lên cloud">
+            <svg viewBox="0 0 24 24"><path d="M12 20V8"/><path d="m17 13-5-5-5 5"/><path d="M4 4h16"/></svg>
+            <span>Đẩy dữ liệu lên cloud</span>
+          </button>
+          <div id="syncPill" class="sync-pill loading"><span class="sync-dot"></span><span id="syncPillText">Đang khởi tạo</span></div>
+        </div>
       </div>
     </div>
-
-    <section class="section active" id="section-overview">
-      <div class="grid-4">
-        <div class="card metric"><div class="label">Tài khoản ngân hàng</div><div class="value" id="mBankCount">0</div></div>
-        <div class="card metric"><div class="label">Tài khoản quảng cáo</div><div class="value" id="mAdCount">0</div></div>
-        <div class="card metric"><div class="label">Cần nạp ngay</div><div class="value" id="mNeedTopup" style="color:var(--bad)">0</div></div>
-        <div class="card metric"><div class="label">Tổng số dư ngân hàng</div><div class="value" id="mTotalBank">0 đ</div></div>
-      </div>
-
-      
-
-      <div class="card section-card" style="margin-top:12px">
-        <div class="toolbar">
-          <h2 style="margin:0">Số dư từng tài khoản ngân hàng</h2>
-          <div class="right"><input id="searchBox" placeholder="Tìm ngân hàng hoặc tài khoản QC" style="min-width:260px" /></div>
-        </div>
-        <div id="bankBalanceGrid" class="bank-balance-grid"></div>
-      </div>
-
-      <div class="card section-card" style="margin-top:16px">
-        <div class="toolbar"><h2 style="margin:0">Chi tiết số dư ngân hàng</h2></div><div class="footer-note">Đã ẩn số dư ban đầu để giao diện gọn và tập trung vào số dư hiện tại.</div>
-        <div id="bankList" class="bank-list"></div>
-      </div><div class="grid-2" style="margin-top:16px">
-        <div class="card section-card">
-          <h2>Nạp tiền vào ngân hàng</h2>
-          <div class="row">
-            <div class="field"><label>Chọn ngân hàng</label><select id="depositBankIdQuick"></select></div>
-            <div class="field"><label>Số tiền nạp</label><input id="depositAmountQuick" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
-            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="depositTxIdQuick" placeholder="VD: FT241234..." /></div>
-            <div class="field"><label>Ghi chú</label><input id="depositNoteQuick" placeholder="Không bắt buộc" /></div>
+<section class="section active" id="section-overview">
+      <div id="dashboardGrid" class="dashboard-grid">
+        <div class="dashboard-block" data-block-id="metrics" data-size="full" draggable="true">
+          <div class="drop-marker top"></div>
+          <div class="dashboard-toolbar">
+            <div class="dashboard-chip drag-chip" title="Kéo thả">⋮</div>
+            <button class="dashboard-chip resize-label" type="button" data-resize-block="metrics" title="Đổi kích thước">⤢</button>
           </div>
-          <div class="row" style="margin-top:12px"><button id="btnAddDepositQuick">Nạp vào ngân hàng</button></div>
-        </div>
-        <div class="card section-card">
-          <h2>Thanh toán quảng cáo</h2>
-          <div class="row">
-            <div class="field"><label>Chọn tài khoản QC</label><select id="paymentAdIdQuick"></select></div>
-            <div class="field"><label>Số tiền thanh toán</label><input id="paymentAmountQuick" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
-            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="paymentTxIdQuick" placeholder="VD: invoice-2026-001" /></div>
-            <div class="field"><label>Ghi chú</label><input id="paymentNoteQuick" placeholder="Không bắt buộc" /></div>
+          <div class="grid-4">
+            <div class="card metric glass-hero"><div class="label">Tài khoản ngân hàng</div><div class="value" id="mBankCount">0</div></div>
+            <div class="card metric glass-hero"><div class="label">Tài khoản quảng cáo</div><div class="value" id="mAdCount">0</div></div>
+            <div class="card metric glass-hero"><div class="label">Cần nạp ngay</div><div class="value" id="mNeedTopup" style="color:var(--bad)">0</div></div>
+            <div class="card metric glass-hero"><div class="label">Tổng số dư ngân hàng</div><div class="value" id="mTotalBank">0 đ</div></div>
           </div>
-          <div class="footer-note" id="paymentFeePreviewQuick"></div>
-          <div class="row" style="margin-top:12px"><button id="btnAddPaymentQuick">Ghi nhận thanh toán</button></div>
+          <div class="drop-marker bottom"></div>
+        </div>
+
+        <div class="dashboard-block" data-block-id="balances" data-size="full" draggable="true">
+          <div class="drop-marker top"></div>
+          <div class="dashboard-toolbar">
+            <div class="dashboard-chip drag-chip" title="Kéo thả">⋮</div>
+            <button class="dashboard-chip resize-label" type="button" data-resize-block="balances" title="Đổi kích thước">⤢</button>
+          </div>
+          <div class="card section-card glass-hero">
+            <div class="toolbar">
+              <h2 style="margin:0">Số dư từng tài khoản ngân hàng</h2>
+              <div class="right"><input id="searchBox" placeholder="Tìm ngân hàng hoặc tài khoản QC" style="min-width:260px" /></div>
+            </div>
+            <div id="bankBalanceGrid" class="bank-balance-grid"></div>
+          </div>
+          <div class="drop-marker bottom"></div>
+        </div>
+
+        <div class="dashboard-block" data-block-id="details" data-size="full" draggable="true">
+          <div class="drop-marker top"></div>
+          <div class="dashboard-toolbar">
+            <div class="dashboard-chip drag-chip" title="Kéo thả">⋮</div>
+            <button class="dashboard-chip resize-label" type="button" data-resize-block="details" title="Đổi kích thước">⤢</button>
+          </div>
+          <div class="card section-card">
+            <div class="toolbar"><h2 style="margin:0">Chi tiết số dư ngân hàng</h2></div>
+            <div id="bankList" class="bank-list"></div>
+          </div>
+          <div class="drop-marker bottom"></div>
+        </div>
+
+        <div class="dashboard-block" data-block-id="quickDeposit" data-size="half" draggable="true">
+          <div class="drop-marker top"></div>
+          <div class="dashboard-toolbar">
+            <div class="dashboard-chip drag-chip" title="Kéo thả">⋮</div>
+            <button class="dashboard-chip resize-label" type="button" data-resize-block="quickDeposit" title="Đổi kích thước">⤡</button>
+          </div>
+          <div class="card section-card">
+            <h2>Nạp tiền vào ngân hàng</h2>
+            <div class="row">
+              <div class="field"><label>Chọn ngân hàng</label><select id="depositBankIdQuick"></select></div>
+              <div class="field"><label>Số tiền nạp</label><input id="depositAmountQuick" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
+              <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="depositTxIdQuick" placeholder="ID giao dịch" /></div>
+              <div class="field"><label>Ghi chú</label><input id="depositNoteQuick" placeholder="Ghi chú" /></div>
+            </div>
+            <div class="row" style="margin-top:12px"><button id="btnAddDepositQuick">Nạp vào ngân hàng</button></div>
+          </div>
+          <div class="drop-marker bottom"></div>
+        </div>
+
+        <div class="dashboard-block" data-block-id="quickPayment" data-size="half" draggable="true">
+          <div class="drop-marker top"></div>
+          <div class="dashboard-toolbar">
+            <div class="dashboard-chip drag-chip" title="Kéo thả">⋮</div>
+            <button class="dashboard-chip resize-label" type="button" data-resize-block="quickPayment" title="Đổi kích thước">⤡</button>
+          </div>
+          <div class="card section-card">
+            <h2>Thanh toán quảng cáo</h2>
+            <div class="row">
+              <div class="field"><label>Chọn tài khoản QC</label><select id="paymentAdIdQuick"></select></div>
+              <div class="field"><label>Số tiền thanh toán</label><input id="paymentAmountQuick" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
+              <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="paymentTxIdQuick" placeholder="ID giao dịch" /></div>
+              <div class="field"><label>Ghi chú</label><input id="paymentNoteQuick" placeholder="Ghi chú" /></div>
+            </div>
+            <div class="row" style="margin-top:12px"><button id="btnAddPaymentQuick">Ghi nhận thanh toán</button></div>
+          </div>
+          <div class="drop-marker bottom"></div>
         </div>
       </div>
     </section>
+
 
     <section class="section" id="section-banks">
       <div class="grid-2">
         <div class="card section-card">
           <h2>Thêm tài khoản ngân hàng</h2>
           <div class="row">
-            <div class="field"><label>Tên ngân hàng / chủ thẻ</label><input id="bankName" placeholder="Ví dụ: VPB Dương" /></div>
-            <div class="field"><label>Số tài khoản / 4 số cuối</label><input id="bankNumber" placeholder="Ví dụ: 6087" /></div>
+            <div class="field"><label>Tên ngân hàng / chủ thẻ</label><input id="bankName" placeholder="Tên ngân hàng" /></div>
+            <div class="field"><label>Số tài khoản / 4 số cuối</label><input id="bankNumber" placeholder="Số tài khoản / 4 số cuối" /></div>
             <div class="field"><label>Số dư ban đầu</label><input id="bankInitialBalance" inputmode="numeric" placeholder="Chỉ nhập số" /></div>
           </div>
           <div class="row" style="margin-top:12px"><button id="btnAddBank">Thêm ngân hàng</button></div>
@@ -217,8 +426,8 @@
         <div class="card section-card">
           <h2>Thêm tài khoản quảng cáo</h2>
           <div class="row">
-            <div class="field"><label>Tên tài khoản QC</label><input id="adName" placeholder="Ví dụ: LAN ANH" /></div>
-            <div class="field"><label>Mã tài khoản</label><input id="adCode" placeholder="Ví dụ: 255047..." /></div>
+            <div class="field"><label>Tên tài khoản QC</label><input id="adName" placeholder="Tên tài khoản QC" /></div>
+            <div class="field"><label>Mã tài khoản</label><input id="adCode" placeholder="Mã tài khoản" /></div>
             <div class="field"><label>Ngân hàng liên kết</label><select id="adBankId"></select></div>
           </div>
           <div class="row" style="margin-top:12px">
@@ -240,8 +449,8 @@
           <div class="row">
             <div class="field"><label>Chọn ngân hàng</label><select id="depositBankId"></select></div>
             <div class="field"><label>Số tiền nạp</label><input id="depositAmount" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
-            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="depositTxId" placeholder="VD: FT241234..." /></div>
-            <div class="field"><label>Ghi chú</label><input id="depositNote" placeholder="Không bắt buộc" /></div>
+            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="depositTxId" placeholder="ID giao dịch" /></div>
+            <div class="field"><label>Ghi chú</label><input id="depositNote" placeholder="Ghi chú" /></div>
           </div>
           <div class="row" style="margin-top:12px"><button id="btnAddDeposit">Nạp vào ngân hàng</button></div>
         </div>
@@ -250,10 +459,10 @@
           <div class="row">
             <div class="field"><label>Chọn tài khoản QC</label><select id="paymentAdId"></select></div>
             <div class="field"><label>Số tiền thanh toán</label><input id="paymentAmount" inputmode="numeric" placeholder="Chỉ nhập số, > 0" /></div>
-            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="paymentTxId" placeholder="VD: invoice-2026-001" /></div>
-            <div class="field"><label>Ghi chú</label><input id="paymentNote" placeholder="Không bắt buộc" /></div>
+            <div class="field"><label>ID giao dịch (tuỳ chọn)</label><input id="paymentTxId" placeholder="ID giao dịch" /></div>
+            <div class="field"><label>Ghi chú</label><input id="paymentNote" placeholder="Ghi chú" /></div>
           </div>
-          <div class="footer-note" id="paymentFeePreview"></div>
+          
           <div class="row" style="margin-top:12px"><button id="btnAddPayment">Ghi nhận thanh toán</button></div>
         </div>
       </div>
@@ -328,6 +537,9 @@
     <div class="row">
       <div class="field"><label>Tên ngân hàng / chủ thẻ</label><input id="editBankName" /></div>
       <div class="field"><label>Số tài khoản / 4 số cuối</label><input id="editBankNumber" /></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="field"><label>Số dư hiện tại</label><input id="editBankCurrentBalance" inputmode="numeric" /></div>
       <div class="field"><label>Số dư ban đầu</label><input id="editBankInitialBalance" inputmode="numeric" /></div>
     </div>
     <div class="row" style="margin-top:14px"><button id="btnSaveBankEdit">Lưu thay đổi</button></div>
@@ -345,6 +557,7 @@
     <div class="row" style="margin-top:14px"><div class="field"><label>Ngưỡng sẽ bị thu tiền</label><input id="editAdThreshold" inputmode="numeric" /></div></div>
     <div class="row" style="margin-top:14px"><button id="btnSaveAdEdit">Lưu thay đổi</button></div>
   </div>
+</div>
 
 <div class="modal-backdrop" id="txModal">
   <div class="modal">
@@ -373,13 +586,17 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "
 const STORAGE_KEY = "tbalance_online_html_v1";
 const CONFIG_KEY = "tbalance_online_firebase_cfg";
 const WORKSPACE_KEY = "tbalance_online_workspace";
-const DEFAULT_DATA = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: 0 } };
+const THEME_KEY = "tbalance_theme_mode";
+const DASHBOARD_LAYOUT_KEY = "tbalance_dashboard_layout_v2";
+const SIDEBAR_KEY = "tbalance_sidebar_collapsed";
+const DEFAULT_DATA = { banks: [], adAccounts: [], transactions: [], settings: { cardFeePercent: 0, dashboardLayout: null } };
 
 let data = (() => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const d = raw ? JSON.parse(raw) : DEFAULT_DATA;
-    if (!d.settings) d.settings = { cardFeePercent: 0 };
+    if (!d.settings) d.settings = { cardFeePercent: 0, dashboardLayout: null };
+    if (!("dashboardLayout" in d.settings)) d.settings.dashboardLayout = null;
     return d;
   } catch { return DEFAULT_DATA; }
 })();
@@ -409,6 +626,150 @@ const formatDecimalPercent = (v) => {
   return cleaned.replace(".", ",");
 };
 const saveLocal = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+
+function applyTheme(theme) {
+  const isDark = theme === "dark";
+  document.body.classList.toggle("dark", isDark);
+  const label = el("themeToggleText");
+  if (label) label.textContent = isDark ? "Light mode" : "Dark mode";
+  const btn = el("btnThemeToggle");
+  if (btn) btn.setAttribute("title", isDark ? "Light mode" : "Dark mode");
+  localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+}
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || "light";
+  applyTheme(saved);
+}
+
+function applySidebarState(collapsed) {
+  document.body.classList.toggle("sidebar-collapsed", !!collapsed);
+  localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+}
+function initSidebarState() {
+  applySidebarState(localStorage.getItem(SIDEBAR_KEY) === "1");
+}
+
+let draggedDashboardBlock = null;
+
+function getDefaultDashboardLayout() {
+  return {
+    order: ["metrics", "balances", "details", "quickDeposit", "quickPayment"],
+    sizes: {
+      metrics: "full",
+      balances: "full",
+      details: "full",
+      quickDeposit: "half",
+      quickPayment: "half"
+    }
+  };
+}
+
+function getDashboardLayout() {
+  const saved = data.settings?.dashboardLayout;
+  if (saved && Array.isArray(saved.order) && saved.sizes) return saved;
+  return getDefaultDashboardLayout();
+}
+
+function persistDashboardLayout() {
+  const grid = el("dashboardGrid");
+  if (!grid) return;
+  const order = [...grid.querySelectorAll(".dashboard-block")].map(n => n.dataset.blockId);
+  const sizes = {};
+  [...grid.querySelectorAll(".dashboard-block")].forEach(n => sizes[n.dataset.blockId] = n.dataset.size || "full");
+  if (!data.settings) data.settings = { cardFeePercent: 0, dashboardLayout: null };
+  data.settings.dashboardLayout = { order, sizes };
+  saveLocal();
+  scheduleCloudSave();
+}
+
+function applyDashboardLayout() {
+  const grid = el("dashboardGrid");
+  if (!grid) return;
+  const blocks = [...grid.querySelectorAll(".dashboard-block")];
+  const layout = getDashboardLayout();
+
+  layout.order.forEach(id => {
+    const node = blocks.find(b => b.dataset.blockId === id);
+    if (node) grid.appendChild(node);
+  });
+
+  blocks.forEach(block => {
+    const size = layout.sizes?.[block.dataset.blockId] || block.dataset.size || "full";
+    block.dataset.size = size;
+    const btn = block.querySelector("[data-resize-block]");
+    if (btn) btn.textContent = size === "half" ? "1/2" : "Rộng";
+  });
+}
+
+function cycleDashboardBlockSize(blockId) {
+  const grid = el("dashboardGrid");
+  if (!grid) return;
+  const block = grid.querySelector(`.dashboard-block[data-block-id="${blockId}"]`);
+  if (!block) return;
+  block.dataset.size = block.dataset.size === "half" ? "full" : "half";
+  const btn = block.querySelector("[data-resize-block]");
+  if (btn) btn.textContent = block.dataset.size === "half" ? "1/2" : "Rộng";
+  persistDashboardLayout();
+  addSyncLog("Đã cập nhật kích thước layout");
+}
+
+function bindDashboardLayoutUI() {
+  const grid = el("dashboardGrid");
+  if (!grid) return;
+  const blocks = [...grid.querySelectorAll(".dashboard-block")];
+
+  blocks.forEach(block => {
+    if (block.dataset.boundLayout === "1") return;
+    block.dataset.boundLayout = "1";
+
+    block.addEventListener("dragstart", () => {
+      draggedDashboardBlock = block;
+      block.classList.add("dragging");
+    });
+
+    block.addEventListener("dragend", () => {
+      block.classList.remove("dragging");
+      draggedDashboardBlock = null;
+      blocks.forEach(b => b.classList.remove("drop-before", "drop-after"));
+      persistDashboardLayout();
+    });
+
+    block.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!draggedDashboardBlock || draggedDashboardBlock === block) return;
+      const rect = block.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      blocks.forEach(b => b.classList.remove("drop-before", "drop-after"));
+      block.classList.add(before ? "drop-before" : "drop-after");
+    });
+
+    block.addEventListener("drop", (e) => {
+      e.preventDefault();
+      if (!draggedDashboardBlock || draggedDashboardBlock === block) return;
+      const rect = block.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      block.classList.remove("drop-before", "drop-after");
+      if (before) block.parentNode.insertBefore(draggedDashboardBlock, block);
+      else block.parentNode.insertBefore(draggedDashboardBlock, block.nextSibling);
+      persistDashboardLayout();
+      addSyncLog("Đã cập nhật layout dashboard");
+    });
+
+    const resizeBtn = block.querySelector("[data-resize-block]");
+    if (resizeBtn) {
+      resizeBtn.addEventListener("click", () => cycleDashboardBlockSize(block.dataset.blockId));
+    }
+  });
+}
+
+function resetDashboardLayout() {
+  if (!data.settings) data.settings = { cardFeePercent: 0, dashboardLayout: null };
+  data.settings.dashboardLayout = getDefaultDashboardLayout();
+  render();
+  scheduleCloudSave();
+  addSyncLog("Đã reset layout dashboard");
+}
 
 function formatMoneyInput(id) {
   const input = el(id);
@@ -505,9 +866,16 @@ function addSyncLog(message) {
   }
 }
 
+function setSyncPill(type, msg) {
+  const pill = el("syncPill");
+  const text = el("syncPillText");
+  if (pill) pill.className = `sync-pill ${type}`;
+  if (text) text.textContent = msg;
+}
 function showStatus(msg, isError=false) {
   el("syncStatus").textContent = msg;
   el("syncStatus").style.color = isError ? "var(--bad)" : "var(--muted)";
+  setSyncPill(isError ? "error" : "ok", msg);
 }
 function updatePaymentPreview(inputId, outputId) {
   const rawAmount = positiveInt(el(inputId)?.value || "");
@@ -547,7 +915,7 @@ function showBillImagePreview(file) {
 
 async function extractTextFromImage(file) {
   try {
-    setOcrStatus("🧠 Đang phân tích ảnh bill...");
+    setOcrStatus("🧠 Đang phân tích ảnh bill..."); setSyncPill("loading","Đang phân tích bill");
     const Tesseract = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/+esm");
 
     const img = new Image();
@@ -559,7 +927,7 @@ async function extractTextFromImage(file) {
     });
 
     const canvas = document.createElement("canvas");
-    const scale = Math.max(3, Math.min(4, 2200 / Math.max(img.width, 1)));
+    const scale = Math.max(2, Math.min(3, 1800 / Math.max(img.width, 1)));
     canvas.width = Math.max(1, Math.round(img.width * scale));
     canvas.height = Math.max(1, Math.round(img.height * scale));
     const ctx = canvas.getContext("2d");
@@ -582,11 +950,11 @@ async function extractTextFromImage(file) {
       }
     });
     URL.revokeObjectURL(blobUrl);
-    setOcrStatus("✅ Đã phân tích xong bill.");
+    setOcrStatus("✅ Đã phân tích xong bill."); setSyncPill("ok","Đã phân tích bill");
     return result?.data?.text || "";
   } catch (e) {
     console.error(e);
-    setOcrStatus("❌ OCR ảnh bị lỗi.");
+    setOcrStatus("❌ OCR ảnh bị lỗi."); setSyncPill("error","Lỗi OCR");
     throw new Error("Không OCR được ảnh. Hãy thử ảnh rõ hơn hoặc dán nội dung text.");
   }
 }
@@ -1048,7 +1416,7 @@ function render() {
   data.banks.forEach(bank => {
     const item = document.createElement("div");
     item.className = "tx";
-    item.innerHTML = `<div class="tx-left"><div class="tx-title">${escapeHtml(bank.name)}</div><div class="muted">${escapeHtml(bank.number || "Chưa có số tài khoản")} · Số dư đầu ${money(bank.initialBalance || 0)}</div></div><div class="right"><div class="tx-amount">${money(getBankBalance(bank))}</div><button class="small secondary" data-edit-bank="${bank.id}">Sửa</button></div>`;
+    item.innerHTML = `<div class="tx-left"><div class="tx-title">${escapeHtml(bank.name)}</div><div class="muted">${escapeHtml(bank.number || "Chưa có số tài khoản")}</div></div><div class="right"><div class="tx-amount">${money(getBankBalance(bank))}</div><button class="small secondary" data-edit-bank="${bank.id}">Sửa</button></div>`;
     bankMenuList.appendChild(item);
   });
 
@@ -1083,6 +1451,9 @@ function render() {
   document.querySelectorAll("[data-edit-ad]").forEach(btn => btn.onclick = () => openAdModal(btn.dataset.editAd));
   document.querySelectorAll("[data-edit-tx]").forEach(btn => btn.onclick = () => openTxModal(btn.dataset.editTx));
   document.querySelectorAll("[data-delete-tx]").forEach(btn => btn.onclick = () => deleteTransaction(btn.dataset.deleteTx));
+
+  applyDashboardLayout();
+  bindDashboardLayoutUI();
   saveLocal();
 }
 function validateFirebaseConfig(cfg) {
@@ -1232,6 +1603,7 @@ function openBankModal(id) {
   editingBankId = id;
   el("editBankName").value = bank.name || "";
   el("editBankNumber").value = bank.number || "";
+  el("editBankCurrentBalance").value = Number(getBankBalance(bank) || 0).toLocaleString("vi-VN");
   el("editBankInitialBalance").value = bank.initialBalance ? Number(bank.initialBalance).toLocaleString("vi-VN") : "";
   el("bankModal").classList.add("open");
 }
@@ -1310,10 +1682,22 @@ function saveBankEdit() {
   if (!bank) return;
   const name = el("editBankName").value.trim();
   if (!name) return alert("Nhập tên ngân hàng.");
+  const oldCurrent = getBankBalance(bank);
+  const desiredCurrent = positiveInt(el("editBankCurrentBalance").value);
+  const manualInitial = positiveInt(el("editBankInitialBalance").value);
+
   bank.name = name;
   bank.number = el("editBankNumber").value.trim();
-  bank.initialBalance = positiveInt(el("editBankInitialBalance").value);
-  closeBankModal(); persist();
+
+  if (desiredCurrent > 0) {
+    const delta = desiredCurrent - oldCurrent;
+    bank.initialBalance = Number(bank.initialBalance || 0) + delta;
+  } else {
+    bank.initialBalance = manualInitial;
+  }
+
+  closeBankModal();
+  persist();
 }
 function saveAdEdit() {
   const ad = data.adAccounts.find(a => a.id === editingAdId);
@@ -1383,7 +1767,7 @@ async function autoConnectIfConfigured() {
   }
 }
 
-["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","adThreshold","editAdThreshold","editTxAmount"].forEach(formatMoneyInput);
+["bankInitialBalance","depositAmount","paymentAmount","depositAmountQuick","paymentAmountQuick","editBankInitialBalance","editBankCurrentBalance","adThreshold","editAdThreshold","editTxAmount"].forEach(formatMoneyInput);
 el("cardFeePercent").addEventListener("input", () => {
   el("cardFeePercent").value = formatDecimalPercent(el("cardFeePercent").value);
   if (!data.settings) data.settings = { cardFeePercent: 0 };
@@ -1406,7 +1790,10 @@ el("btnPush").addEventListener("click", pushCloud);
 el("btnPull").addEventListener("click", pullCloud);
 el("btnPullTop").addEventListener("click", pullCloud);
 el("btnPushTop").addEventListener("click", pushCloud);
-el("searchBox").addEventListener("input", render);
+el("btnSidebarToggle").addEventListener("click", () => applySidebarState(!document.body.classList.contains("sidebar-collapsed")));
+el("btnThemeToggle").addEventListener("click", () => applyTheme(document.body.classList.contains("dark") ? "light" : "dark"));
+el("btnResetLayout").addEventListener("click", resetDashboardLayout);
+const searchBoxNode = el("searchBox"); if (searchBoxNode) searchBoxNode.addEventListener("input", render);
 el("btnCloseBankModal").addEventListener("click", closeBankModal);
 el("btnCloseAdModal").addEventListener("click", closeAdModal);
 el("btnCloseTxModal").addEventListener("click", closeTxModal);
@@ -1447,7 +1834,10 @@ renderMobileNav();
 el("mobileSectionSelect").addEventListener("change", (e) => setSection(e.target.value));
 
 bootSavedConfig();
+initTheme();
+initSidebarState();
 setOcrStatus("Chưa có bill nào được tải lên.");
+setSyncPill("loading","Đang khởi tạo");
 showStatus("Đang chuẩn bị kết nối cloud...");
 render();
 autoConnectIfConfigured();
