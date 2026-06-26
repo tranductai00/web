@@ -1,0 +1,6 @@
+Bản V46
+- Giữ nguyên tính năng cũ.
+- Fix lỗi dữ liệu file tải lên bị lưu chung cho tất cả Workspace.
+- Mỗi Workspace dùng bộ nhớ riêng: tháng, ghi chú, thời gian cập nhật.
+- Đổi Workspace sẽ tự tải đúng dữ liệu riêng, Workspace mới sẽ trống nếu chưa có dữ liệu.
+- Giữ nguyên URL gốc, không tự đổi URL theo Workspace.
