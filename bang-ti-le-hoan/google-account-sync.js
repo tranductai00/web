@@ -112,7 +112,10 @@ function installCloud(user){
         photoURL:u.photoURL||'',
         emailVerified:!!u.emailVerified,
         serverUpdatedAt:serverTimestamp()
-      },{merge:true});
+      },{merge:false});
+      // V56 DELETE MONTH FIX:
+      // Workspace payload là snapshot đầy đủ. Dùng replace thay vì merge để các tháng
+      // đã bị xoá local cũng bị xoá thật trên Firestore, tránh realtime kéo lại tháng cũ.
       return true;
     },
     async load(){
