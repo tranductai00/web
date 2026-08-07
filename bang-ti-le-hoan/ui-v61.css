@@ -1,0 +1,229 @@
+/* V61 — UI ONLY
+   Giữ nguyên toàn bộ chức năng gốc.
+   Fix lại giao diện UI tải file và chọn tháng gần giống ảnh mẫu, gọn hơn,
+   đồng thời bỏ cảm giác dư thừa của layout cũ.
+*/
+
+:root{
+  --v61-upload-w: 332px;
+  --v61-gap: 14px;
+  --v61-radius: 22px;
+  --v61-line: #dbe6f6;
+  --v61-soft: #f7faff;
+  --v61-text: #233556;
+  --v61-muted: #8a9bb3;
+  --v61-blue: #2f6df6;
+  --v61-blue2:#5c90ff;
+  --v61-green:#17a34a;
+  --v61-red:#ff5563;
+  --v61-amber:#f5a623;
+  --v61-shadow: 0 12px 28px rgba(15,23,42,.05), 0 3px 10px rgba(47,109,246,.05);
+}
+
+@keyframes v61Fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.layout.compactTop{
+  grid-template-columns: var(--v61-upload-w) minmax(0,1fr)!important;
+  gap: var(--v61-gap)!important;
+  align-items:start!important;
+  margin-bottom:10px!important;
+}
+.layout.compactTop > .card{
+  min-width:0!important;
+  border-radius:26px!important;
+  border:1px solid var(--v61-line)!important;
+  background:linear-gradient(180deg,#fff,#fbfdff)!important;
+  box-shadow:var(--v61-shadow)!important;
+}
+
+/* ===== Upload panel ===== */
+.compactTop .upload{
+  min-height:430px!important;
+  padding:16px!important;
+  border-radius:26px!important;
+}
+.compactTop .upload .title{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  font-size:18px!important;font-weight:900!important;color:var(--v61-text)!important;
+}
+.compactTop .upload .title::before{
+  width:28px!important;height:28px!important;border-radius:999px!important;
+  font-size:14px!important;font-weight:900!important;
+}
+.compactTop .uploadRight{
+  display:grid!important;
+  grid-template-columns:1.08fr .92fr!important;
+  grid-template-rows:44px 1fr auto!important;
+  gap:12px!important;
+  align-items:stretch!important;
+}
+.compactTop .fileTitleRow{
+  grid-column:1 / -1!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  min-height:44px!important;
+}
+.compactTop .fileTitleRow .title{font-size:16px!important;color:var(--v61-text)!important;display:flex!important}
+.compactTop #fileCount{
+  min-width:64px!important;height:32px!important;padding:0 10px!important;border-radius:999px!important;
+  font-size:11px!important;font-weight:900!important;background:#eef3ff!important;color:#5b6f91!important;
+  border:1px solid #e0e9f9!important;
+}
+.compactTop .fileTitleRow .btn.primary{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  height:42px!important;min-height:42px!important;padding:0 18px!important;border-radius:14px!important;
+  font-size:13px!important;font-weight:900!important;box-shadow:0 10px 18px rgba(47,109,246,.18)!important;
+}
+.compactTop .miniDrop{
+  grid-column:1!important;grid-row:2 / span 2!important;
+  min-height:255px!important;height:auto!important;border-radius:20px!important;
+  border:2px dashed #bfd2fb!important;background:linear-gradient(180deg,#fcfdff,#f8fbff)!important;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease!important;
+}
+.compactTop .miniDrop:hover,
+.compactTop .miniDrop.drag{transform:translateY(-1px)!important;box-shadow:0 12px 20px rgba(47,109,246,.08)!important;border-color:#9abbff!important}
+.compactTop .miniDrop > div{gap:8px!important}
+.compactTop .miniDrop > div::before{font-size:40px!important}
+.compactTop .miniDrop b{font-size:13px!important;color:var(--v61-text)!important}
+.compactTop .miniDrop b::after{margin-top:6px!important;font-size:11px!important;color:#8ea1bc!important}
+.compactTop .miniDrop small{margin-top:7px!important}
+.compactTop .miniDrop small::before{min-width:120px!important;height:38px!important;border-radius:12px!important;font-size:12px!important}
+.compactTop .miniDrop small::after{margin-top:10px!important;font-size:10px!important}
+.compactTop .compactFileList{
+  grid-column:2!important;grid-row:2!important;
+  display:flex!important;flex-direction:column!important;gap:10px!important;min-height:108px!important;
+}
+.compactTop .compactFileList::before{
+  content:""!important;display:none!important;
+}
+.compactTop .compactFileList > div[style],
+.compactTop .filePill{
+  width:100%!important;height:104px!important;min-height:104px!important;line-height:1.35!important;
+  border-radius:18px!important;border:1px solid var(--v61-line)!important;background:#fff!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  color:#7c8ea7!important;font-size:14px!important;font-weight:800!important;box-shadow:none!important;
+  padding:18px!important;text-align:center!important;
+}
+.compactTop .filePill{
+  justify-content:flex-start!important;align-items:center!important;height:54px!important;min-height:54px!important;line-height:54px!important;
+  padding:0 44px 0 14px!important;border-radius:14px!important;font-size:12.5px!important;font-weight:850!important;
+}
+.compactTop .filePill::before{margin-right:10px!important}
+.compactTop .filePill button{top:15px!important;right:12px!important;width:22px!important;height:22px!important}
+.compactTop .uploadActions{
+  grid-column:2!important;grid-row:3!important;
+  display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important;
+}
+.compactTop .uploadActions .btn{
+  height:54px!important;min-height:54px!important;border-radius:18px!important;font-size:13px!important;font-weight:850!important;
+  border:1px solid var(--v61-line)!important;background:#fff!important;color:var(--v61-text)!important;
+  box-shadow:none!important;
+}
+
+/* ===== Month panel ===== */
+.compactTop .compactSide{
+  min-height:430px!important;
+  padding:16px!important;
+  border-radius:26px!important;
+}
+.compactTop .sideTitleRow{
+  min-height:44px!important;
+}
+.compactTop .sideTitleRow .title{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  font-size:18px!important;font-weight:900!important;color:var(--v61-text)!important;
+}
+.compactTop .sideTitleRow .title::before{
+  width:28px!important;height:28px!important;border-radius:999px!important;font-size:14px!important;font-weight:900!important;
+}
+.compactTop .sideTitleRow .smBtn{
+  width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;border-radius:14px!important;
+}
+.compactTop .compactMonthBox{
+  display:flex!important;flex-wrap:nowrap!important;gap:14px!important;overflow-x:auto!important;overflow-y:hidden!important;
+  padding:8px 2px 10px 2px!important;align-items:stretch!important;scrollbar-width:thin!important;
+}
+.compactTop .compactMonthBox::-webkit-scrollbar{height:8px!important}
+.compactTop .compactMonthBox::-webkit-scrollbar-thumb{background:#d5e0f4!important;border-radius:999px!important}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  flex:0 0 246px!important;width:246px!important;min-width:246px!important;
+  min-height:206px!important;height:206px!important;border-radius:22px!important;
+}
+.compactTop .monthItem{
+  grid-template-columns:22px 14px minmax(0,1fr) auto!important;
+  grid-template-rows:26px 1fr auto!important;
+  gap:9px!important;padding:14px!important;border-width:1.5px!important;
+  border-radius:22px!important;background:linear-gradient(180deg,#fff,#fcfdff)!important;
+  animation:v61Fade .22s ease both!important;
+}
+.compactTop .monthItem:hover{transform:translateY(-1px)!important;box-shadow:0 12px 22px rgba(47,109,246,.08)!important}
+.compactTop .monthItem input{width:22px!important;min-width:22px!important;height:22px!important}
+.compactTop .monthItem .dot{width:14px!important;min-width:14px!important;height:14px!important}
+.compactTop .monthName{font-size:15px!important;font-weight:900!important;color:var(--v61-text)!important}
+.compactTop .monthCount{min-width:42px!important;height:28px!important;padding:0 8px!important;font-size:12px!important;border-radius:999px!important}
+.compactTop .monthActions{
+  grid-template-columns:repeat(3,1fr)!important;gap:10px!important;padding-top:12px!important;margin-top:4px!important;
+}
+.compactTop .iconBtn,
+.compactTop .editMonth,
+.compactTop .deleteMonth,
+.compactTop .uploadMonth{
+  width:100%!important;height:42px!important;min-height:42px!important;border-radius:13px!important;font-size:14px!important;
+}
+.compactTop .uploadMonth,.compactTop .iconBtn{background:#f4f8ff!important;color:var(--v61-blue)!important;border-color:#d4e0f7!important}
+.compactTop .editMonth{background:#fff8eb!important;color:#d08a00!important;border-color:#f4d9a0!important}
+.compactTop .deleteMonth{background:#fff2f4!important;color:#ff5563!important;border-color:#f6c4ca!important}
+.compactTop .compactMonthBox > div[style]{
+  display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;
+  border:2px dashed #d2def6!important;background:linear-gradient(180deg,#fcfdff,#f9fbff)!important;color:#6d84db!important;
+  font-size:15px!important;font-weight:800!important;gap:8px!important;
+}
+.compactTop .compactMonthBox > div[style]::before{content:"+"!important;display:block!important;font-size:34px!important;line-height:1!important;color:#597dff!important}
+
+.compactTop .sideActions{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;
+  padding-top:12px!important;margin-top:6px!important;border-top:2px solid #eef3fb!important;
+  background:#fff!important;
+}
+.compactTop .sideActions::before{
+  content:"Đã chọn tháng"!important;display:flex!important;align-items:center!important;
+  min-height:44px!important;padding:0!important;background:transparent!important;border:none!important;
+  color:var(--v61-text)!important;font-size:14px!important;font-weight:850!important;
+}
+.compactTop .sideActions .btn{
+  min-width:230px!important;height:50px!important;padding:0 16px!important;border-radius:16px!important;
+  font-size:14px!important;font-weight:900!important;box-shadow:0 12px 22px rgba(47,109,246,.17)!important;
+}
+
+/* dark */
+html[data-theme="dark"] .layout.compactTop > .card{background:linear-gradient(180deg,#111b2d,#0f1828)!important;border-color:#23354f!important}
+html[data-theme="dark"] .compactTop .upload .title,
+html[data-theme="dark"] .compactTop .sideTitleRow .title,
+html[data-theme="dark"] .compactTop .monthName,
+html[data-theme="dark"] .compactTop .sideActions::before{color:#eef4ff!important}
+html[data-theme="dark"] .compactTop .miniDrop,
+html[data-theme="dark"] .compactTop .compactMonthBox > div[style],
+html[data-theme="dark"] .compactTop .compactFileList > div[style],
+html[data-theme="dark"] .compactTop .filePill,
+html[data-theme="dark"] .compactTop .uploadActions .btn,
+html[data-theme="dark"] .compactTop .monthItem,
+html[data-theme="dark"] .compactTop .sideTitleRow .smBtn{background:#0f1828!important;border-color:#2b3f5d!important;color:#d7e5fa!important}
+
+@media (max-width:1380px){
+  .layout.compactTop{grid-template-columns:320px minmax(0,1fr)!important}
+  .compactTop .monthItem,.compactTop .compactMonthBox > div[style]{flex-basis:232px!important;width:232px!important;min-width:232px!important}
+}
+@media (max-width:1100px){
+  .layout.compactTop{grid-template-columns:1fr!important}
+  .compactTop .uploadRight{grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important}
+  .compactTop .miniDrop{grid-column:1!important;grid-row:2!important;min-height:190px!important}
+  .compactTop .compactFileList{grid-column:1!important;grid-row:3!important}
+  .compactTop .uploadActions{grid-column:1!important;grid-row:4!important;grid-template-columns:1fr 1fr!important}
+}
+@media (max-width:760px){
+  .compactTop .upload,
+  .compactTop .compactSide{padding:14px!important}
+  .compactTop .uploadActions{grid-template-columns:1fr!important}
+  .compactTop .sideActions{flex-direction:column!important;align-items:stretch!important}
+  .compactTop .sideActions .btn{width:100%!important;min-width:0!important}
+}
