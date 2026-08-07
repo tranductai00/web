@@ -1,0 +1,226 @@
+/* V68 — UI ONLY
+   Base: V67
+   Giữ nguyên toàn bộ chức năng gốc.
+   Chỉ tăng hiệu ứng glassmorphism + animation cho khu Tải file Excel và Chọn tháng.
+*/
+
+:root{
+  --v68-glass-bg: linear-gradient(180deg, rgba(255,255,255,.80), rgba(247,250,255,.74));
+  --v68-glass-panel: rgba(255,255,255,.55);
+  --v68-glass-panel-2: rgba(255,255,255,.68);
+  --v68-glass-line: rgba(147,197,253,.45);
+  --v68-glass-line-strong: rgba(96,165,250,.75);
+  --v68-glass-shadow: 0 14px 30px rgba(15,23,42,.08), 0 2px 8px rgba(37,99,235,.06);
+  --v68-btn-shadow: 0 10px 18px rgba(37,99,235,.16);
+}
+
+@keyframes v68CardIn {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes v68FloatGlow {
+  0%,100% { box-shadow:0 0 0 rgba(0,0,0,0); }
+  50% { box-shadow:0 10px 22px rgba(37,99,235,.08); }
+}
+@keyframes v68PulseBorder {
+  0%,100% { border-color: rgba(96,165,250,.48); }
+  50% { border-color: rgba(56,189,248,.72); }
+}
+
+/* Main wrapper */
+.layout.compactTop{
+  gap:16px!important;
+}
+.layout.compactTop > .card{
+  position:relative!important;
+  overflow:hidden!important;
+  border-radius:18px!important;
+  border:1px solid rgba(191,219,254,.78)!important;
+  background:var(--v68-glass-bg)!important;
+  box-shadow:var(--v68-glass-shadow)!important;
+  backdrop-filter: blur(14px) saturate(1.15)!important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.15)!important;
+  animation:v68CardIn .28s ease both!important;
+}
+.layout.compactTop > .card::before{
+  height:3px!important;
+  background:linear-gradient(90deg,#3b82f6,#60a5fa,#22c55e,#8b5cf6)!important;
+  opacity:.8!important;
+}
+.layout.compactTop > .card::after{
+  display:block!important;
+  content:""!important;
+  position:absolute!important;
+  inset:auto auto -20px -20px!important;
+  width:120px!important;
+  height:120px!important;
+  border-radius:999px!important;
+  background:radial-gradient(circle, rgba(96,165,250,.16), transparent 70%)!important;
+  pointer-events:none!important;
+}
+
+/* Titles */
+.compactTop .upload .title,
+.compactTop .sideTitleRow .title,
+.compactTop .fileTitleRow .title{
+  color:#1e2f4d!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.5)!important;
+}
+.compactTop .upload .title::before,
+.compactTop .sideTitleRow .title::before{
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(226,236,248,.95))!important;
+  color:#4a6283!important;
+  border:1px solid rgba(191,219,254,.7)!important;
+}
+
+/* Upload glass box */
+.compactTop .miniDrop{
+  border:1.5px dashed rgba(96,165,250,.55)!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.62), rgba(241,247,255,.75))!important;
+  backdrop-filter: blur(10px)!important;
+  -webkit-backdrop-filter: blur(10px)!important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 8px 18px rgba(37,99,235,.05)!important;
+  animation:v68FloatGlow 4s ease-in-out infinite!important;
+}
+.compactTop .miniDrop:hover,
+.compactTop .miniDrop.drag{
+  background:linear-gradient(180deg, rgba(255,255,255,.75), rgba(236,245,255,.92))!important;
+  border-color:rgba(59,130,246,.8)!important;
+  box-shadow:0 0 0 4px rgba(59,130,246,.08), 0 12px 22px rgba(37,99,235,.10)!important;
+}
+.compactTop .miniDrop > div::before{
+  color:#52759a!important;
+  text-shadow:0 2px 10px rgba(37,99,235,.12)!important;
+}
+.compactTop .miniDrop b{
+  color:#2e4564!important;
+}
+
+/* File list area */
+.compactTop .compactFileList > div[style],
+.compactTop .filePill{
+  background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(244,248,255,.86))!important;
+  border-color:rgba(201,215,235,.95)!important;
+  box-shadow:0 4px 12px rgba(15,23,42,.04)!important;
+}
+.compactTop .filePill{
+  backdrop-filter: blur(8px)!important;
+  -webkit-backdrop-filter: blur(8px)!important;
+}
+.compactTop .filePill button{
+  background:linear-gradient(180deg,#f7f9fd,#e9eff7)!important;
+  box-shadow:0 2px 5px rgba(15,23,42,.05)!important;
+  transition:transform .16s ease, background .16s ease!important;
+}
+.compactTop .filePill button:hover{
+  transform:scale(1.06)!important;
+  background:linear-gradient(180deg,#eef4fb,#e1ebf7)!important;
+}
+
+/* Action buttons */
+.compactTop .fileTitleRow .btn.primary,
+.compactTop .sideActions .btn{
+  background:linear-gradient(135deg,#3478f6,#5a94ff)!important;
+  box-shadow:var(--v68-btn-shadow)!important;
+}
+.compactTop .fileTitleRow .btn.primary:hover,
+.compactTop .sideActions .btn:hover{
+  filter:brightness(1.03)!important;
+  transform:translateY(-1px)!important;
+}
+.compactTop .uploadActions .btn,
+.compactTop .sideTitleRow .smBtn,
+.compactTop .iconBtn,
+.compactTop .uploadMonth,
+.compactTop .editMonth,
+.compactTop .deleteMonth{
+  background:linear-gradient(180deg, rgba(255,255,255,.82), rgba(245,248,255,.95))!important;
+  backdrop-filter: blur(7px)!important;
+  -webkit-backdrop-filter: blur(7px)!important;
+  box-shadow:0 4px 10px rgba(15,23,42,.04)!important;
+}
+.compactTop .uploadActions .btn:hover,
+.compactTop .sideTitleRow .smBtn:hover,
+.compactTop .iconBtn:hover,
+.compactTop .uploadMonth:hover,
+.compactTop .editMonth:hover,
+.compactTop .deleteMonth:hover{
+  filter:brightness(1.02)!important;
+}
+
+/* Month cards */
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  background:linear-gradient(180deg, rgba(255,255,255,.72), rgba(246,250,255,.90))!important;
+  border:1px solid rgba(191,219,254,.9)!important;
+  backdrop-filter: blur(12px) saturate(1.08)!important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.08)!important;
+  box-shadow:0 10px 20px rgba(15,23,42,.05)!important;
+}
+.compactTop .monthItem{
+  animation:v68CardIn .24s ease both!important;
+}
+.compactTop .monthItem.active{
+  background:linear-gradient(180deg, rgba(240,247,255,.95), rgba(248,251,255,.96))!important;
+  border-color:rgba(59,130,246,.85)!important;
+  box-shadow:0 0 0 1px rgba(59,130,246,.10), 0 12px 22px rgba(37,99,235,.10)!important;
+  animation:v68PulseBorder 2.4s ease-in-out infinite!important;
+}
+.compactTop .monthItem:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,.88), rgba(244,248,255,.95))!important;
+}
+.compactTop .monthCount,
+.compactTop #fileCount{
+  background:linear-gradient(180deg, rgba(243,246,252,.95), rgba(234,241,249,.95))!important;
+  border:1px solid rgba(219,228,239,.9)!important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8)!important;
+}
+.compactTop .monthName{
+  letter-spacing:.2px!important;
+}
+
+/* Placeholder add month box */
+.compactTop .compactMonthBox > div[style]{
+  color:#687d98!important;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease!important;
+}
+.compactTop .compactMonthBox > div[style]:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(96,165,250,.8)!important;
+  box-shadow:0 10px 18px rgba(37,99,235,.08)!important;
+}
+
+/* Dark mode compatibility for only top cards */
+html[data-theme="dark"] .layout.compactTop > .card{
+  background:linear-gradient(180deg, rgba(15,23,42,.82), rgba(17,24,39,.78))!important;
+  border-color:rgba(71,85,105,.9)!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.28)!important;
+}
+html[data-theme="dark"] .compactTop .upload .title,
+html[data-theme="dark"] .compactTop .sideTitleRow .title,
+html[data-theme="dark"] .compactTop .fileTitleRow .title,
+html[data-theme="dark"] .compactTop .monthName{color:#ecf4ff!important;text-shadow:none!important}
+html[data-theme="dark"] .compactTop .miniDrop,
+html[data-theme="dark"] .compactTop .monthItem,
+html[data-theme="dark"] .compactTop .compactMonthBox > div[style],
+html[data-theme="dark"] .compactTop .uploadActions .btn,
+html[data-theme="dark"] .compactTop .sideTitleRow .smBtn,
+html[data-theme="dark"] .compactTop .filePill,
+html[data-theme="dark"] .compactTop .compactFileList > div[style]{
+  background:linear-gradient(180deg, rgba(22,32,50,.78), rgba(15,23,42,.86))!important;
+  border-color:rgba(71,85,105,.95)!important;
+  color:#cfe2ff!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.18)!important;
+}
+html[data-theme="dark"] .compactTop .monthItem.active{
+  border-color:rgba(96,165,250,.9)!important;
+  background:linear-gradient(180deg, rgba(18,31,52,.92), rgba(20,34,58,.88))!important;
+}
+html[data-theme="dark"] .compactTop .monthCount,
+html[data-theme="dark"] .compactTop #fileCount{
+  background:linear-gradient(180deg, rgba(30,41,59,.88), rgba(22,32,50,.92))!important;
+  border-color:rgba(71,85,105,.9)!important;
+  color:#d9e6fb!important;
+}
+html[data-theme="dark"] .compactTop .miniDrop b{color:#d7e8ff!important}
+html[data-theme="dark"] .compactTop .miniDrop > div::before{color:#cfe3ff!important}
