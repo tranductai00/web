@@ -33,7 +33,7 @@
     .searchBox{position:relative;margin-top:10px}.searchIcon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}.search{width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 34px 0 33px;outline:0}.clearSearch{position:absolute;right:6px;top:6px;width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}.clearSearch:hover{background:var(--blueBg);color:var(--blue)}
     .sideSort{width:100%;height:34px;margin-top:8px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:0 9px;outline:0}.search:focus,.select:focus,.sideSort:focus,.productSearch:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.13)}
     .workspaceList{overflow:auto;padding:7px;flex:1}.workspaceItem{width:100%;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--text);padding:10px;text-align:left;cursor:pointer;display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:9px;align-items:center;transition:.14s}.workspaceItem:hover{background:var(--panel2);border-color:var(--line)}.workspaceItem.active{background:var(--blueBg);border-color:#93c5fd;box-shadow:inset 3px 0 0 var(--blue)}
-    .avatar{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,var(--blueBg),var(--panel2));border:1px solid var(--line);color:var(--blue);font-weight:950}.workspaceName{font-weight:950;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.workspaceMeta{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.workspaceRate{font-weight:950;padding:4px 7px;border-radius:8px;white-space:nowrap}.good{color:var(--green)}.bad{color:var(--red);background:var(--redBg)}
+    .avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blueBg),var(--panel2));border:1px solid var(--line);color:var(--blue);font-weight:950;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover;display:block}.accountEmail{font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.workspaceName{font-weight:950;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.workspaceMeta{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.workspaceRate{font-weight:950;padding:4px 7px;border-radius:8px;white-space:nowrap}.good{color:var(--green)}.bad{color:var(--red);background:var(--redBg)}
     .sideFooter{padding:9px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:10.5px;display:flex;justify-content:space-between;gap:8px}
 
     .main{min-width:0}.workspaceHero{padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:14px}.heroInfo{min-width:0}.eyebrow{color:var(--blue);font-size:10.5px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}.heroTitle{margin:4px 0 0;font-size:20px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.heroMeta{margin:4px 0 0;color:var(--muted);font-size:11px}.heroActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.select{height:35px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 10px;outline:0;min-width:150px}
@@ -57,7 +57,7 @@
   <header class="top">
     <div class="brand">
       <div class="logo">T</div>
-      <div><h1>Quản lý tỷ lệ hoàn</h1><p>Xem dữ liệu riêng của từng người dùng / Workspace</p></div>
+      <div><h1>Quản lý tỷ lệ hoàn</h1><p>Theo dõi dữ liệu realtime theo tài khoản Google</p></div>
     </div>
     <div class="actions">
       <span id="liveStatus"><span class="statusDot"></span> Chưa kết nối</span>
@@ -71,17 +71,17 @@
     <div class="layout">
       <aside class="card sidebar">
         <div class="sideHead">
-          <div class="sideTitle"><h2>Người dùng / Workspace</h2><span class="count" id="workspaceCount">0</span></div>
+          <div class="sideTitle"><h2>Tài khoản Google</h2><span class="count" id="workspaceCount">0</span></div>
           <div class="searchBox">
             <span class="searchIcon">⌕</span>
-            <input class="search" id="workspaceSearch" placeholder="Tìm mã Workspace..." autocomplete="off">
+            <input class="search" id="workspaceSearch" placeholder="Tìm tên, email hoặc UID..." autocomplete="off">
             <button class="clearSearch hidden" id="clearWorkspaceSearch" type="button" title="Xóa tìm kiếm">×</button>
           </div>
           <select class="sideSort" id="workspaceSort" aria-label="Sắp xếp Workspace">
             <option value="updated">Cập nhật mới nhất</option>
             <option value="badDesc">Tỷ lệ hoàn cao nhất</option>
             <option value="sentDesc">SL đã gửi cao nhất</option>
-            <option value="name">Workspace A–Z</option>
+            <option value="name">Tên người dùng A–Z</option>
           </select>
         </div>
         <div class="workspaceList" id="workspaceList"><div class="empty">Chưa có dữ liệu</div></div>
@@ -91,19 +91,19 @@
       <main class="main">
         <section class="card workspaceHero">
           <div class="heroInfo">
-            <div class="eyebrow">Workspace đang xem</div>
-            <h2 class="heroTitle" id="workspaceTitle">Chưa chọn người dùng</h2>
-            <p class="heroMeta" id="workspaceMeta">Chọn một Workspace bên trái để xem dữ liệu.</p>
+            <div class="eyebrow">Tài khoản đang xem</div>
+            <h2 class="heroTitle" id="workspaceTitle">Chưa chọn tài khoản</h2>
+            <p class="heroMeta" id="workspaceMeta">Chọn một tài khoản Google bên trái để xem dữ liệu.</p>
           </div>
           <div class="heroActions">
             <select class="select" id="detailMonth" disabled aria-label="Chọn tháng"></select>
-            <button class="btn" id="copyWorkspaceBtn" type="button" disabled>Sao chép mã</button>
+            <button class="btn" id="copyWorkspaceBtn" type="button" disabled>Sao chép UID</button>
             <button class="btn primary" id="exportDetailBtn" type="button" disabled>Xuất CSV</button>
           </div>
         </section>
 
         <section class="stats">
-          <div class="card stat"><div class="statLabel">Tổng người dùng</div><div class="statValue" id="statUsers">0</div><div class="statSub">Workspace trên Cloud</div></div>
+          <div class="card stat"><div class="statLabel">Tổng người dùng</div><div class="statValue" id="statUsers">0</div><div class="statSub">Tài khoản Google trên Cloud</div></div>
           <div class="card stat"><div class="statLabel">Sản phẩm</div><div class="statValue" id="statProducts">0</div><div class="statSub">Trong tháng đang xem</div></div>
           <div class="card stat"><div class="statLabel">Tổng SL đơn</div><div class="statValue" id="statTotal">0</div><div class="statSub">Giữ nguyên dữ liệu cũ</div></div>
           <div class="card stat"><div class="statLabel">SL đã gửi</div><div class="statValue" id="statSent">0</div><div class="statSub">Theo công thức hiện tại</div></div>
@@ -130,14 +130,14 @@
 
         <section class="card tableCard">
           <div class="tableHead">
-            <div><h2>Danh sách sản phẩm</h2><p id="tableSubtitle">Chọn một Workspace để xem dữ liệu.</p></div>
+            <div><h2>Danh sách sản phẩm</h2><p id="tableSubtitle">Chọn một tài khoản để xem dữ liệu.</p></div>
             <div class="tableActions"><span class="muted" id="lastUpdated"></span></div>
           </div>
           <div class="tableWrap">
             <table class="table" id="productTable">
               <colgroup><col style="width:48px"><col style="width:140px"><col style="width:285px"><col style="width:100px"><col style="width:100px"><col style="width:100px"><col style="width:100px"><col style="width:105px"><col style="width:115px"><col style="width:150px"><col style="width:230px"><col style="width:230px"></colgroup>
               <thead><tr><th class="sticky1">STT</th><th class="sticky2 left">Mã SP</th><th class="sticky3 left">Tên sản phẩm</th><th>Tổng SL đơn</th><th>SL đã gửi</th><th>Giao TC</th><th>Đã hoàn</th><th>Còn lại</th><th>Tỷ lệ giao TC</th><th>Tỷ lệ hoàn/chưa giao</th><th class="left">Đánh giá</th><th class="left">Giải pháp</th></tr></thead>
-              <tbody id="productBody"><tr><td colspan="12"><div class="empty"><div class="emptyIcon">▦</div>Chưa chọn Workspace</div></td></tr></tbody>
+              <tbody id="productBody"><tr><td colspan="12"><div class="empty"><div class="emptyIcon">▦</div>Chưa chọn tài khoản</div></td></tr></tbody>
             </table>
           </div>
           <div class="pager" id="pager"></div>
@@ -149,7 +149,7 @@
   <div class="overlay" id="loginOverlay">
     <form class="loginCard" id="loginForm">
       <h2>Đăng nhập quản trị</h2>
-      <p>Dùng tài khoản Email/Password trong Firebase Authentication. Chỉ tài khoản có document trong collection <b>admins</b> mới được xem danh sách toàn bộ Workspace.</p>
+      <p>Dùng tài khoản Email/Password trong Firebase Authentication. Chỉ tài khoản có document trong collection <b>admins</b> mới được xem danh sách toàn bộ tài khoản Google.</p>
       <div class="loginField"><label>Email quản trị</label><input type="email" id="adminEmail" required autocomplete="username"></div>
       <div class="loginField"><label>Mật khẩu</label><input type="password" id="adminPassword" required autocomplete="current-password"></div>
       <div class="loginActions"><button class="btn primary" id="loginBtn" type="submit">Đăng nhập</button></div>
@@ -178,7 +178,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const $ = s => document.querySelector(s);
-    const UI_KEY = 'multi_admin_v2_ui';
+    const UI_KEY = 'multi_admin_v3_google_ui';
     const state = {
       workspaces:[], activeId:'', detailMonth:'', unsubscribe:null,
       filtered:[], page:1, highOnly:false, showChart:false
@@ -231,6 +231,10 @@
     function updatedAt(ws){return ws?.data?.serverUpdatedAt||ws?.data?.updatedAt||ws?.data?.localUpdatedAt||'';}
     function notesFor(ws){return ws?.data?.notes||{};}
     function noteFor(ws,code){return notesFor(ws)[String(code||'').trim()]||{};}
+    function userName(ws){return ws?.data?.displayName||ws?.data?.email?.split('@')[0]||ws?.id||'Người dùng';}
+    function userEmail(ws){return ws?.data?.email||'';}
+    function userPhoto(ws){return ws?.data?.photoURL||'';}
+    function isGoogleDashboard(ws){return !!(ws?.data?.ownerUid&&ws?.data?.authProvider==='google.com');}
 
     function saveUI(){
       try{localStorage.setItem(UI_KEY,JSON.stringify({theme:document.documentElement.dataset.theme,workspaceSort:$('#workspaceSort').value,cat:$('#catFilter').value,sort:$('#sortFilter').value,perPage:$('#perPage').value,highOnly:state.highOnly,showChart:state.showChart}));}catch(e){}
@@ -247,17 +251,17 @@
     function startRealtime(){
       if(state.unsubscribe)state.unsubscribe();
       setLive(false,'Đang kết nối...');
-      const q=query(collection(db,'orderDashboards'),limit(500));
+      const q=query(collection(db,'orderDashboards'),limit(1000));
       state.unsubscribe=onSnapshot(q,snap=>{
         const previous=state.activeId;
-        state.workspaces=snap.docs.map(d=>({id:d.id,data:d.data()}));
+        state.workspaces=snap.docs.map(d=>({id:d.id,data:d.data()})).filter(isGoogleDashboard);
         if(previous&&!state.workspaces.some(w=>w.id===previous))state.activeId='';
         if(!state.activeId&&state.workspaces.length){
           const newest=[...state.workspaces].sort((a,b)=>timestampMs(updatedAt(b))-timestampMs(updatedAt(a)))[0];
           state.activeId=newest?.id||'';
           state.detailMonth=latestMonth(newest);
         }
-        setLive(true,`Realtime · ${state.workspaces.length} Workspace`);
+        setLive(true,`Realtime · ${state.workspaces.length} tài khoản`);
         renderAll();
       },error=>{
         console.error(error);setLive(false,'Không có quyền đọc danh sách');
@@ -268,12 +272,12 @@
     function workspaceSummary(ws){const month=latestMonth(ws);return {...sumItems(ws.data.months?.[month]?.items||{}),month};}
     function visibleWorkspaces(){
       const q=norm($('#workspaceSearch').value);
-      return state.workspaces.filter(w=>!q||norm(w.id).includes(q));
+      return state.workspaces.filter(w=>!q||norm([userName(w),userEmail(w),w.id].join(' ')).includes(q));
     }
     function sortedWorkspaces(list){
       const mode=$('#workspaceSort').value;
       return [...list].sort((a,b)=>{
-        if(mode==='name')return a.id.localeCompare(b.id,'vi');
+        if(mode==='name')return userName(a).localeCompare(userName(b),'vi');
         if(mode==='sentDesc')return workspaceSummary(b).sent-workspaceSummary(a).sent;
         if(mode==='badDesc')return workspaceSummary(b).rateBad-workspaceSummary(a).rateBad;
         return timestampMs(updatedAt(b))-timestampMs(updatedAt(a));
@@ -284,11 +288,13 @@
       $('#workspaceCount').textContent=fmt(state.workspaces.length);
       $('#visibleWorkspaceCount').textContent=`${fmt(list.length)} đang hiển thị`;
       $('#clearWorkspaceSearch').classList.toggle('hidden',!$('#workspaceSearch').value);
-      if(!list.length){$('#workspaceList').innerHTML='<div class="empty">Không tìm thấy Workspace</div>';return;}
+      if(!list.length){$('#workspaceList').innerHTML='<div class="empty">Không tìm thấy tài khoản Google</div>';return;}
       $('#workspaceList').innerHTML=list.map(w=>{
         const s=workspaceSummary(w);const bad=s.rateBad>.25;
-        const initial=esc((w.id||'W').slice(0,1).toUpperCase());
-        return `<button class="workspaceItem ${state.activeId===w.id?'active':''}" data-open="${esc(w.id)}"><span class="avatar">${initial}</span><span><span class="workspaceName">${esc(w.id)}</span><span class="workspaceMeta">${esc(s.month||'Chưa có tháng')} · ${fmt(s.products)} SP · ${formatDate(updatedAt(w))}</span></span><span class="workspaceRate ${bad?'bad':'good'}">${pct(s.rateBad)}</span></button>`;
+        const name=userName(w),email=userEmail(w),photo=userPhoto(w);
+        const initial=esc((name||'U').slice(0,1).toUpperCase());
+        const avatar=photo?`<span class="avatar"><img src="${esc(photo)}" alt=""></span>`:`<span class="avatar">${initial}</span>`;
+        return `<button class="workspaceItem ${state.activeId===w.id?'active':''}" data-open="${esc(w.id)}">${avatar}<span><span class="workspaceName">${esc(name)}</span><span class="accountEmail">${esc(email||'Không có email')}</span><span class="workspaceMeta">${esc(s.month||'Chưa có tháng')} · ${fmt(s.products)} SP · ${formatDate(updatedAt(w))}</span></span><span class="workspaceRate ${bad?'bad':'good'}">${pct(s.rateBad)}</span></button>`;
       }).join('');
       document.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openWorkspace(el.dataset.open)));
     }
@@ -306,8 +312,8 @@
       const has=!!w;
       $('#detailMonth').disabled=!has;$('#copyWorkspaceBtn').disabled=!has;$('#exportDetailBtn').disabled=!has;
       if(!w){
-        $('#workspaceTitle').textContent='Chưa chọn người dùng';
-        $('#workspaceMeta').textContent='Chọn một Workspace bên trái để xem dữ liệu.';
+        $('#workspaceTitle').textContent='Chưa chọn tài khoản';
+        $('#workspaceMeta').textContent='Chọn một tài khoản Google bên trái để xem dữ liệu.';
         $('#detailMonth').innerHTML='';
         $('#lastUpdated').textContent='';
         return;
@@ -315,9 +321,10 @@
       const names=monthNames(w);
       if(!state.detailMonth||!names.includes(state.detailMonth))state.detailMonth=names[names.length-1]||'';
       $('#detailMonth').innerHTML=names.map(m=>`<option value="${esc(m)}" ${m===state.detailMonth?'selected':''}>${esc(m)}</option>`).join('');
-      $('#workspaceTitle').textContent=w.id;
-      $('#workspaceMeta').textContent=`${names.length} tháng · ${Object.keys(notesFor(w)).length} ghi chú · cập nhật ${formatDate(updatedAt(w))}`;
-      $('#lastUpdated').textContent=`Cập nhật: ${formatDate(updatedAt(w))}`;
+      $('#workspaceTitle').textContent=userName(w);
+      const mail=userEmail(w);const pieces=[mail,w.id,`${names.length} tháng`,`${Object.keys(notesFor(w)).length} ghi chú`,`cập nhật ${formatDate(updatedAt(w))}`].filter(Boolean);
+      $('#workspaceMeta').textContent=pieces.join(' · ');
+      $('#lastUpdated').textContent=`Cập nhật realtime: ${formatDate(updatedAt(w))}`;
     }
 
     function renderStats(){
@@ -365,10 +372,10 @@
     }
     function renderProducts(){
       const body=$('#productBody');const w=activeWorkspace();
-      if(!w){state.filtered=[];$('#filterCount').textContent='0 sản phẩm';$('#tableSubtitle').textContent='Chọn một Workspace để xem dữ liệu.';body.innerHTML='<tr><td colspan="12"><div class="empty"><div class="emptyIcon">▦</div>Chưa chọn Workspace</div></td></tr>';$('#pager').innerHTML='';renderChart();return;}
+      if(!w){state.filtered=[];$('#filterCount').textContent='0 sản phẩm';$('#tableSubtitle').textContent='Chọn một tài khoản để xem dữ liệu.';body.innerHTML='<tr><td colspan="12"><div class="empty"><div class="emptyIcon">▦</div>Chưa chọn tài khoản</div></td></tr>';$('#pager').innerHTML='';renderChart();return;}
       state.filtered=productRows();
       $('#filterCount').textContent=`${fmt(state.filtered.length)} sản phẩm`;
-      $('#tableSubtitle').textContent=`${w.id} · ${state.detailMonth||'Chưa có tháng'} · ${fmt(state.filtered.length)} sản phẩm phù hợp`;
+      $('#tableSubtitle').textContent=`${userName(w)} · ${state.detailMonth||'Chưa có tháng'} · ${fmt(state.filtered.length)} sản phẩm phù hợp`;
       const pp=Number($('#perPage').value)||50;
       const totalPages=Math.max(1,Math.ceil(state.filtered.length/pp));
       if(state.page>totalPages)state.page=totalPages;
@@ -408,9 +415,9 @@
     }
     function exportDetail(){
       const w=activeWorkspace();if(!w)return;
-      const rows=[['Workspace','Tháng','Mã SP','Tên sản phẩm','Danh mục','Tổng SL đơn','SL đã gửi','Giao TC','Đã hoàn','Còn lại','Tỷ lệ giao TC','Tỷ lệ hoàn/chưa giao','Đánh giá','Giải pháp']];
-      state.filtered.forEach(x=>rows.push([w.id,state.detailMonth,x.code||'',x.name||'',x.cat||'',x.total,x.sent,x.delivered,x.returned,x.remain,pct(x.rateSuccess),pct(x.rateBad),x.eval||'',x.solution||'']));
-      downloadText(`${w.id}-${state.detailMonth||'du-lieu'}.csv`,rows.map(r=>r.map(csvCell).join(',')).join('\n'));
+      const rows=[['Người dùng','Email','UID','Tháng','Mã SP','Tên sản phẩm','Danh mục','Tổng SL đơn','SL đã gửi','Giao TC','Đã hoàn','Còn lại','Tỷ lệ giao TC','Tỷ lệ hoàn/chưa giao','Đánh giá','Giải pháp']];
+      state.filtered.forEach(x=>rows.push([userName(w),userEmail(w),w.id,state.detailMonth,x.code||'',x.name||'',x.cat||'',x.total,x.sent,x.delivered,x.returned,x.remain,pct(x.rateSuccess),pct(x.rateBad),x.eval||'',x.solution||'']));
+      const base=(userName(w)||w.id).replace(/[^a-zA-Z0-9_-]+/g,'_');downloadText(`${base}-${state.detailMonth||'du-lieu'}.csv`,rows.map(r=>r.map(csvCell).join(',')).join('\n'));
       toast(`Đã xuất ${state.filtered.length} sản phẩm theo bộ lọc.`);
     }
 
@@ -437,7 +444,7 @@
     $('#highToggle').addEventListener('click',toggleHigh);$('#highToggle').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleHigh();}});
     $('#chartToggle').addEventListener('click',toggleChart);$('#chartToggle').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleChart();}});
     $('#resetFiltersBtn').addEventListener('click',resetFilters);
-    $('#copyWorkspaceBtn').addEventListener('click',async()=>{if(!state.activeId)return;try{await navigator.clipboard.writeText(state.activeId);toast('Đã sao chép mã Workspace.');}catch(e){toast('Không thể sao chép tự động.');}});
+    $('#copyWorkspaceBtn').addEventListener('click',async()=>{if(!state.activeId)return;try{await navigator.clipboard.writeText(state.activeId);toast('Đã sao chép UID người dùng.');}catch(e){toast('Không thể sao chép tự động.');}});
     $('#exportDetailBtn').addEventListener('click',exportDetail);
     $('#themeBtn').addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;saveUI();});
 
