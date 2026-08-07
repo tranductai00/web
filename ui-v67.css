@@ -1,0 +1,336 @@
+/* V67 — UI ONLY
+   Base: V66.
+   Giữ nguyên toàn bộ chức năng gốc.
+   Chỉ fix lại bố cục và UI khu Tải file Excel + Chọn tháng:
+   - rõ ràng hơn
+   - không che mất thông tin
+   - thêm hiệu ứng hover nhẹ
+*/
+
+@keyframes v67FadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== TOP WRAPPER ===== */
+.layout.compactTop{
+  grid-template-columns:minmax(460px, 1fr) minmax(700px, 1.05fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+  margin-bottom:12px!important;
+}
+.layout.compactTop > .card{
+  border-radius:16px!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.06)!important;
+}
+
+/* ===== UPLOAD PANEL ===== */
+.compactTop .upload{
+  height:auto!important;
+  min-height:138px!important;
+  padding:12px!important;
+}
+.uploadGrid.compactUpload{
+  display:grid!important;
+  grid-template-columns:minmax(260px, .96fr) minmax(280px, 1.04fr)!important;
+  gap:12px!important;
+  align-items:start!important;
+  height:auto!important;
+}
+.compactTop .uploadLeft{
+  grid-template-rows:22px minmax(0,1fr)!important;
+  gap:8px!important;
+}
+.compactTop .upload .title{
+  height:22px!important;
+  line-height:22px!important;
+  font-size:13px!important;
+  letter-spacing:0!important;
+}
+.compactTop .upload .title::before{
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+  font-size:9px!important;
+}
+.compactTop .miniDrop{
+  height:74px!important;
+  min-height:74px!important;
+  border-radius:12px!important;
+  padding:0 12px!important;
+  transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease, background .2s ease!important;
+}
+.compactTop .miniDrop > div{
+  gap:9px!important;
+}
+.compactTop .miniDrop > div::before{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  font-size:21px!important;
+  color:#567492!important;
+}
+.compactTop .miniDrop b{
+  font-size:12.5px!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+}
+.compactTop .uploadRight{
+  min-width:0!important;
+  display:grid!important;
+  grid-template-columns:1fr auto!important;
+  grid-template-rows:28px auto auto!important;
+  gap:8px 8px!important;
+  align-content:start!important;
+}
+.compactTop .fileTitleRow{
+  height:28px!important;
+  min-height:28px!important;
+  align-items:center!important;
+}
+.compactTop .fileTitleRow .title{
+  font-size:12.5px!important;
+}
+.compactTop #fileCount{
+  height:22px!important;
+  min-height:22px!important;
+  padding:0 8px!important;
+  font-size:10px!important;
+}
+.compactTop .fileTitleRow .btn.primary{
+  height:30px!important;
+  min-height:30px!important;
+  padding:0 12px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease!important;
+}
+.compactTop .fileTitleRow .btn.primary:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 8px 16px rgba(37,99,235,.18)!important;
+}
+.compactTop .compactFileList{
+  grid-column:1/-1!important;
+  grid-row:2!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  align-content:flex-start!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+  min-height:34px!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  padding:2px 0!important;
+}
+.compactTop .compactFileList > div[style]{
+  height:36px!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  border-radius:10px!important;
+  font-size:10px!important;
+}
+.compactTop .filePill{
+  max-width:210px!important;
+  min-width:90px!important;
+  height:28px!important;
+  min-height:28px!important;
+  line-height:26px!important;
+  padding:0 24px 0 10px!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease!important;
+}
+.compactTop .filePill:hover{
+  transform:translateY(-1px)!important;
+  border-color:#adc4df!important;
+  box-shadow:0 4px 10px rgba(15,23,42,.06)!important;
+}
+.compactTop .filePill button{
+  top:5px!important;
+  right:5px!important;
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+}
+.compactTop .uploadActions{
+  grid-column:1/-1!important;
+  grid-row:3!important;
+  justify-content:flex-end!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+}
+.compactTop .uploadActions .btn{
+  height:28px!important;
+  min-height:28px!important;
+  padding:0 10px!important;
+  border-radius:8px!important;
+  font-size:10px!important;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease!important;
+}
+.compactTop .uploadActions .btn:hover{
+  transform:translateY(-1px)!important;
+  border-color:#bfd0e4!important;
+  box-shadow:0 5px 10px rgba(15,23,42,.05)!important;
+}
+
+/* ===== MONTH PANEL ===== */
+.compactTop .compactSide{
+  height:auto!important;
+  min-height:138px!important;
+  padding:12px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:24px auto auto!important;
+  gap:10px 10px!important;
+  align-items:start!important;
+}
+.compactTop .sideTitleRow{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  height:24px!important;
+  min-height:24px!important;
+}
+.compactTop .sideTitleRow .title{
+  font-size:13px!important;
+}
+.compactTop .sideTitleRow .title::before{
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+  font-size:9px!important;
+}
+.compactTop .sideTitleRow .smBtn{
+  width:28px!important;
+  min-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  border-radius:9px!important;
+  transition:transform .16s ease, box-shadow .16s ease!important;
+}
+.compactTop .sideTitleRow .smBtn:hover{
+  transform:rotate(20deg)!important;
+  box-shadow:0 5px 10px rgba(15,23,42,.06)!important;
+}
+.compactTop .compactMonthBox{
+  grid-column:1!important;
+  grid-row:2!important;
+  min-width:0!important;
+  min-height:78px!important;
+  height:auto!important;
+  max-height:none!important;
+  gap:10px!important;
+  padding:2px 0 4px!important;
+  overflow:auto hidden!important;
+}
+.compactTop .monthItem{
+  flex:0 0 148px!important;
+  width:148px!important;
+  min-width:148px!important;
+  height:78px!important;
+  min-height:78px!important;
+  padding:7px 8px!important;
+  border-radius:12px!important;
+  grid-template-columns:16px 10px minmax(0,1fr) auto!important;
+  grid-template-rows:18px 1fr 24px!important;
+  gap:4px 5px!important;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease!important;
+  animation:v67FadeIn .22s ease both!important;
+}
+.compactTop .monthItem:hover{
+  transform:translateY(-2px)!important;
+  box-shadow:0 8px 16px rgba(37,99,235,.08)!important;
+}
+.compactTop .monthItem input{
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+}
+.compactTop .monthItem .dot{
+  width:10px!important;
+  height:10px!important;
+  min-width:10px!important;
+}
+.compactTop .monthName{
+  font-size:11px!important;
+}
+.compactTop .monthCount{
+  min-width:26px!important;
+  height:18px!important;
+  font-size:9px!important;
+}
+.compactTop .monthActions{
+  gap:4px!important;
+}
+.compactTop .iconBtn,
+.compactTop .uploadMonth,
+.compactTop .editMonth,
+.compactTop .deleteMonth{
+  height:22px!important;
+  min-height:22px!important;
+  border-radius:7px!important;
+  font-size:10px!important;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease!important;
+}
+.compactTop .iconBtn:hover,
+.compactTop .uploadMonth:hover,
+.compactTop .editMonth:hover,
+.compactTop .deleteMonth:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 4px 8px rgba(15,23,42,.06)!important;
+}
+.compactTop .compactMonthBox > div[style]{
+  flex:0 0 136px!important;
+  width:136px!important;
+  min-width:136px!important;
+  height:78px!important;
+  min-height:78px!important;
+  border-radius:12px!important;
+  font-size:10px!important;
+}
+.compactTop .sideActions{
+  grid-column:2!important;
+  grid-row:2!important;
+  align-self:start!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+}
+.compactTop .sideActions .btn{
+  min-width:156px!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:0 12px!important;
+  border-radius:10px!important;
+  font-size:10px!important;
+  white-space:nowrap!important;
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease!important;
+}
+.compactTop .sideActions .btn:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 8px 16px rgba(37,99,235,.16)!important;
+}
+
+/* keep summary/other info visible below if any */
+.compactTop .compactSide > :not(.sideTitleRow):not(.compactMonthBox):not(.sideActions){
+  grid-column:1/-1!important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:1280px){
+  .layout.compactTop{
+    grid-template-columns:minmax(420px, .98fr) minmax(0, 1.02fr)!important;
+  }
+}
+@media (max-width:1180px){
+  .layout.compactTop{grid-template-columns:1fr!important}
+}
+@media (max-width:760px){
+  .uploadGrid.compactUpload{grid-template-columns:1fr!important}
+  .compactTop .compactSide{
+    grid-template-columns:1fr!important;
+    grid-template-rows:24px auto auto!important;
+  }
+  .compactTop .compactMonthBox{grid-column:1!important;grid-row:2!important}
+  .compactTop .sideActions{grid-column:1!important;grid-row:3!important;justify-content:stretch!important}
+  .compactTop .sideActions .btn{width:100%!important}
+}

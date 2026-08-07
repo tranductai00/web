@@ -1,0 +1,28 @@
+/* V48 · Google Account + per-user realtime sync. Không thay đổi công thức/bảng dữ liệu. */
+#cloudPanel,.v44LoginOverlay{display:none!important}
+.g48AuthOverlay{position:fixed;inset:0;z-index:2147483646;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.46);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.g48AuthOverlay.show{display:flex!important}
+.g48AuthCard{width:min(430px,calc(100vw - 28px));padding:26px;border:1px solid rgba(226,232,240,.95);border-radius:24px;background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 30px 90px rgba(15,23,42,.28);color:#0f172a}
+html[data-theme="dark"] .g48AuthCard{background:linear-gradient(180deg,#111c31,#0f172a);border-color:#334155;color:#e5edf8}
+.g48AuthLogo{width:54px;height:54px;margin:0 auto 13px;border-radius:17px;display:grid;place-items:center;background:#fff;border:1px solid #e2e8f0;box-shadow:0 12px 25px rgba(15,23,42,.1);font-size:24px;font-weight:950;color:#4285f4}
+.g48AuthCard h2{margin:0;text-align:center;font-size:23px;letter-spacing:-.025em;font-weight:950}
+.g48AuthCard p{margin:8px auto 18px;max-width:345px;text-align:center;color:#64748b;line-height:1.55;font-size:13px}
+html[data-theme="dark"] .g48AuthCard p{color:#94a3b8}
+.g48GoogleBtn{width:100%;height:48px;border:1px solid #dbe3ef;border-radius:14px;background:#fff;color:#172033;font:850 14px Inter,system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:11px;box-shadow:0 8px 18px rgba(15,23,42,.06)}
+.g48GoogleBtn:hover{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(37,99,235,.09)}
+.g48GoogleBtn:disabled{opacity:.6;cursor:wait}.g48GoogleG{font-size:19px;font-weight:950;color:#4285f4}
+.g48AuthHint{margin-top:12px;padding:10px 11px;border:1px solid #dbeafe;border-radius:12px;background:#eff6ff;color:#1d4ed8;font-size:11.5px;line-height:1.45}
+html[data-theme="dark"] .g48AuthHint{background:#12233f;border-color:#244a78;color:#93c5fd}
+.g48AuthError{display:none;margin-top:10px;padding:9px 10px;border-radius:11px;background:#fff1f2;color:#be123c;font-size:12px;line-height:1.45}.g48AuthError.show{display:block}
+.g48AccountPanel{position:fixed;inset:0;z-index:2147483645;display:none;align-items:flex-start;justify-content:flex-end;padding:64px 14px 14px;background:rgba(15,23,42,.18)}
+.g48AccountPanel.show{display:flex!important}
+.g48AccountCard{width:min(360px,calc(100vw - 24px));padding:15px;border:1px solid var(--line,#e5eaf2);border-radius:17px;background:var(--card,#fff);box-shadow:0 22px 65px rgba(15,23,42,.22);color:var(--text,#14213d)}
+.g48Profile{display:grid;grid-template-columns:44px minmax(0,1fr);gap:11px;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line,#e5eaf2)}
+.g48Avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--line,#e5eaf2);background:var(--card2,#f8fbff)}
+.g48AvatarFallback{display:grid;place-items:center;font-weight:950;color:#2563eb}.g48Name{font-weight:950;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.g48Email{font-size:11px;color:var(--muted,#667085);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g48SyncState{display:flex;align-items:center;gap:7px;padding:11px 2px;color:var(--muted,#667085);font-size:11.5px}.g48LiveDot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
+.g48PanelActions{display:flex;gap:7px}.g48PanelActions button{flex:1;height:34px;border-radius:10px;border:1px solid var(--line,#e5eaf2);background:var(--card2,#f8fbff);color:var(--text,#14213d);font-weight:850;cursor:pointer}.g48PanelActions .danger{color:#e11d48;background:#fff1f3}
+#cloudBtn.g48AccountBtn{max-width:230px;display:flex!important;align-items:center!important;gap:6px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#cloudBtn.g48AccountBtn .g48MiniAvatar{width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid rgba(148,163,184,.35)}
+#cloudBtn.g48AccountBtn .g48MiniFallback{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#dbeafe;color:#2563eb;font-size:9px;font-weight:950}
+@media(max-width:640px){.g48AuthCard{padding:22px 18px}.g48AccountPanel{padding:56px 8px 8px}.g48AccountCard{width:100%}#cloudBtn.g48AccountBtn{max-width:155px}.g48AccountBtn .g48AccountText{max-width:105px;overflow:hidden;text-overflow:ellipsis}}

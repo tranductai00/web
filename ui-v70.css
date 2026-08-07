@@ -1,0 +1,162 @@
+/* V70 — UI ONLY
+   Base: V69
+   Giữ nguyên toàn bộ chức năng gốc.
+   Mục tiêu: cân lại bố cục khu Tải file + Chọn tháng, cho 2 ô chính bằng nhau hơn.
+*/
+
+:root{
+  --v70-panel-radius: 18px;
+  --v70-inner-radius: 14px;
+}
+
+/* 2 panel top equal width */
+.layout.compactTop{
+  grid-template-columns:repeat(2, minmax(0, 1fr))!important;
+  gap:18px!important;
+  align-items:stretch!important;
+}
+.layout.compactTop > .card{
+  min-height:188px!important;
+  border-radius:var(--v70-panel-radius)!important;
+}
+.compactTop .upload,
+.compactTop .compactSide{
+  min-height:188px!important;
+  height:100%!important;
+  padding:14px!important;
+}
+
+/* left panel */
+.uploadGrid.compactUpload{
+  grid-template-columns:minmax(0, 1fr) minmax(0, 1fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+}
+.compactTop .uploadLeft,
+.compactTop .uploadRight{
+  min-width:0!important;
+}
+.compactTop .miniDrop{
+  width:100%!important;
+  min-height:96px!important;
+  height:96px!important;
+  border-radius:var(--v70-inner-radius)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.compactTop .compactFileList{
+  min-height:52px!important;
+}
+.compactTop .compactFileList > div[style]{
+  min-height:52px!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.compactTop .uploadActions{
+  gap:10px!important;
+}
+.compactTop .uploadActions .btn,
+.compactTop .fileTitleRow .btn.primary{
+  height:34px!important;
+  min-height:34px!important;
+}
+
+/* right panel */
+.compactTop .compactSide{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto 1fr!important;
+  gap:14px 16px!important;
+  align-items:start!important;
+}
+.compactTop .sideTitleRow{
+  grid-column:1/-1!important;
+}
+.compactTop .compactMonthBox{
+  grid-column:1!important;
+  min-height:96px!important;
+  align-items:stretch!important;
+  gap:12px!important;
+  padding:0!important;
+}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  height:96px!important;
+  min-height:96px!important;
+  border-radius:var(--v70-inner-radius)!important;
+}
+
+/* If only placeholder exists, make it visually match upload box size */
+.compactTop .compactMonthBox > div[style]:only-child{
+  flex:0 0 calc(50% - 6px)!important;
+  width:calc(50% - 6px)!important;
+  min-width:240px!important;
+  max-width:420px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding:0 18px!important;
+  border:1.5px solid #c9daf4!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(245,249,255,.92))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.92), 0 8px 20px rgba(15,23,42,.05)!important;
+  color:#7a8fae!important;
+  font-weight:700!important;
+}
+.compactTop .monthItem{
+  flex:0 0 170px!important;
+  width:170px!important;
+  min-width:170px!important;
+}
+.compactTop .sideActions{
+  grid-column:2!important;
+  grid-row:2!important;
+  align-self:center!important;
+  padding-top:0!important;
+}
+.compactTop .sideActions .btn{
+  min-width:196px!important;
+  height:46px!important;
+  min-height:46px!important;
+  border-radius:14px!important;
+}
+
+/* light glass touch */
+.layout.compactTop > .card,
+.compactTop .miniDrop,
+.compactTop .compactFileList > div[style],
+.compactTop .filePill,
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style],
+.compactTop .uploadActions .btn,
+.compactTop .fileTitleRow .btn.primary,
+.compactTop .sideTitleRow .smBtn,
+.compactTop .iconBtn,
+.compactTop .uploadMonth,
+.compactTop .editMonth,
+.compactTop .deleteMonth{
+  backdrop-filter:blur(10px) saturate(1.08)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(1.08)!important;
+}
+
+/* smoother spacing to avoid content clipping */
+.compactTop .fileTitleRow,
+.compactTop .sideTitleRow{
+  margin-bottom:2px!important;
+}
+.compactTop .monthActions{gap:6px!important}
+
+/* responsive */
+@media (max-width:1240px){
+  .layout.compactTop{grid-template-columns:1fr!important}
+  .compactTop .compactSide{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important}
+  .compactTop .sideActions{grid-column:1!important;grid-row:3!important;justify-content:flex-end!important}
+  .compactTop .compactMonthBox > div[style]:only-child{
+    width:100%!important;max-width:none!important;min-width:0!important;flex:1 1 auto!important;
+  }
+}
+@media (max-width:760px){
+  .uploadGrid.compactUpload{grid-template-columns:1fr!important}
+  .compactTop .sideActions .btn{width:100%!important;min-width:0!important}
+}

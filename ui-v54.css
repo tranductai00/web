@@ -1,0 +1,327 @@
+/* V54 — UI ONLY
+   Chỉ làm lại UI khu Tải file Excel + Chọn tháng with animation.
+   Giữ nguyên 100% chức năng, dữ liệu, công thức và event handler.
+*/
+
+:root{
+  --v54-blue:#2563eb;
+  --v54-blue-2:#4f8cff;
+  --v54-cyan:#2ec5d3;
+  --v54-line:#d9e6f6;
+  --v54-soft:#f7fbff;
+  --v54-shadow:0 12px 36px rgba(37,99,235,.08);
+}
+
+/* ===== animation ===== */
+@keyframes v54FadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes v54Pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.14)}50%{box-shadow:0 0 0 8px rgba(37,99,235,0)}}
+@keyframes v54Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes v54Sweep{from{transform:translateX(-120%)}to{transform:translateX(140%)}}
+
+/* ===== top layout ===== */
+.layout.compactTop{
+  grid-template-columns:360px minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+}
+.layout.compactTop > .card{
+  position:relative!important;
+  overflow:hidden!important;
+  border-radius:22px!important;
+  border:1px solid var(--v54-line)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(247,251,255,.96))!important;
+  box-shadow:var(--v54-shadow)!important;
+  animation:v54FadeUp .38s ease both!important;
+}
+.layout.compactTop > .card::before{
+  content:""!important;
+  position:absolute!important;left:0;right:0;top:0;height:3px!important;
+  background:linear-gradient(90deg,var(--v54-blue),var(--v54-blue-2),var(--v54-cyan))!important;
+  opacity:.9!important;
+}
+.layout.compactTop > .card::after{
+  content:""!important;
+  position:absolute!important;top:0;left:0;width:22%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)!important;
+  transform:translateX(-150%);
+  animation:v54Sweep 5s ease-in-out infinite!important;
+  pointer-events:none!important;
+}
+
+/* ===== upload ===== */
+.compactTop .upload{
+  padding:14px!important;
+  min-height:140px!important;
+  height:140px!important;
+}
+.uploadGrid.compactUpload{
+  grid-template-columns:108px minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+  height:100%!important;
+}
+.compactTop .uploadLeft{
+  display:grid!important;
+  grid-template-rows:24px minmax(0,1fr)!important;
+  gap:8px!important;
+}
+.compactTop .upload .title,
+.compactTop .sideTitleRow .title{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  margin:0!important;
+  color:#132544!important;
+  font-size:16px!important;
+  font-weight:950!important;
+  line-height:1.1!important;
+  letter-spacing:-.02em!important;
+}
+.compactTop .miniDrop{
+  width:108px!important;
+  min-height:92px!important;
+  height:92px!important;
+  border:1.5px dashed #8db7f8!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,#fcfeff,#edf5ff)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 8px 20px rgba(37,99,235,.08)!important;
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,background .2s ease!important;
+}
+.compactTop .miniDrop:hover,
+.compactTop .miniDrop.drag{
+  transform:translateY(-2px)!important;
+  border-color:var(--v54-blue)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 14px 24px rgba(37,99,235,.12)!important;
+  background:linear-gradient(180deg,#fafdff,#eaf3ff)!important;
+}
+.compactTop .miniDrop > div{gap:8px!important}
+.compactTop .miniDrop > div::before{
+  content:"⬆"!important;
+  width:34px!important;height:34px!important;border-radius:12px!important;
+  display:grid!important;place-items:center!important;
+  background:linear-gradient(145deg,var(--v54-blue),var(--v54-blue-2))!important;
+  color:#fff!important;font-size:18px!important;font-weight:900!important;
+  box-shadow:0 10px 18px rgba(37,99,235,.20)!important;
+  animation:v54Float 1.8s ease-in-out infinite!important;
+}
+.compactTop .miniDrop b{
+  max-width:90px!important;
+  color:var(--v54-blue)!important;
+  font-size:13px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+}
+.compactTop .miniDrop small{display:none!important}
+
+.compactTop .uploadRight{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:28px 42px auto!important;
+  gap:8px!important;
+  height:100%!important;
+  min-width:0!important;
+}
+.compactTop .fileTitleRow{
+  grid-column:1/-1!important;
+  height:28px!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+}
+.compactTop .fileTitleRow .title{
+  font-size:15px!important;
+}
+.compactTop #fileCount{
+  height:24px!important;min-height:24px!important;padding:0 10px!important;border-radius:999px!important;
+  background:#eaf2ff!important;color:#54709c!important;font-size:11px!important;font-weight:900!important;
+}
+.compactTop .fileTitleRow .btn.primary{
+  height:32px!important;min-height:32px!important;padding:0 14px!important;border-radius:12px!important;
+  font-size:12px!important;font-weight:900!important;box-shadow:0 8px 16px rgba(37,99,235,.16)!important;
+  transition:transform .16s ease,box-shadow .16s ease!important;
+}
+.compactTop .fileTitleRow .btn.primary:hover{transform:translateY(-1px)!important;box-shadow:0 12px 20px rgba(37,99,235,.2)!important}
+.compactTop .compactFileList{
+  grid-column:1/-1!important;
+  min-height:42px!important;max-height:42px!important;height:42px!important;
+  display:flex!important;align-items:center!important;gap:8px!important;overflow:auto hidden!important;flex-wrap:nowrap!important;
+  scrollbar-width:none!important;
+}
+.compactTop .compactFileList::-webkit-scrollbar{display:none!important}
+.compactTop .compactFileList > div[style]{
+  width:100%!important;height:40px!important;display:flex!important;align-items:center!important;
+  padding:0 14px!important;border:1px dashed #d7e4f4!important;border-radius:14px!important;
+  background:linear-gradient(180deg,#fbfdff,#f5f9ff)!important;color:#8090a8!important;
+  font-size:13px!important;font-weight:700!important;
+}
+.compactTop .filePill{
+  position:relative!important;
+  height:40px!important;line-height:40px!important;min-height:40px!important;
+  padding:0 34px 0 14px!important;border-radius:14px!important;border:1px solid #bed6ff!important;
+  background:linear-gradient(180deg,#f2f7ff,#e8f0ff)!important;color:#1d5fd2!important;
+  font-size:13px!important;font-weight:900!important;box-shadow:0 6px 16px rgba(37,99,235,.08)!important;
+  animation:v54FadeUp .28s ease both!important;
+}
+.compactTop .filePill button{
+  top:8px!important;right:8px!important;width:22px!important;height:22px!important;border-radius:8px!important;
+  font-size:14px!important;background:#fff!important;border:1px solid #d8e5fa!important;
+}
+.compactTop .uploadActions{
+  grid-column:1/-1!important;display:flex!important;justify-content:flex-end!important;gap:8px!important;
+}
+.compactTop .uploadActions .btn{
+  height:34px!important;min-height:34px!important;padding:0 12px!important;border-radius:12px!important;
+  font-size:12px!important;font-weight:850!important;background:#fff!important;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease!important;
+}
+.compactTop .uploadActions .btn:hover{transform:translateY(-1px)!important;box-shadow:0 8px 16px rgba(15,23,42,.06)!important}
+
+/* ===== month side ===== */
+.compactTop .compactSide{
+  padding:14px!important;
+  height:140px!important;min-height:140px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:28px minmax(0,1fr)!important;
+  gap:10px 14px!important;
+}
+.compactTop .sideTitleRow{
+  grid-column:1/-1!important;height:28px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+}
+.compactTop .sideTitleRow .smBtn{
+  width:34px!important;height:34px!important;min-width:34px!important;border-radius:12px!important;
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease!important;
+}
+.compactTop .sideTitleRow .smBtn:hover{
+  transform:rotate(-12deg) scale(1.03)!important;
+  box-shadow:0 8px 18px rgba(37,99,235,.10)!important;
+}
+.compactTop .compactMonthBox{
+  grid-column:1!important;grid-row:2!important;min-width:0!important;
+  display:flex!important;align-items:stretch!important;gap:12px!important;
+  overflow:auto hidden!important;padding:2px 2px 10px 2px!important;
+  scrollbar-width:thin!important;scrollbar-color:#c9d8ee transparent!important;
+}
+.compactTop .compactMonthBox::-webkit-scrollbar{height:8px!important}
+.compactTop .compactMonthBox::-webkit-scrollbar-thumb{background:#cad9ef!important;border-radius:999px!important}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  flex:0 0 clamp(240px,18vw,300px)!important;
+  min-height:72px!important;height:72px!important;border-radius:18px!important;
+}
+.compactTop .monthItem{
+  position:relative!important;display:flex!important;align-items:center!important;gap:10px!important;
+  padding:0 14px!important;border:1px solid #d4e1f2!important;
+  background:linear-gradient(180deg,#ffffff,#f7fbff)!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.045)!important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease!important;
+  animation:v54FadeUp .35s ease both!important;
+}
+.compactTop .monthItem::before{
+  content:""!important;position:absolute!important;left:0;top:12px;bottom:12px;width:4px!important;border-radius:999px!important;
+  background:linear-gradient(180deg,var(--v54-blue),var(--v54-cyan))!important;opacity:.82!important;
+}
+.compactTop .monthItem:hover{
+  transform:translateY(-2px)!important;box-shadow:0 16px 28px rgba(37,99,235,.08)!important;border-color:#a6c7fb!important;
+}
+.compactTop .monthItem.active{
+  border-color:#6ea4f7!important;background:linear-gradient(180deg,#eef5ff,#fcfdff)!important;
+  box-shadow:0 0 0 2px rgba(37,99,235,.09),0 16px 30px rgba(37,99,235,.09)!important;
+  animation:v54FadeUp .35s ease both, v54Pulse 2s ease-in-out infinite!important;
+}
+.compactTop .monthItem input{width:18px!important;height:18px!important;min-width:18px!important;margin-left:2px!important}
+.compactTop .monthItem .dot{width:12px!important;height:12px!important;min-width:12px!important;box-shadow:0 0 0 5px rgba(37,99,235,.06)!important}
+.compactTop .monthName{font-size:14px!important;font-weight:950!important;color:#1a2740!important;letter-spacing:-.015em!important;min-width:70px!important}
+.compactTop .monthCount{
+  min-width:38px!important;height:28px!important;padding:0 10px!important;border-radius:999px!important;
+  background:#edf3fb!important;color:#607188!important;font-size:11px!important;font-weight:900!important;
+}
+.compactTop .monthActions{display:inline-flex!important;align-items:center!important;gap:4px!important;margin-left:auto!important}
+.compactTop .iconBtn,
+.compactTop .editMonth,
+.compactTop .deleteMonth,
+.compactTop .uploadMonth{
+  width:28px!important;height:28px!important;min-width:28px!important;border-radius:10px!important;
+  font-size:12px!important;opacity:.78!important;
+  transition:transform .16s ease,opacity .16s ease,box-shadow .16s ease!important;
+}
+.compactTop .monthItem:hover .iconBtn,
+.compactTop .monthItem:hover .editMonth,
+.compactTop .monthItem:hover .deleteMonth,
+.compactTop .monthItem:hover .uploadMonth{opacity:1!important;transform:translateY(-1px)!important;box-shadow:0 6px 10px rgba(15,23,42,.05)!important}
+
+.compactTop .compactMonthBox > div[style]{
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;padding:0 18px!important;
+  border:1px dashed #d7e4f4!important;background:linear-gradient(180deg,#fbfdff,#f5f9ff)!important;
+  color:#7b8da6!important;font-size:13px!important;font-weight:800!important;
+  animation:v54FadeUp .3s ease both!important;
+}
+.compactTop .compactMonthBox > div[style]::before{
+  content:"◷"!important;
+  width:30px!important;height:30px!important;border-radius:10px!important;display:grid!important;place-items:center!important;
+  background:#edf4ff!important;color:#4d83d8!important;font-size:15px!important;
+  animation:v54Float 2s ease-in-out infinite!important;
+}
+.compactTop .sideActions{
+  grid-column:2!important;grid-row:2!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;
+}
+.compactTop .sideActions .btn{
+  min-width:168px!important;height:44px!important;padding:0 18px!important;border-radius:14px!important;
+  font-size:13px!important;font-weight:950!important;box-shadow:0 12px 22px rgba(37,99,235,.16)!important;
+  transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;
+}
+.compactTop .sideActions .btn:hover{transform:translateY(-2px)!important;filter:saturate(1.05)!important;box-shadow:0 18px 30px rgba(37,99,235,.2)!important}
+
+/* ===== dark ===== */
+html[data-theme="dark"] .layout.compactTop > .card{
+  background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(13,23,38,.98))!important;
+  border-color:#23364f!important;
+  box-shadow:0 18px 36px rgba(0,0,0,.24)!important;
+}
+html[data-theme="dark"] .compactTop .upload .title,
+html[data-theme="dark"] .compactTop .sideTitleRow .title,
+html[data-theme="dark"] .compactTop .monthName{color:#ecf3ff!important}
+html[data-theme="dark"] .compactTop .miniDrop{background:linear-gradient(180deg,#101d30,#12243a)!important;border-color:#355581!important}
+html[data-theme="dark"] .compactTop .compactFileList > div[style],
+html[data-theme="dark"] .compactTop .compactMonthBox > div[style]{background:linear-gradient(180deg,#0f1a2b,#0f1c30)!important;border-color:#2b3b53!important;color:#8ea0b8!important}
+html[data-theme="dark"] .compactTop .filePill{background:linear-gradient(180deg,#11284f,#102340)!important;border-color:#2b5fb5!important;color:#d5e7ff!important}
+html[data-theme="dark"] .compactTop .monthItem{background:linear-gradient(180deg,#111b2b,#101a2a)!important;border-color:#2a3a52!important;box-shadow:0 12px 24px rgba(0,0,0,.18)!important}
+html[data-theme="dark"] .compactTop .monthItem.active{background:linear-gradient(180deg,#102849,#0f203a)!important;border-color:#4b84d8!important}
+html[data-theme="dark"] .compactTop .monthCount{background:#20314a!important;color:#bed2ef!important}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .layout.compactTop > .card,
+  .compactTop .miniDrop > div::before,
+  .compactTop .monthItem,
+  .compactTop .monthItem.active,
+  .compactTop .compactMonthBox > div[style]::before,
+  .layout.compactTop > .card::after{
+    animation:none!important;
+  }
+  .compactTop .miniDrop,
+  .compactTop .monthItem,
+  .compactTop .sideActions .btn,
+  .compactTop .fileTitleRow .btn.primary,
+  .compactTop .uploadActions .btn,
+  .compactTop .sideTitleRow .smBtn{
+    transition:none!important;
+  }
+}
+
+/* responsive */
+@media (max-width:1450px){
+  .layout.compactTop{grid-template-columns:340px minmax(0,1fr)!important}
+  .compactTop .sideActions .btn{min-width:152px!important}
+  .compactTop .monthItem,.compactTop .compactMonthBox > div[style]{flex-basis:260px!important}
+}
+@media (max-width:1100px){
+  .layout.compactTop{grid-template-columns:1fr!important}
+  .compactTop .upload,.compactTop .compactSide{height:auto!important;min-height:140px!important}
+}
+@media (max-width:720px){
+  .compactTop .upload{min-height:auto!important;height:auto!important}
+  .uploadGrid.compactUpload{grid-template-columns:94px minmax(0,1fr)!important;gap:10px!important}
+  .compactTop .miniDrop{width:94px!important;min-height:88px!important;height:88px!important}
+  .compactTop .compactSide{grid-template-columns:1fr!important;grid-template-rows:28px auto auto!important}
+  .compactTop .compactMonthBox{grid-column:1!important;grid-row:2!important}
+  .compactTop .sideActions{grid-column:1!important;grid-row:3!important;justify-content:stretch!important}
+  .compactTop .sideActions .btn{width:100%!important;min-width:0!important}
+  .compactTop .monthItem,.compactTop .compactMonthBox > div[style]{flex-basis:240px!important}
+}

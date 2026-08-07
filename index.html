@@ -19,7 +19,7 @@
 
   <script type="module">
     const SOURCE_VERSION = '5f21d9935c175a655b590525738b13e0b7874855';
-    const UI_VERSION = '68';
+    const UI_VERSION = '70';
     const CACHE_KEY = 'bang_ti_le_hoan_legacy_source_' + SOURCE_VERSION;
     const sources = [
       `https://cdn.jsdelivr.net/gh/tranductai00/web@${SOURCE_VERSION}/bang-ti-le-hoan/index.html`,
@@ -98,6 +98,12 @@
       }
       if(!html.includes('ui-v68.css')){
         html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v68.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v69.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v69.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v70.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v70.css?v=${UI_VERSION}">\n</head>`);
       }
       if(!html.includes('google-account-sync.js')){
         html=html.replace('</body>','<script type="module" src="./google-account-sync.js?v=56-delete-month-fix"><\/script>\n</body>');

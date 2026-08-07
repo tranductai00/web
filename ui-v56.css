@@ -1,0 +1,308 @@
+/* V56 — UI ONLY
+   Giữ nguyên toàn bộ chức năng gốc.
+   Chỉ tinh chỉnh lại UI khu Tải file + Chọn tháng:
+   - Bo viền card tháng đầy đủ và mềm hơn
+   - Sửa cảm giác bị cắt viền / mất góc ở khu month
+   - Tối ưu animation cho hover / active / chọn / nút thao tác
+   - Không thay đổi dữ liệu, công thức, logic, event, Google Login, Firebase, Admin.
+*/
+
+:root{
+  --v56-blue:#2563eb;
+  --v56-blue2:#4f8cff;
+  --v56-cyan:#2ec5d3;
+  --v56-line:rgba(178,208,248,.92);
+  --v56-glass:rgba(255,255,255,.58);
+  --v56-glass2:rgba(250,252,255,.72);
+  --v56-shadow:0 18px 36px rgba(37,99,235,.08), 0 8px 18px rgba(15,23,42,.05);
+  --v56-text:#1c2a44;
+}
+
+@keyframes v56CardIn{from{opacity:0;transform:translateY(8px) scale(.988)}to{opacity:1;transform:none}}
+@keyframes v56PulseSoft{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.10)}50%{box-shadow:0 0 0 9px rgba(37,99,235,0)}}
+@keyframes v56IconPop{0%{transform:scale(.92)}100%{transform:scale(1)}}
+
+/* ===== overall compact top ===== */
+.layout.compactTop{
+  gap:16px!important;
+}
+.layout.compactTop > .card{
+  border-radius:24px!important;
+}
+
+/* ===== Upload panel refinements ===== */
+.compactTop .upload{
+  min-height:150px!important;
+  height:150px!important;
+}
+.uploadGrid.compactUpload{
+  grid-template-columns:116px minmax(0,1fr)!important;
+  gap:14px!important;
+}
+.compactTop .miniDrop{
+  width:116px!important;
+  min-height:96px!important;
+  height:96px!important;
+  border-radius:24px!important;
+  transition:transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .24s cubic-bezier(.2,.8,.2,1), border-color .22s ease, background .22s ease!important;
+}
+.compactTop .miniDrop:hover,
+.compactTop .miniDrop.drag{
+  transform:translateY(-3px) scale(1.01)!important;
+}
+.compactTop .miniDrop > div::before{
+  animation-duration:2.2s!important;
+}
+.compactTop .fileTitleRow .btn.primary,
+.compactTop .uploadActions .btn,
+.compactTop .sideActions .btn,
+.compactTop .sideTitleRow .smBtn{
+  transition:transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s cubic-bezier(.2,.8,.2,1), filter .2s ease, border-color .2s ease, background .2s ease!important;
+}
+.compactTop .uploadActions .btn:active,
+.compactTop .fileTitleRow .btn.primary:active,
+.compactTop .sideActions .btn:active,
+.compactTop .sideTitleRow .smBtn:active{
+  transform:translateY(0) scale(.98)!important;
+}
+.compactTop .filePill{
+  border-radius:18px!important;
+}
+.compactTop .filePill button{
+  transition:transform .18s ease, background .18s ease, box-shadow .18s ease!important;
+}
+.compactTop .filePill button:hover{
+  transform:scale(1.06)!important;
+}
+
+/* ===== Month area: fix full rounded borders ===== */
+.compactTop .compactSide{
+  min-height:150px!important;
+  height:150px!important;
+}
+.compactTop .compactMonthBox{
+  gap:16px!important;
+  padding:4px 4px 12px 4px!important;
+  align-items:stretch!important;
+}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  flex:0 0 clamp(270px,18vw,328px)!important;
+  min-height:82px!important;
+  height:82px!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+}
+.compactTop .monthItem{
+  position:relative!important;
+  padding:0 16px!important;
+  border:1px solid var(--v56-line)!important;
+  border-radius:24px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.68),rgba(245,249,255,.76)) padding-box,
+    linear-gradient(180deg,rgba(255,255,255,.62),rgba(186,214,252,.55)) border-box!important;
+  box-shadow:var(--v56-shadow)!important;
+  backdrop-filter:blur(14px) saturate(1.1)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.1)!important;
+  transition:
+    transform .24s cubic-bezier(.2,.8,.2,1),
+    box-shadow .24s cubic-bezier(.2,.8,.2,1),
+    border-color .22s ease,
+    background .22s ease!important;
+  animation:v56CardIn .32s cubic-bezier(.2,.8,.2,1) both!important;
+  isolation:isolate!important;
+}
+.compactTop .monthItem::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:12px!important;
+  bottom:12px!important;
+  width:4px!important;
+  border-radius:999px!important;
+  background:linear-gradient(180deg,var(--v56-blue),var(--v56-cyan))!important;
+  opacity:.95!important;
+}
+.compactTop .monthItem::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  border-radius:24px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.56)!important;
+  pointer-events:none!important;
+  z-index:0!important;
+}
+.compactTop .monthItem > *{
+  position:relative!important;
+  z-index:1!important;
+}
+.compactTop .monthItem:hover{
+  transform:translateY(-3px)!important;
+  border-color:rgba(126,174,247,.98)!important;
+  box-shadow:0 20px 34px rgba(37,99,235,.10), 0 10px 20px rgba(15,23,42,.06)!important;
+}
+.compactTop .monthItem.active{
+  border-color:rgba(88,145,239,.98)!important;
+  box-shadow:0 0 0 2px rgba(37,99,235,.08), 0 20px 36px rgba(37,99,235,.12)!important;
+  animation:v56CardIn .32s cubic-bezier(.2,.8,.2,1) both, v56PulseSoft 2.3s ease-in-out infinite!important;
+}
+.compactTop .monthItem input{
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  margin-left:2px!important;
+}
+.compactTop .monthItem .dot{
+  width:13px!important;
+  height:13px!important;
+  min-width:13px!important;
+  box-shadow:0 0 0 6px rgba(37,99,235,.06)!important;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1)!important;
+}
+.compactTop .monthItem:hover .dot,
+.compactTop .monthItem.active .dot{
+  transform:scale(1.08)!important;
+}
+.compactTop .monthName{
+  font-size:15px!important;
+  font-weight:950!important;
+  color:var(--v56-text)!important;
+  letter-spacing:-.02em!important;
+}
+.compactTop .monthCount{
+  min-width:40px!important;
+  height:30px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+}
+
+/* Highlight edit controls better */
+.compactTop .monthActions{
+  gap:7px!important;
+  margin-left:auto!important;
+}
+.compactTop .iconBtn,
+.compactTop .editMonth,
+.compactTop .deleteMonth,
+.compactTop .uploadMonth{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  border-radius:12px!important;
+  font-size:13px!important;
+  animation:v56IconPop .18s ease both!important;
+  transition:
+    transform .2s cubic-bezier(.2,.8,.2,1),
+    box-shadow .2s cubic-bezier(.2,.8,.2,1),
+    filter .2s ease,
+    background .2s ease,
+    border-color .2s ease!important;
+}
+.compactTop .monthItem:hover .iconBtn,
+.compactTop .monthItem:hover .editMonth,
+.compactTop .monthItem:hover .deleteMonth,
+.compactTop .monthItem:hover .uploadMonth{
+  transform:translateY(-2px)!important;
+}
+.compactTop .iconBtn:hover,
+.compactTop .uploadMonth:hover,
+.compactTop .editMonth:hover,
+.compactTop .deleteMonth:hover{
+  transform:translateY(-2px) scale(1.05)!important;
+  box-shadow:0 12px 18px rgba(15,23,42,.10)!important;
+  filter:saturate(1.08)!important;
+}
+.compactTop .iconBtn:active,
+.compactTop .uploadMonth:active,
+.compactTop .editMonth:active,
+.compactTop .deleteMonth:active{
+  transform:translateY(0) scale(.96)!important;
+}
+
+/* Empty month state */
+.compactTop .compactMonthBox > div[style]{
+  border-radius:24px!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+
+/* Buttons on month area */
+.compactTop .sideActions .btn{
+  min-width:178px!important;
+  height:50px!important;
+  border-radius:18px!important;
+}
+.compactTop .sideActions .btn:hover{
+  transform:translateY(-2px)!important;
+}
+
+/* dark mode refinements */
+html[data-theme="dark"] .compactTop .monthItem{
+  background:
+    linear-gradient(180deg,rgba(18,30,47,.76),rgba(16,27,43,.84)) padding-box,
+    linear-gradient(180deg,rgba(74,105,152,.48),rgba(52,76,113,.34)) border-box!important;
+  border-color:rgba(68,94,132,.76)!important;
+}
+html[data-theme="dark"] .compactTop .monthItem::after{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+html[data-theme="dark"] .compactTop .monthItem:hover{
+  border-color:rgba(92,134,201,.92)!important;
+  box-shadow:0 18px 30px rgba(0,0,0,.22),0 10px 22px rgba(37,99,235,.10)!important;
+}
+html[data-theme="dark"] .compactTop .monthItem.active{
+  border-color:#4b84d8!important;
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .compactTop .monthItem,
+  .compactTop .monthItem.active,
+  .compactTop .iconBtn,
+  .compactTop .editMonth,
+  .compactTop .deleteMonth,
+  .compactTop .uploadMonth,
+  .compactTop .miniDrop,
+  .compactTop .sideActions .btn,
+  .compactTop .fileTitleRow .btn.primary,
+  .compactTop .uploadActions .btn,
+  .compactTop .sideTitleRow .smBtn{
+    animation:none!important;
+    transition:none!important;
+  }
+}
+
+/* responsive */
+@media (max-width:1500px){
+  .compactTop .monthItem,
+  .compactTop .compactMonthBox > div[style]{
+    flex-basis:290px!important;
+  }
+}
+@media (max-width:1180px){
+  .compactTop .upload,
+  .compactTop .compactSide{
+    height:auto!important;
+    min-height:150px!important;
+  }
+}
+@media (max-width:760px){
+  .uploadGrid.compactUpload{
+    grid-template-columns:100px minmax(0,1fr)!important;
+  }
+  .compactTop .miniDrop{
+    width:100px!important;
+    height:92px!important;
+    min-height:92px!important;
+  }
+  .compactTop .monthItem,
+  .compactTop .compactMonthBox > div[style]{
+    flex-basis:250px!important;
+    min-height:80px!important;
+    height:80px!important;
+  }
+  .compactTop .sideActions .btn{
+    width:100%!important;
+    min-width:0!important;
+  }
+}

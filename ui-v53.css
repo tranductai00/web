@@ -1,0 +1,530 @@
+/* V53 — UI ONLY
+   Chỉ sửa giao diện khu Tải file Excel + Chọn tháng.
+   Không thay đổi công thức, dữ liệu, xử lý Excel, event handler,
+   Google Login, Firebase realtime, bộ lọc, biểu đồ, ghi chú hay Admin. */
+
+/* =========================================================
+   1. KHUNG TRÊN: upload gọn, chọn tháng chiếm tối đa diện tích
+   ========================================================= */
+.layout.compactTop{
+  grid-template-columns:320px minmax(0,1fr)!important;
+  gap:10px!important;
+  align-items:stretch!important;
+  margin-bottom:10px!important;
+}
+.compactTop > .card{
+  min-width:0!important;
+  height:112px!important;
+  min-height:112px!important;
+  border:1px solid #d8e4f3!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.97)!important;
+  box-shadow:0 7px 22px rgba(15,23,42,.055)!important;
+  overflow:hidden!important;
+}
+.compactTop > .card::before{
+  height:2px!important;
+  opacity:.72!important;
+  animation:none!important;
+  background:linear-gradient(90deg,#2563eb,#58a6ff,#38c6d9)!important;
+}
+
+/* =========================================================
+   2. TẢI FILE — nhỏ nhưng không bị bó chữ / chật nút
+   ========================================================= */
+.compactTop .upload{
+  padding:8px!important;
+  height:112px!important;
+  min-height:112px!important;
+}
+.uploadGrid.compactUpload{
+  height:100%!important;
+  display:grid!important;
+  grid-template-columns:86px minmax(0,1fr)!important;
+  gap:8px!important;
+  align-items:stretch!important;
+}
+.compactTop .uploadLeft{
+  display:grid!important;
+  grid-template-rows:18px minmax(0,1fr)!important;
+  gap:5px!important;
+  min-width:0!important;
+}
+.compactTop .upload .title{
+  margin:0!important;
+  font-size:10.5px!important;
+  line-height:18px!important;
+  font-weight:950!important;
+  letter-spacing:-.015em!important;
+  white-space:nowrap!important;
+}
+.compactTop .miniDrop{
+  width:86px!important;
+  height:73px!important;
+  min-height:73px!important;
+  padding:0 5px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:1.5px dashed #8db7f8!important;
+  border-radius:12px!important;
+  background:linear-gradient(145deg,#f8fbff,#edf5ff)!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  transition:border-color .16s ease,background .16s ease,box-shadow .16s ease,transform .16s ease!important;
+}
+.compactTop .miniDrop:hover,
+.compactTop .miniDrop.drag{
+  transform:translateY(-1px)!important;
+  border-color:#2563eb!important;
+  background:#edf5ff!important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.07)!important;
+}
+.compactTop .miniDrop::after{display:none!important}
+.compactTop .miniDrop > div{
+  height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  text-align:center!important;
+}
+.compactTop .miniDrop > div::before{
+  content:"↑"!important;
+  width:25px!important;
+  height:25px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:8px!important;
+  background:linear-gradient(145deg,#2563eb,#3b82f6)!important;
+  color:#fff!important;
+  font-size:14px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  box-shadow:0 5px 12px rgba(37,99,235,.18)!important;
+  animation:none!important;
+}
+.compactTop .miniDrop b{
+  max-width:74px!important;
+  color:#2563eb!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  white-space:normal!important;
+}
+.compactTop .miniDrop small{display:none!important}
+
+.compactTop .uploadRight{
+  min-width:0!important;
+  height:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:22px 31px 27px!important;
+  gap:4px!important;
+  align-content:start!important;
+}
+.compactTop .fileTitleRow{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  min-height:22px!important;
+  height:22px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:5px!important;
+  margin:0!important;
+}
+.compactTop .fileTitleRow .title{
+  font-size:10px!important;
+  line-height:1!important;
+  margin:0!important;
+}
+.compactTop #fileCount{
+  height:18px!important;
+  min-height:18px!important;
+  padding:0 6px!important;
+  margin-left:3px!important;
+  border-radius:999px!important;
+  font-size:8.5px!important;
+  background:#edf4ff!important;
+  color:#52709e!important;
+}
+.compactTop .fileTitleRow .btn.primary{
+  height:22px!important;
+  min-height:22px!important;
+  padding:0 7px!important;
+  border-radius:8px!important;
+  font-size:8.5px!important;
+  line-height:1!important;
+  box-shadow:none!important;
+}
+.compactTop .compactFileList{
+  grid-column:1/-1!important;
+  grid-row:2!important;
+  min-width:0!important;
+  min-height:31px!important;
+  height:31px!important;
+  max-height:31px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:auto hidden!important;
+  flex-wrap:nowrap!important;
+  scrollbar-width:none!important;
+}
+.compactTop .compactFileList::-webkit-scrollbar{display:none!important}
+.compactTop .compactFileList > div[style]{
+  width:100%!important;
+  min-height:29px!important;
+  height:29px!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:0 8px!important;
+  border:1px dashed #d5e0ee!important;
+  border-radius:8px!important;
+  background:#fafcff!important;
+  color:#8a97aa!important;
+  font-size:9px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.compactTop .filePill{
+  flex:0 0 auto!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:29px!important;
+  min-height:29px!important;
+  padding:0 24px 0 8px!important;
+  border:1px solid #bfd8ff!important;
+  border-radius:8px!important;
+  background:#eff6ff!important;
+  color:#1f63d6!important;
+  font-size:9px!important;
+  line-height:29px!important;
+  font-weight:900!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  animation:none!important;
+}
+.compactTop .filePill button{
+  top:5px!important;
+  right:4px!important;
+  width:19px!important;
+  height:19px!important;
+  border-radius:6px!important;
+  font-size:13px!important;
+}
+.compactTop .uploadActions{
+  grid-column:1/-1!important;
+  grid-row:3!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:4px!important;
+  margin:0!important;
+  white-space:nowrap!important;
+}
+.compactTop .uploadActions .btn{
+  height:27px!important;
+  min-height:27px!important;
+  padding:0 7px!important;
+  border-radius:8px!important;
+  font-size:8.5px!important;
+  font-weight:850!important;
+  box-shadow:none!important;
+}
+
+/* =========================================================
+   3. CHỌN THÁNG — lớn, ngang, không còn khoảng trống vô ích
+   ========================================================= */
+.compactTop .compactSide{
+  position:relative!important;
+  height:112px!important;
+  min-height:112px!important;
+  padding:8px 10px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:28px minmax(0,1fr)!important;
+  column-gap:10px!important;
+  row-gap:6px!important;
+}
+.compactTop .sideTitleRow{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  height:28px!important;
+  min-height:28px!important;
+  margin:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+}
+.compactTop .sideTitleRow .title{
+  margin:0!important;
+  font-size:15px!important;
+  line-height:28px!important;
+  font-weight:950!important;
+  letter-spacing:-.02em!important;
+}
+.compactTop .sideTitleRow .smBtn{
+  width:28px!important;
+  min-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  padding:0!important;
+  border-radius:9px!important;
+  font-size:13px!important;
+  box-shadow:none!important;
+  transition:transform .16s ease,background .16s ease,border-color .16s ease!important;
+}
+.compactTop .sideTitleRow .smBtn:hover{
+  transform:rotate(-8deg)!important;
+  background:#edf5ff!important;
+  border-color:#bfd5f7!important;
+}
+
+/* Một hàng tháng lớn, cuộn ngang khi có nhiều tháng */
+.compactTop .compactMonthBox{
+  grid-column:1!important;
+  grid-row:2!important;
+  min-width:0!important;
+  min-height:58px!important;
+  height:58px!important;
+  max-height:58px!important;
+  display:flex!important;
+  align-items:stretch!important;
+  gap:7px!important;
+  padding:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scroll-snap-type:x proximity!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:#c7d8ef transparent!important;
+}
+.compactTop .compactMonthBox::-webkit-scrollbar{height:4px!important}
+.compactTop .compactMonthBox::-webkit-scrollbar-thumb{background:#c7d8ef!important;border-radius:999px!important}
+.compactTop .monthItem{
+  position:relative!important;
+  flex:0 0 clamp(220px,19vw,285px)!important;
+  width:auto!important;
+  height:58px!important;
+  min-height:58px!important;
+  padding:0 8px 0 11px!important;
+  gap:8px!important;
+  border:1px solid #d4e0ef!important;
+  border-radius:12px!important;
+  background:linear-gradient(145deg,#fff,#f8fbff)!important;
+  box-shadow:0 2px 8px rgba(15,23,42,.035)!important;
+  scroll-snap-align:start!important;
+  overflow:hidden!important;
+  animation:none!important;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease!important;
+}
+.compactTop .monthItem::before{
+  width:3px!important;
+  opacity:.72!important;
+}
+.compactTop .monthItem::after{display:none!important}
+.compactTop .monthItem:hover{
+  transform:translateY(-1px)!important;
+  border-color:#9dbff4!important;
+  box-shadow:0 7px 16px rgba(37,99,235,.07)!important;
+}
+.compactTop .monthItem.active{
+  border-color:#73a6f4!important;
+  background:linear-gradient(145deg,#eef5ff,#fbfdff)!important;
+  box-shadow:0 0 0 2px rgba(37,99,235,.07),0 5px 13px rgba(37,99,235,.06)!important;
+}
+.compactTop .monthItem input{
+  width:17px!important;
+  min-width:17px!important;
+  height:17px!important;
+  margin:0!important;
+}
+.compactTop .monthItem .dot{
+  width:10px!important;
+  min-width:10px!important;
+  height:10px!important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.06)!important;
+}
+.compactTop .monthName{
+  flex:1 1 auto!important;
+  min-width:64px!important;
+  max-width:none!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.compactTop .monthCount{
+  flex:0 0 auto!important;
+  min-width:34px!important;
+  height:23px!important;
+  padding:0 7px!important;
+  border-radius:999px!important;
+  background:#edf2f8!important;
+  color:#617188!important;
+  font-size:9.5px!important;
+  font-weight:900!important;
+}
+.compactTop .monthActions{
+  flex:0 0 auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:2px!important;
+  margin-left:0!important;
+}
+.compactTop .iconBtn,
+.compactTop .editMonth,
+.compactTop .deleteMonth,
+.compactTop .uploadMonth{
+  width:26px!important;
+  min-width:26px!important;
+  height:26px!important;
+  min-height:26px!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  opacity:.72!important;
+}
+.compactTop .monthItem:hover .iconBtn,
+.compactTop .monthItem:hover .editMonth,
+.compactTop .monthItem:hover .deleteMonth,
+.compactTop .monthItem:hover .uploadMonth{opacity:1!important}
+
+/* Empty state nhỏ, sạch — không còn khung dashed khổng lồ */
+.compactTop .compactMonthBox > div[style]{
+  flex:1 1 auto!important;
+  width:auto!important;
+  min-width:180px!important;
+  min-height:58px!important;
+  height:58px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:8px!important;
+  padding:0 13px!important;
+  border:1px solid #e0e8f3!important;
+  border-radius:11px!important;
+  background:linear-gradient(145deg,#fafcff,#f6f9fd)!important;
+  color:#8190a5!important;
+  font-size:10.5px!important;
+  font-weight:800!important;
+}
+.compactTop .compactMonthBox > div[style]::before{
+  content:"◷"!important;
+  flex:0 0 auto!important;
+  width:25px!important;
+  height:25px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:8px!important;
+  background:#edf4ff!important;
+  color:#4d83d8!important;
+  font-size:13px!important;
+  animation:none!important;
+}
+
+/* Nút chọn 2 tháng nằm cùng hàng với danh sách tháng */
+.compactTop .sideActions{
+  grid-column:2!important;
+  grid-row:2!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  margin:0!important;
+  gap:0!important;
+}
+.compactTop .sideActions .btn{
+  width:148px!important;
+  min-width:148px!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:0 12px!important;
+  border-radius:10px!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  box-shadow:0 5px 13px rgba(37,99,235,.12)!important;
+  transition:transform .15s ease,box-shadow .15s ease!important;
+}
+.compactTop .sideActions .btn:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 8px 17px rgba(37,99,235,.16)!important;
+}
+
+/* =========================================================
+   4. DARK MODE
+   ========================================================= */
+html[data-theme="dark"] .compactTop > .card{
+  background:#101827!important;
+  border-color:#26364e!important;
+}
+html[data-theme="dark"] .compactTop .miniDrop{
+  background:#101d30!important;
+  border-color:#355581!important;
+}
+html[data-theme="dark"] .compactTop .compactFileList > div[style],
+html[data-theme="dark"] .compactTop .compactMonthBox > div[style]{
+  background:#0e1828!important;
+  border-color:#2b3b53!important;
+  color:#8ea0b8!important;
+}
+html[data-theme="dark"] .compactTop .monthItem{
+  background:#111b2b!important;
+  border-color:#2a3a52!important;
+}
+html[data-theme="dark"] .compactTop .monthItem:hover,
+html[data-theme="dark"] .compactTop .monthItem.active{
+  background:#12233f!important;
+  border-color:#4b84d8!important;
+}
+
+/* =========================================================
+   5. RESPONSIVE
+   ========================================================= */
+@media(min-width:1700px){
+  .layout.compactTop{grid-template-columns:300px minmax(0,1fr)!important}
+  .compactTop .monthItem{flex-basis:270px!important}
+}
+@media(max-width:1250px){
+  .layout.compactTop{grid-template-columns:300px minmax(0,1fr)!important;gap:8px!important}
+  .compactTop .sideActions .btn{width:132px!important;min-width:132px!important;padding:0 9px!important}
+  .compactTop .monthItem{flex-basis:210px!important}
+}
+@media(max-width:900px){
+  .layout.compactTop{grid-template-columns:1fr!important}
+  .compactTop > .card{height:auto!important;min-height:112px!important}
+  .compactTop .upload{height:112px!important}
+  .compactTop .compactSide{height:112px!important}
+}
+@media(max-width:640px){
+  .compactTop .upload{height:auto!important;min-height:120px!important}
+  .uploadGrid.compactUpload{grid-template-columns:78px minmax(0,1fr)!important}
+  .compactTop .miniDrop{width:78px!important}
+  .compactTop .compactSide{
+    height:auto!important;
+    min-height:154px!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:28px 58px 38px!important;
+    row-gap:6px!important;
+  }
+  .compactTop .compactMonthBox{grid-column:1!important;grid-row:2!important}
+  .compactTop .sideActions{grid-column:1!important;grid-row:3!important;justify-content:stretch!important}
+  .compactTop .sideActions .btn{width:100%!important;min-width:0!important}
+  .compactTop .monthItem{flex-basis:205px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .compactTop *,
+  .compactTop *::before,
+  .compactTop *::after{
+    transition:none!important;
+    animation:none!important;
+  }
+}
