@@ -1,0 +1,175 @@
+/* V63 — UI ONLY
+   Giữ nguyên toàn bộ chức năng.
+   UI tải file + chọn tháng compact hơn, không chiếm toàn màn hình.
+   Có fallback hỗ trợ xóa tháng khi nút gốc lỗi.
+*/
+
+:root{
+  --v63-blue:#2f6df6;
+  --v63-blue2:#5f92ff;
+  --v63-text:#223354;
+  --v63-muted:#8ea0bc;
+  --v63-line:#dbe7f7;
+  --v63-soft:#f7fbff;
+  --v63-bg:#f3f7fd;
+  --v63-shadow:0 12px 28px rgba(15,23,42,.05), 0 4px 12px rgba(47,109,246,.04);
+  --v63-radius:24px;
+}
+
+/* Overall compact container */
+body{background:var(--v63-bg)!important}
+.layout.compactTop{
+  width:min(1380px, calc(100vw - 40px))!important;
+  margin:18px auto 8px!important;
+  display:grid!important;
+  grid-template-columns:minmax(320px, 360px) minmax(0, 1fr)!important;
+  gap:16px!important;
+  align-items:start!important;
+}
+.layout.compactTop > .card{
+  min-width:0!important;
+  border-radius:28px!important;
+  border:1px solid var(--v63-line)!important;
+  background:linear-gradient(180deg,#fff,#fbfdff)!important;
+  box-shadow:var(--v63-shadow)!important;
+}
+.compactTop .upload,
+.compactTop .compactSide{
+  min-height:auto!important;
+  height:auto!important;
+  padding:18px!important;
+  border-radius:28px!important;
+}
+
+/* titles */
+.compactTop .upload .title,
+.compactTop .sideTitleRow .title,
+.compactTop .fileTitleRow .title{
+  font-size:17px!important;
+  font-weight:900!important;
+  color:var(--v63-text)!important;
+  margin:0!important;
+  display:flex!important;align-items:center!important;gap:10px!important;
+}
+.compactTop .upload .title::before,
+.compactTop .sideTitleRow .title::before,
+.compactTop .fileTitleRow .title::before{
+  width:34px!important;height:34px!important;border-radius:999px!important;
+  display:grid!important;place-items:center!important;
+  background:linear-gradient(135deg,var(--v63-blue),var(--v63-blue2))!important;
+  color:#fff!important;font-size:15px!important;font-weight:900!important;
+  box-shadow:0 10px 18px rgba(47,109,246,.15)!important;
+}
+.compactTop .fileTitleRow .title::before{display:none!important;content:none!important}
+
+/* upload layout */
+.compactTop .v63-upload-shell{display:flex!important;flex-direction:column!important;gap:16px!important}
+.compactTop .v63-upload-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;flex-wrap:wrap!important}
+.compactTop .fileTitleRow{display:flex!important;align-items:center!important;gap:12px!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+.compactTop #fileCount{
+  min-width:62px!important;height:34px!important;padding:0 10px!important;
+  border-radius:999px!important;background:#eef3ff!important;border:1px solid #dfe8fb!important;
+  color:#607292!important;font-size:12px!important;font-weight:900!important;
+}
+.compactTop .fileTitleRow .btn.primary{
+  height:42px!important;min-height:42px!important;padding:0 18px!important;border:none!important;border-radius:14px!important;
+  background:linear-gradient(135deg,var(--v63-blue),var(--v63-blue2))!important;color:#fff!important;
+  font-size:13px!important;font-weight:900!important;box-shadow:0 10px 18px rgba(47,109,246,.16)!important;
+}
+.compactTop .v63-upload-content{display:grid!important;grid-template-columns:1.05fr .95fr!important;gap:16px!important;align-items:start!important}
+.compactTop .miniDrop{
+  min-height:238px!important;height:238px!important;border-radius:24px!important;
+  border:2px dashed #bfd2fb!important;background:linear-gradient(180deg,#fcfdff,#f7fbff)!important;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease!important;
+}
+.compactTop .miniDrop:hover,.compactTop .miniDrop.drag{transform:translateY(-1px)!important;border-color:#9ebfff!important;box-shadow:0 14px 24px rgba(47,109,246,.08)!important}
+.compactTop .miniDrop > div{gap:10px!important}
+.compactTop .miniDrop > div::before{font-size:46px!important;color:#aec4ff!important}
+.compactTop .miniDrop b{font-size:16px!important;font-weight:900!important;color:var(--v63-text)!important}
+.compactTop .miniDrop b::after{margin-top:6px!important;font-size:12px!important;color:#98a8c0!important}
+.compactTop .miniDrop small{margin-top:8px!important}
+.compactTop .miniDrop small::before{
+  min-width:128px!important;height:40px!important;border-radius:13px!important;padding:0 16px!important;
+  background:linear-gradient(135deg,var(--v63-blue),var(--v63-blue2))!important;color:#fff!important;font-size:13px!important;font-weight:900!important;
+  box-shadow:0 10px 18px rgba(47,109,246,.16)!important;
+}
+.compactTop .miniDrop small::after{margin-top:10px!important;font-size:10px!important;color:#98a8c0!important}
+.compactTop .v63-upload-right{display:flex!important;flex-direction:column!important;gap:14px!important}
+.compactTop .compactFileList{display:flex!important;flex-direction:column!important;gap:12px!important}
+.compactTop .compactFileList::before{display:none!important;content:none!important}
+.compactTop .compactFileList > div[style],
+.compactTop .filePill{
+  width:100%!important;min-height:110px!important;border-radius:20px!important;border:1px solid var(--v63-line)!important;background:#fff!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;padding:18px!important;text-align:center!important;
+  color:#7f90a8!important;font-size:14px!important;font-weight:800!important;box-shadow:none!important;
+}
+.compactTop .filePill{min-height:54px!important;height:54px!important;justify-content:flex-start!important;padding:0 44px 0 14px!important;font-size:13px!important}
+.compactTop .filePill button{top:16px!important;right:12px!important;width:22px!important;height:22px!important}
+.compactTop .uploadActions{display:grid!important;grid-template-columns:1fr!important;gap:12px!important}
+.compactTop .uploadActions .btn{
+  height:54px!important;min-height:54px!important;border-radius:18px!important;background:#fff!important;border:1px solid var(--v63-line)!important;
+  color:var(--v63-text)!important;font-size:13px!important;font-weight:850!important;box-shadow:none!important;
+}
+.compactTop .v63-upload-support{display:flex!important;align-items:center!important;gap:8px!important;color:#9aa9bf!important;font-size:12px!important;font-weight:800!important}
+.compactTop .v63-upload-support::before{content:"ⓘ"!important;color:#a3b1cd!important;font-size:14px!important}
+
+/* month layout */
+.compactTop .sideTitleRow{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;min-height:44px!important}
+.compactTop .sideTitleRow .smBtn{width:46px!important;min-width:46px!important;height:46px!important;min-height:46px!important;border-radius:16px!important;border:1px solid var(--v63-line)!important;background:#fff!important;color:#687c9e!important;box-shadow:none!important}
+.compactTop .compactMonthBox{
+  display:flex!important;flex-wrap:nowrap!important;gap:16px!important;align-items:stretch!important;overflow-x:auto!important;overflow-y:hidden!important;
+  padding:14px 2px 10px!important;scrollbar-width:thin!important;
+}
+.compactTop .compactMonthBox::-webkit-scrollbar{height:8px!important}
+.compactTop .compactMonthBox::-webkit-scrollbar-thumb{background:#d8e3f5!important;border-radius:999px!important}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > .v63-add-proxy{
+  flex:0 0 230px!important;width:230px!important;min-width:230px!important;height:170px!important;min-height:170px!important;border-radius:22px!important;
+}
+.compactTop .monthItem{
+  display:grid!important;grid-template-columns:24px 16px minmax(0,1fr) auto!important;grid-template-rows:28px 1fr auto!important;
+  gap:10px!important;padding:14px!important;border-radius:22px!important;border:1.5px solid #d2def6!important;background:linear-gradient(180deg,#fff,#fcfdff)!important;
+}
+.compactTop .monthItem.active{border-color:#4f83ff!important;box-shadow:0 12px 20px rgba(47,109,246,.08)!important}
+.compactTop .monthItem input{width:24px!important;height:24px!important;min-width:24px!important;margin:0!important}
+.compactTop .monthItem .dot{width:16px!important;height:16px!important;min-width:16px!important;align-self:center!important}
+.compactTop .monthName{font-size:15px!important;font-weight:900!important;color:var(--v63-text)!important;align-self:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.compactTop .monthCount{min-width:40px!important;height:28px!important;padding:0 8px!important;border-radius:999px!important;background:#f1f4fb!important;color:#6a7c9b!important;font-size:12px!important;font-weight:900!important;align-self:center!important}
+.compactTop .monthActions{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:10px!important;padding-top:12px!important;border-top:2px solid #eef3fb!important}
+.compactTop .iconBtn,.compactTop .editMonth,.compactTop .deleteMonth,.compactTop .uploadMonth{width:100%!important;height:44px!important;min-height:44px!important;border-radius:14px!important;font-size:14px!important;box-shadow:none!important}
+.compactTop .uploadMonth,.compactTop .iconBtn{background:#f5f8ff!important;border-color:#d6e1f7!important;color:#2f6df6!important}
+.compactTop .editMonth{background:#fff9ee!important;border-color:#f4dab0!important;color:#e69b08!important}
+.compactTop .deleteMonth{background:#fff5f6!important;border-color:#f3c7cc!important;color:#ff5a66!important}
+.compactTop .v63-add-proxy{
+  display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:10px!important;
+  border:2px dashed #d2def6!important;background:linear-gradient(180deg,#fcfdff,#f8fbff)!important;color:#6781df!important;
+  font-size:15px!important;font-weight:800!important;cursor:pointer!important;
+}
+.compactTop .v63-add-proxy::before{content:"+"!important;font-size:44px!important;line-height:1!important;color:#597dff!important}
+.compactTop .sideActions{
+  display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;gap:16px!important;
+  padding:12px 14px!important;margin-top:8px!important;border:1px solid #edf2fa!important;border-radius:18px!important;background:#fbfdff!important;
+}
+.compactTop .sideActions::before{display:none!important;content:none!important}
+.compactTop .v63-side-summary{display:flex!important;align-items:center!important;gap:10px!important;color:var(--v63-text)!important;font-size:15px!important;font-weight:850!important}
+.compactTop .v63-side-summary .count{color:#2f6df6!important;font-weight:900!important}
+.compactTop .v63-side-summary::before{content:"📅"!important;display:grid!important;place-items:center!important;width:34px!important;height:34px!important;border-radius:12px!important;background:#eef4ff!important;font-size:16px!important}
+.compactTop .sideActions .btn{
+  min-width:240px!important;height:56px!important;padding:0 18px!important;border-radius:18px!important;
+  background:linear-gradient(135deg,var(--v63-blue),var(--v63-blue2))!important;border:none!important;color:#fff!important;
+  font-size:15px!important;font-weight:900!important;box-shadow:0 12px 20px rgba(47,109,246,.16)!important;
+}
+
+/* responsive */
+@media (max-width:1180px){
+  .layout.compactTop{width:min(100vw - 24px, 980px)!important;grid-template-columns:1fr!important}
+}
+@media (max-width:760px){
+  .layout.compactTop{width:calc(100vw - 20px)!important;gap:12px!important}
+  .compactTop .upload,.compactTop .compactSide{padding:14px!important}
+  .compactTop .v63-upload-header,.compactTop .v63-upload-content{grid-template-columns:1fr!important;display:grid!important}
+  .compactTop .v63-upload-content{gap:14px!important}
+  .compactTop .fileTitleRow{justify-content:flex-start!important}
+  .compactTop .sideActions{grid-template-columns:1fr!important}
+  .compactTop .sideActions .btn{min-width:0!important;width:100%!important}
+}
