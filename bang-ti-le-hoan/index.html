@@ -19,7 +19,7 @@
 
   <script type="module">
     const SOURCE_VERSION = '5f21d9935c175a655b590525738b13e0b7874855';
-    const UI_VERSION = '56';
+    const UI_VERSION = '64';
     const CACHE_KEY = 'bang_ti_le_hoan_legacy_source_' + SOURCE_VERSION;
     const sources = [
       `https://cdn.jsdelivr.net/gh/tranductai00/web@${SOURCE_VERSION}/bang-ti-le-hoan/index.html`,
@@ -90,11 +90,64 @@
       if(!html.includes('ui-v56.css')){
         html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v56.css?v=${UI_VERSION}">\n</head>`);
       }
+      if(!html.includes('ui-v57.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v57.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v58.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v58.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v59.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v59.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v60.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v60.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v61.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v61.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v62.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v62.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v63.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v63.css?v=${UI_VERSION}">\n</head>`);
+      }
       if(!html.includes('google-account-sync.js')){
         html=html.replace('</body>','<script type="module" src="./google-account-sync.js?v=49"><\/script>\n</body>');
       }
       if(!html.includes('ui-v50.js')){
         html=html.replace('</body>',`<script src="./ui-v50.js?v=${UI_VERSION}"><\/script>\n</body>`);
+      }
+      if(!html.includes('ui-v63.js')){
+        html=html.replace('</body>',`<script src="./ui-v63.js?v=${UI_VERSION}"><\/script>\n</body>`);
+      }
+      // V64: sửa chắc chắn chức năng xóa file Excel đã chọn.
+      // Giữ nguyên semantics gốc: chỉ xóa file khỏi danh sách file đang chọn,
+      // KHÔNG tự xóa dữ liệu tháng đã phân tích từ file.
+      html=html.replace(
+        /function\s+removeFile\s*\(i\)\s*\{files\.splice\(i,1\);renderFileList\(\)\}function\s+clearFiles\s*\(\)\s*\{files=\[\];renderFileList\(\)\}/,
+        `function removeFile(i){
+          i=Number(i);
+          if(!Number.isInteger(i)||i<0||i>=files.length)return;
+          files.splice(i,1);
+          try{const inp=document.getElementById('fileInput');if(inp)inp.value='';}catch(e){}
+          renderFileList();
+        }
+        function clearFiles(){
+          files.length=0;
+          try{const inp=document.getElementById('fileInput');if(inp)inp.value='';}catch(e){}
+          renderFileList();
+        }
+        window.removeFile=removeFile;
+        window.clearFiles=clearFiles;`
+      );
+      // Fallback nếu source gốc thay đổi nhẹ nhưng hai hàm vẫn tồn tại.
+      html=html.replace(
+        /function\s+removeFile\s*\(i\)\s*\{([\s\S]*?)\}\s*function\s+clearFiles\s*\(\)\s*\{([\s\S]*?)\}/,
+        (m,a,b)=>m.includes('window.removeFile=removeFile')?m:m+'\\n<script>try{window.removeFile=removeFile;window.clearFiles=clearFiles}catch(e){}<\\/script>'
+      );
+
+      if(!html.includes('ui-v64.js')){
+        html=html.replace('</body>',`<script src="./ui-v64.js?v=${UI_VERSION}"><\\/script>\\n</body>`);
       }
       return html;
     }
