@@ -1,0 +1,278 @@
+/* V59 — UI ONLY
+   Giữ nguyên toàn bộ chức năng gốc.
+   Chỉ thu ngắn tối đa chiều rộng khu Tải file Excel + Chọn tháng,
+   giảm khoảng trống ngang và làm card tháng compact hơn.
+*/
+
+:root{
+  --v59-gap:10px;
+  --v59-upload-w:300px;
+  --v59-month-card-w:210px;
+}
+
+/* Toàn khu trên: upload cực gọn, chọn tháng tận dụng phần còn lại */
+.layout.compactTop{
+  grid-template-columns:var(--v59-upload-w) minmax(0,1fr)!important;
+  gap:var(--v59-gap)!important;
+  align-items:start!important;
+  margin-bottom:8px!important;
+}
+.layout.compactTop > .card{
+  min-width:0!important;
+}
+
+/* ===== TẢI FILE: thu hẹp tối đa ===== */
+.compactTop .upload{
+  width:100%!important;
+  min-height:388px!important;
+  height:auto!important;
+  padding:14px!important;
+  border-radius:20px!important;
+}
+.compactTop .upload .title{
+  font-size:15px!important;
+  gap:8px!important;
+}
+.compactTop .upload .title::before{
+  width:24px!important;
+  height:24px!important;
+  font-size:13px!important;
+}
+.compactTop .uploadRight{
+  gap:10px!important;
+}
+.compactTop #fileCount{
+  min-width:72px!important;
+  height:32px!important;
+  padding:0 9px!important;
+  font-size:10.5px!important;
+  border-radius:11px!important;
+}
+.compactTop .miniDrop{
+  min-height:158px!important;
+  height:158px!important;
+  border-radius:16px!important;
+}
+.compactTop .miniDrop > div{
+  gap:5px!important;
+}
+.compactTop .miniDrop > div::before{
+  font-size:32px!important;
+}
+.compactTop .miniDrop b{
+  font-size:13px!important;
+}
+.compactTop .miniDrop b::after{
+  margin-top:4px!important;
+  font-size:10px!important;
+}
+.compactTop .miniDrop small{
+  margin-top:5px!important;
+}
+.compactTop .miniDrop small::before{
+  min-width:110px!important;
+  height:34px!important;
+  padding:0 12px!important;
+  border-radius:10px!important;
+  font-size:11px!important;
+}
+.compactTop .miniDrop small::after{
+  margin-top:7px!important;
+  font-size:9.5px!important;
+}
+.compactTop .compactFileList{
+  gap:6px!important;
+}
+.compactTop .compactFileList::before{
+  font-size:12px!important;
+}
+.compactTop .compactFileList > div[style],
+.compactTop .filePill{
+  height:42px!important;
+  min-height:42px!important;
+  line-height:42px!important;
+  border-radius:12px!important;
+  font-size:11.5px!important;
+}
+.compactTop .filePill{
+  padding:0 40px 0 12px!important;
+}
+.compactTop .filePill button{
+  top:9px!important;
+  right:9px!important;
+  width:22px!important;
+  height:22px!important;
+}
+.compactTop .uploadActions{
+  gap:8px!important;
+}
+.compactTop .uploadActions .btn{
+  height:40px!important;
+  min-height:40px!important;
+  padding:0 8px!important;
+  border-radius:12px!important;
+  font-size:10.5px!important;
+}
+
+/* ===== CHỌN THÁNG: card ngắn nhất vẫn đủ thao tác ===== */
+.compactTop .compactSide{
+  width:100%!important;
+  min-height:388px!important;
+  height:auto!important;
+  padding:14px!important;
+  gap:10px!important;
+  border-radius:20px!important;
+}
+.compactTop .sideTitleRow .title{
+  font-size:16px!important;
+  gap:8px!important;
+}
+.compactTop .sideTitleRow .title::before{
+  width:24px!important;
+  height:24px!important;
+  font-size:13px!important;
+}
+.compactTop .sideTitleRow .smBtn{
+  width:34px!important;
+  min-width:34px!important;
+  height:34px!important;
+  min-height:34px!important;
+  border-radius:11px!important;
+}
+.compactTop .compactMonthBox{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:10px!important;
+  padding:2px 2px 6px 2px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  align-items:flex-start!important;
+  scrollbar-width:thin!important;
+}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  flex:0 0 var(--v59-month-card-w)!important;
+  width:var(--v59-month-card-w)!important;
+  min-width:var(--v59-month-card-w)!important;
+  min-height:172px!important;
+  height:172px!important;
+  border-radius:16px!important;
+}
+.compactTop .monthItem{
+  grid-template-columns:20px 12px minmax(0,1fr) auto!important;
+  grid-template-rows:26px 1fr auto!important;
+  gap:7px!important;
+  padding:12px!important;
+  border-width:1.5px!important;
+}
+.compactTop .monthItem input{
+  width:20px!important;
+  min-width:20px!important;
+  height:20px!important;
+}
+.compactTop .monthItem .dot{
+  width:12px!important;
+  min-width:12px!important;
+  height:12px!important;
+}
+.compactTop .monthName{
+  font-size:13px!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.compactTop .monthCount{
+  min-width:34px!important;
+  height:25px!important;
+  padding:0 7px!important;
+  font-size:10.5px!important;
+}
+.compactTop .monthActions{
+  gap:7px!important;
+  padding-top:10px!important;
+  margin-top:2px!important;
+}
+.compactTop .iconBtn,
+.compactTop .editMonth,
+.compactTop .deleteMonth,
+.compactTop .uploadMonth{
+  height:34px!important;
+  min-height:34px!important;
+  border-radius:10px!important;
+  font-size:13px!important;
+}
+.compactTop .sideActions{
+  padding-top:10px!important;
+}
+.compactTop .sideActions::before{
+  font-size:12px!important;
+}
+.compactTop .sideActions .btn{
+  min-width:190px!important;
+  height:42px!important;
+  padding:0 12px!important;
+  border-radius:13px!important;
+  font-size:13px!important;
+}
+
+/* Màn rất rộng: vẫn không cho upload phình ra */
+@media (min-width:1700px){
+  :root{
+    --v59-upload-w:286px;
+    --v59-month-card-w:205px;
+  }
+}
+
+/* Laptop */
+@media (max-width:1250px){
+  :root{
+    --v59-upload-w:280px;
+    --v59-month-card-w:198px;
+  }
+  .layout.compactTop{gap:8px!important}
+}
+
+/* Tablet: xếp dọc để không ép quá */
+@media (max-width:900px){
+  .layout.compactTop{
+    grid-template-columns:1fr!important;
+  }
+  .compactTop .upload,
+  .compactTop .compactSide{
+    min-height:auto!important;
+  }
+  .compactTop .compactMonthBox{
+    overflow-x:auto!important;
+  }
+}
+
+/* Mobile */
+@media (max-width:640px){
+  :root{--v59-month-card-w:180px}
+  .compactTop .upload,
+  .compactTop .compactSide{
+    padding:10px!important;
+  }
+  .compactTop .miniDrop{
+    min-height:140px!important;
+    height:140px!important;
+  }
+  .compactTop .monthItem,
+  .compactTop .compactMonthBox > div[style]{
+    min-height:158px!important;
+    height:158px!important;
+  }
+  .compactTop .uploadActions{
+    grid-template-columns:1fr!important;
+  }
+  .compactTop .sideActions{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:8px!important;
+  }
+  .compactTop .sideActions .btn{
+    width:100%!important;
+    min-width:0!important;
+  }
+}
