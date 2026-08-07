@@ -1,0 +1,204 @@
+/* V58 — UI ONLY
+   Giữ nguyên toàn bộ chức năng gốc.
+   Chỉ thu gọn và làm compact hơn UI khu Tải file Excel + Chọn tháng.
+   Không thay đổi công thức, dữ liệu, xử lý Excel, Google Login, Firebase realtime, Admin.
+*/
+
+:root{
+  --v58-blue:#2f6df6;
+  --v58-blue-2:#5e93ff;
+  --v58-text:#1f2d4d;
+  --v58-soft:#70819b;
+  --v58-line:#dfe8f5;
+  --v58-shadow:0 12px 28px rgba(15,23,42,.04), 0 6px 12px rgba(47,109,246,.04);
+}
+
+@keyframes v58Fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.layout.compactTop{
+  grid-template-columns:minmax(360px, .95fr) minmax(520px, 1.2fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+}
+.layout.compactTop > .card{
+  border-radius:24px!important;
+  box-shadow:var(--v58-shadow)!important;
+}
+
+/* ===== Upload compact ===== */
+.compactTop .upload{
+  padding:18px!important;
+  min-height:520px!important;
+}
+.compactTop .upload .title{
+  font-size:18px!important;
+  gap:10px!important;
+}
+.compactTop .upload .title::before{
+  width:28px!important;height:28px!important;font-size:15px!important;
+}
+.compactTop .uploadRight{
+  gap:14px!important;
+}
+.compactTop #fileCount{
+  min-width:92px!important;
+  height:38px!important;
+  border-radius:14px!important;
+  font-size:12px!important;
+}
+.compactTop .miniDrop{
+  min-height:220px!important;
+  height:220px!important;
+  border-radius:20px!important;
+}
+.compactTop .miniDrop > div::before{
+  font-size:44px!important;
+}
+.compactTop .miniDrop b{
+  font-size:16px!important;
+}
+.compactTop .miniDrop small::before{
+  min-width:136px!important;
+  height:40px!important;
+  font-size:12px!important;
+  border-radius:12px!important;
+}
+.compactTop .miniDrop small::after{
+  font-size:10.5px!important;
+  margin-top:12px!important;
+}
+.compactTop .compactFileList{gap:8px!important}
+.compactTop .compactFileList::before{
+  font-size:14px!important;
+}
+.compactTop .compactFileList > div[style],
+.compactTop .filePill{
+  height:50px!important;
+  min-height:50px!important;
+  line-height:50px!important;
+  border-radius:14px!important;
+  font-size:13px!important;
+}
+.compactTop .filePill{
+  padding:0 50px 0 16px!important;
+}
+.compactTop .filePill button{
+  top:13px!important;
+  right:14px!important;
+}
+.compactTop .uploadActions{
+  gap:14px!important;
+}
+.compactTop .uploadActions .btn{
+  height:48px!important;
+  min-height:48px!important;
+  border-radius:16px!important;
+  font-size:13px!important;
+}
+
+/* ===== Month compact ===== */
+.compactTop .compactSide{
+  padding:18px!important;
+  min-height:520px!important;
+  gap:14px!important;
+}
+.compactTop .sideTitleRow .title{
+  font-size:18px!important;
+  gap:10px!important;
+}
+.compactTop .sideTitleRow .title::before{
+  width:28px!important;height:28px!important;font-size:15px!important;
+}
+.compactTop .sideTitleRow .smBtn{
+  width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+  border-radius:14px!important;
+}
+.compactTop .compactMonthBox{
+  gap:18px!important;
+  padding:4px 4px 0 4px!important;
+}
+.compactTop .monthItem,
+.compactTop .compactMonthBox > div[style]{
+  min-height:212px!important;
+  height:212px!important;
+  border-radius:20px!important;
+}
+.compactTop .monthItem{
+  grid-template-columns:24px 16px 1fr auto!important;
+  grid-template-rows:30px 1fr auto!important;
+  padding:16px 18px!important;
+  gap:10px!important;
+  border-radius:20px!important;
+  animation:v58Fade .25s ease both!important;
+}
+.compactTop .monthItem input{
+  width:24px!important;height:24px!important;min-width:24px!important;
+}
+.compactTop .monthItem .dot{
+  width:16px!important;height:16px!important;min-width:16px!important;
+}
+.compactTop .monthName{
+  font-size:16px!important;
+}
+.compactTop .monthCount{
+  min-width:40px!important;
+  height:30px!important;
+  font-size:13px!important;
+}
+.compactTop .monthActions{
+  gap:12px!important;
+  padding-top:14px!important;
+  margin-top:4px!important;
+}
+.compactTop .iconBtn,
+.compactTop .editMonth,
+.compactTop .deleteMonth,
+.compactTop .uploadMonth{
+  height:42px!important;
+  min-height:42px!important;
+  border-radius:12px!important;
+  font-size:16px!important;
+}
+.compactTop .sideActions{
+  padding-top:14px!important;
+}
+.compactTop .sideActions::before{
+  font-size:14px!important;
+}
+.compactTop .sideActions .btn{
+  min-width:250px!important;
+  height:52px!important;
+  border-radius:16px!important;
+  font-size:16px!important;
+}
+
+/* keep empty state compact */
+.compactTop .compactMonthBox > div[style]{
+  font-size:14px!important;
+}
+
+/* dark mode */
+html[data-theme="dark"] .layout.compactTop > .card{
+  box-shadow:0 12px 26px rgba(0,0,0,.18)!important;
+}
+
+/* responsive */
+@media (max-width:1600px){
+  .layout.compactTop{grid-template-columns:minmax(340px,.95fr) minmax(460px,1.15fr)!important}
+  .compactTop .compactMonthBox{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:1180px){
+  .layout.compactTop{grid-template-columns:1fr!important}
+  .compactTop .upload,
+  .compactTop .compactSide{min-height:auto!important}
+}
+@media (max-width:760px){
+  .compactTop .upload,
+  .compactTop .compactSide{padding:14px!important}
+  .compactTop .miniDrop{min-height:180px!important;height:180px!important}
+  .compactTop .compactMonthBox{grid-template-columns:1fr!important;gap:14px!important}
+  .compactTop .monthItem,
+  .compactTop .compactMonthBox > div[style]{min-height:190px!important;height:auto!important}
+  .compactTop .uploadActions{grid-template-columns:1fr!important}
+  .compactTop .sideActions .btn{width:100%!important;min-width:0!important}
+}
