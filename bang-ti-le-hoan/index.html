@@ -19,6 +19,7 @@
 
   <script type="module">
     const SOURCE_VERSION = '5f21d9935c175a655b590525738b13e0b7874855';
+    const UI_VERSION = '53';
     const CACHE_KEY = 'bang_ti_le_hoan_legacy_source_' + SOURCE_VERSION;
     const sources = [
       `https://cdn.jsdelivr.net/gh/tranductai00/web@${SOURCE_VERSION}/bang-ti-le-hoan/index.html`,
@@ -54,21 +55,37 @@
       // Chỉ loại bỏ module Firebase đăng nhập ẩn danh cũ. Không chạm vào công thức/xử lý Excel/UI.
       html=html.replace(/<script\s+type=["']module["'][^>]*>[\s\S]*?<\/script>/gi, block=>{
         return block.includes('signInAnonymously') && block.includes('window.firebaseCloud')
-          ? '<!-- V49 GitHub Pages: legacy anonymous Firebase module removed -->'
+          ? '<!-- V50 GitHub Pages: legacy anonymous Firebase module removed -->'
           : block;
       });
 
       // Bỏ popup nhập Workspace cũ; phạm vi dữ liệu sẽ dùng Firebase UID của Google.
       html=html.replace(
         /<script\s+id=["']v44-workspace-login-autosync-js["'][^>]*>[\s\S]*?<\/script>/i,
-        '<!-- V49 GitHub Pages: legacy workspace login removed -->'
+        '<!-- V50 GitHub Pages: legacy workspace login removed -->'
       );
 
       if(!html.includes('google-account-sync.css')){
         html=html.replace('</head>','<link rel="stylesheet" href="./google-account-sync.css?v=49">\n</head>');
       }
+      // V50 chỉ bổ sung lớp giao diện, không thay đổi dữ liệu/công thức.
+      if(!html.includes('ui-v50.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v50.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v51.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v51.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v52.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v52.css?v=${UI_VERSION}">\n</head>`);
+      }
+      if(!html.includes('ui-v53.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v53.css?v=${UI_VERSION}">\n</head>`);
+      }
       if(!html.includes('google-account-sync.js')){
         html=html.replace('</body>','<script type="module" src="./google-account-sync.js?v=49"><\/script>\n</body>');
+      }
+      if(!html.includes('ui-v50.js')){
+        html=html.replace('</body>',`<script src="./ui-v50.js?v=${UI_VERSION}"><\/script>\n</body>`);
       }
       return html;
     }
