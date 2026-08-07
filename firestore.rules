@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function ownsDashboard(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // Tạo admins/{UID_ADMIN} thủ công từ Firebase Console.
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    // Mỗi tài khoản Google chỉ đọc/ghi document có ID = Firebase Auth UID của chính họ.
+    // Admin chỉ đọc/list để theo dõi realtime, không sửa dữ liệu người dùng.
+    match /orderDashboards/{userId} {
+      allow get: if isAdmin() || ownsDashboard(userId);
+      allow list: if isAdmin();
+
+      allow create: if ownsDashboard(userId)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.authProvider == 'google.com';
+
+      allow update: if ownsDashboard(userId)
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.authProvider == 'google.com';
+
+      allow delete: if false;
+    }
+  }
+}
