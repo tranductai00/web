@@ -3,7 +3,7 @@
 
   // User page: ONLY sync data. All Pancake API settings live in /bang-ti-le-hoan-admin/.
   // This module never calculates return/success rates; it feeds the legacy 5-column parser unchanged.
-  const VERSION='2.0.0-github-admin-only';
+  const VERSION='2.2.0-github-saved-filter-product-fallback';
   let api=null, modal=null, busy=false, config=null;
 
   function qs(s,root=document){return root.querySelector(s);}
@@ -18,7 +18,7 @@
 
   async function loadApi(){
     if(api)return api;
-    api=await import('./pancake-browser-common.js?v=2');
+    api=await import('./pancake-browser-common.js?v=4');
     return api;
   }
 
@@ -115,7 +115,14 @@
     return a.fetchPancakeOrders({
       shopId:config.shopId,savedFilterId:config.savedFilterId,accessToken:config.accessToken,
       startDateTime:a.unixDay(v.start,false),endDateTime:a.unixDay(v.end,true),testOnly,
-      onProgress:p=>{if(!testOnly)setStatus(`Đang tải Pancake: trang ${p.page}${p.totalPages>1?'/'+p.totalPages:''}…`,'loading');}
+      onProgress:p=>{
+        if(testOnly)return;
+        if(p.phase==='details'){
+          setStatus(`Đang lấy chi tiết sản phẩm: ${p.detailsDone||0}/${p.detailsTotal||0} đơn…`,'loading');
+        }else{
+          setStatus(`Đang tải Pancake: trang ${p.page}${p.totalPages>1?'/'+p.totalPages:''}…`,'loading');
+        }
+      }
     });
   }
 
@@ -173,11 +180,26 @@
       const unknown=a.remainingUnknownStatuses(data.meta,config?.statusMap||{});
       if(Object.keys(unknown).length)throw new Error('Có mã trạng thái Pancake chưa được Admin gán tên: '+Object.keys(unknown).join(', ')+'. Dữ liệu chưa được đưa vào bảng để tránh làm sai kết quả.');
       const rows=a.applyStatusMap(data.rows,config?.statusMap||{});
+      if(!rows.length){
+        const orderCount=Number(data.fetchedOrders||data.totalEntries||0);
+        const m=data.meta||{};
+        if(orderCount===0){
+          throw new Error(`Bộ lọc Pancake không có đơn trong khoảng ${v.start} → ${v.end}. Không có dữ liệu nào được ghi đè.`);
+        }
+        const detailInfo=m.detailRequested
+          ? ` Đã thử tải chi tiết ${m.detailRequested} đơn: thành công ${m.detailLoaded||0}, lỗi ${m.detailFailures||0}.`
+          : '';
+        const sample=Array.isArray(m.detailFailureSamples)&&m.detailFailureSamples.length
+          ? ` Chi tiết lỗi: ${m.detailFailureSamples.join(' · ')}`
+          : '';
+        throw new Error(`Pancake đã trả ${orderCount} đơn nhưng chưa đọc được dòng sản phẩm.${detailInfo}${sample}`);
+      }
       const committed=commitToLegacy(rows,v);
       const warnings=[];
-      if(data.meta?.ordersWithoutItems)warnings.push(`${data.meta.ordersWithoutItems} đơn không có item`);
+      if(data.meta?.ordersWithoutItems)warnings.push(`${data.meta.ordersWithoutItems} đơn vẫn thiếu dòng sản phẩm`);
+      if(data.meta?.detailFailures)warnings.push(`${data.meta.detailFailures} đơn lỗi khi tải chi tiết`);
       if(data.meta?.fallbackCodeCount)warnings.push(`${data.meta.fallbackCodeCount} item dùng mã dự phòng`);
-      setStatus(`Đã cập nhật “${committed.actual}”: ${data.fetchedOrders}/${data.totalEntries||data.fetchedOrders} đơn, ${data.meta?.rowCount||rows.length} dòng sản phẩm, ${data.fetchedPages} trang.${warnings.length?' Lưu ý: '+warnings.join(' · ')+'.':''}`,warnings.length?'warn':'ok');
+      setStatus(`Đã cập nhật “${committed.actual}”: ${data.fetchedOrders}/${data.totalEntries||data.fetchedOrders} đơn, ${data.meta?.rowCount||rows.length} dòng sản phẩm, ${data.fetchedPages} trang.${data.meta?.detailLoaded?` Đã bổ sung chi tiết ${data.meta.detailLoaded} đơn.`:''}${warnings.length?' Lưu ý: '+warnings.join(' · ')+'.':''}`,warnings.length?'warn':'ok');
       toastMsg(`Đã lấy dữ liệu Pancake cho ${committed.actual}`);
     }catch(e){setStatus(e.message||String(e),'error');}
     finally{setBusy(false);}

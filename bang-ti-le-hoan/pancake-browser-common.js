@@ -1,10 +1,12 @@
 // Pancake POS browser adapter for GitHub Pages.
-// IMPORTANT: This file does not calculate return/success rates.
-// It only fetches Pancake orders and normalizes them for the legacy parser.
+// IMPORTANT: This module ONLY fetches/normalizes Pancake data.
+// It intentionally contains NO return-rate/success-rate calculation.
+// All calculations continue to run through the untouched legacy parser.
 
 export const PAGE_SIZE = 1000;
 export const MAX_PAGES = 60;
 export const MAX_ORDERS = 60000;
+export const DETAIL_CONCURRENCY = 6;
 export const STATUS_LABELS = [
   'Mới','Cần xử lý','Chờ hàng','Đã đặt hàng','Chờ in','Đã in','Đang đóng hàng',
   'Đã xác nhận','Chờ chuyển hàng','Đã gửi hàng','Đang hoàn','Đang đổi',
@@ -17,6 +19,9 @@ export const KNOWN_STATUS = {
   13: 'Đã in'
 };
 
+const detailCache = new Map();
+const DETAIL_CACHE_LIMIT = 5000;
+
 function first(obj, paths) {
   for (const path of paths) {
     const parts = path.split('.');
@@ -26,7 +31,10 @@ function first(obj, paths) {
       if (cur == null || typeof cur !== 'object' || !(key in cur)) { ok = false; break; }
       cur = cur[key];
     }
-    if (ok && cur !== undefined && cur !== null && String(cur).trim() !== '') return cur;
+    if (ok && cur !== undefined && cur !== null) {
+      if (typeof cur === 'string' && !cur.trim()) continue;
+      return cur;
+    }
   }
   return '';
 }
@@ -35,6 +43,10 @@ function cleanText(v) {
   if (v === undefined || v === null) return '';
   if (typeof v === 'string' || typeof v === 'number' || typeof v === 'bigint') return String(v).trim();
   return '';
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function findStatusLabel(order) {
@@ -82,31 +94,127 @@ function statusFor(order) {
   return s ? `Trạng thái ${s}` : 'Trạng thái không xác định';
 }
 
-function itemArrays(order) {
-  const directKeys = [
-    'items','order_items','orderItems','products','product_items','productItems',
-    'line_items','lineItems','details','order_details','orderDetails'
-  ];
-  const arrays = [];
-  for (const key of directKeys) {
-    if (Array.isArray(order && order[key]) && order[key].length) arrays.push(order[key]);
-  }
-  if (arrays.length) return arrays.flat();
+function looksLikeItem(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return !!(
+    cleanText(first(value, [
+      'sku','seller_sku','sellerSku','product_code','productCode','barcode',
+      'variation_id','variationId','variant_id','variantId','product_id','productId',
+      'item_id','itemId','variation_display_id','variationDisplayId',
+      'product_display_id','productDisplayId','variation_name','variationName',
+      'product_name','productName'
+    ])) ||
+    (value.variation_info && (typeof value.variation_info === 'object' || typeof value.variation_info === 'string')) ||
+    (value.variationInfo && (typeof value.variationInfo === 'object' || typeof value.variationInfo === 'string')) ||
+    (value.product && (typeof value.product === 'object' || typeof value.product === 'string')) ||
+    (value.variant && (typeof value.variant === 'object' || typeof value.variant === 'string')) ||
+    (value.variation && (typeof value.variation === 'object' || typeof value.variation === 'string'))
+  );
+}
 
-  const found = [];
-  const seen = new Set();
-  function walk(obj, depth) {
-    if (!obj || typeof obj !== 'object' || depth > 3 || seen.has(obj)) return;
-    seen.add(obj);
-    for (const [key, value] of Object.entries(obj)) {
-      const lk = String(key).toLowerCase();
-      if (Array.isArray(value) && /(item|product|variation|variant|detail)/.test(lk)) {
-        for (const it of value) if (it && typeof it === 'object' && !Array.isArray(it)) found.push(it);
-      } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-        walk(value, depth + 1);
+function parseMaybeJson(value) {
+  if (typeof value !== 'string') return value;
+  const t = value.trim();
+  if (!t || !((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']')))) return value;
+  try { return JSON.parse(t); } catch (_) { return value; }
+}
+
+function collectItemValue(value, depth=0) {
+  if (!value || depth > 3) return [];
+  value = parseMaybeJson(value);
+
+  if (Array.isArray(value)) {
+    const out = [];
+    for (const v0 of value) {
+      const v = parseMaybeJson(v0);
+      if (!v) continue;
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        if (looksLikeItem(v)) out.push(v);
+        else out.push(...collectItemValue(v, depth + 1));
+      } else if (Array.isArray(v)) {
+        out.push(...collectItemValue(v, depth + 1));
       }
     }
+    return out;
   }
+
+  if (typeof value !== 'object') return [];
+  if (looksLikeItem(value)) return [value];
+
+  // Pancake may return line-items as an object keyed by id or nested under a wrapper.
+  const out = [];
+  for (const v0 of Object.values(value)) {
+    const v = parseMaybeJson(v0);
+    if (!v) continue;
+    if (v && typeof v === 'object') out.push(...collectItemValue(v, depth + 1));
+  }
+  return out;
+}
+
+function itemArrays(order) {
+  const directKeys = [
+    'items','order_items','orderItems','ordered_items','orderedItems',
+    'products','product_items','productItems','products_info','productsInfo',
+    'line_items','lineItems','details','order_details','orderDetails',
+    'order_products','orderProducts','variations','variation_infos','variationInfos',
+    'product_variations','productVariations','item_variations','itemVariations',
+    'bundle_items','bundleItems','combo_items','comboItems'
+  ];
+
+  const direct = [];
+  for (const key of directKeys) {
+    if (order && Object.prototype.hasOwnProperty.call(order, key)) {
+      direct.push(...collectItemValue(order[key]));
+    }
+  }
+  if (direct.length) return direct;
+
+  // Bounded fallback: scan nested structures and JSON-string wrappers.
+  const found = [];
+  const seenObjects = new Set();
+  const seenItems = new Set();
+
+  function addItem(it) {
+    it = parseMaybeJson(it);
+    if (!it || typeof it !== 'object' || Array.isArray(it) || seenItems.has(it)) return;
+    if (!looksLikeItem(it)) return;
+    seenItems.add(it);
+    found.push(it);
+  }
+
+  function walk(raw, depth) {
+    if (depth > 5) return;
+    const obj = parseMaybeJson(raw);
+    if (!obj || typeof obj !== 'object' || seenObjects.has(obj)) return;
+    seenObjects.add(obj);
+
+    if (Array.isArray(obj)) {
+      for (const child of obj) {
+        const parsed = parseMaybeJson(child);
+        if (parsed && typeof parsed === 'object') {
+          if (!Array.isArray(parsed) && looksLikeItem(parsed)) addItem(parsed);
+          else walk(parsed, depth + 1);
+        }
+      }
+      return;
+    }
+
+    if (looksLikeItem(obj)) addItem(obj);
+
+    for (const [key, rawValue] of Object.entries(obj)) {
+      const lk = String(key).toLowerCase();
+      const value = parseMaybeJson(rawValue);
+
+      if (/(^|_)(items?|products?|variations?|line_items?|order_items?|ordered_items?|order_details?|product_variations?)(_|$)/.test(lk) ||
+          /(item|product|variation|variant|detail)/.test(lk)) {
+        const candidates = collectItemValue(value);
+        for (const it of candidates) addItem(it);
+      }
+
+      if (value && typeof value === 'object') walk(value, depth + 1);
+    }
+  }
+
   walk(order, 0);
   return found;
 }
@@ -114,39 +222,165 @@ function itemArrays(order) {
 function productCode(item) {
   const raw = first(item, [
     'variation_info.display_id','variation_info.sku','variation_info.product_code','variation_info.code',
+    'variation_info.product_display_id','variation_info.seller_sku','variation_info.barcode',
     'variationInfo.display_id','variationInfo.sku','variationInfo.product_code','variationInfo.code',
-    'product.display_id','product.sku','product.product_code','product.code',
-    'variant.display_id','variant.sku','variant.product_code','variant.code',
-    'variation.display_id','variation.sku','variation.product_code','variation.code',
-    'sku','seller_sku','sellerSku','product_code','productCode','code','barcode','display_id'
+    'variationInfo.productDisplayId','variationInfo.sellerSku','variationInfo.barcode',
+    'product.display_id','product.sku','product.product_code','product.code','product.seller_sku','product.barcode',
+    'variant.display_id','variant.sku','variant.product_code','variant.code','variant.seller_sku','variant.barcode',
+    'variation.display_id','variation.sku','variation.product_code','variation.code','variation.seller_sku','variation.barcode',
+    'sku','seller_sku','sellerSku','product_sku','productSku','variation_sku','variationSku',
+    'product_code','productCode','code','barcode','display_id','displayId',
+    'variation_display_id','variationDisplayId','product_display_id','productDisplayId'
   ]);
   const code = cleanText(raw);
   if (code) return {code, fallback:false};
 
-  const variationId = cleanText(first(item, ['variation_id','variationId','variant_id','variantId','variation.id','variant.id']));
+  // Some Pancake payloads serialize variation_info/product as JSON strings.
+  for (const key of ['variation_info','variationInfo','product','variant','variation']) {
+    const nested = parseMaybeJson(item?.[key]);
+    if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+      const nestedCode = cleanText(first(nested, [
+        'display_id','displayId','sku','seller_sku','sellerSku',
+        'product_code','productCode','code','barcode',
+        'product_display_id','productDisplayId'
+      ]));
+      if (nestedCode) return {code:nestedCode, fallback:false};
+      const nestedId = cleanText(first(nested,['variation_id','variationId','variant_id','variantId','id']));
+      if (nestedId) return {code:`VAR-${nestedId}`, fallback:true};
+      const nestedProductId = cleanText(first(nested,['product_id','productId']));
+      if (nestedProductId) return {code:`SP-${nestedProductId}`, fallback:true};
+    }
+  }
+
+  // Stable fallback ids are acceptable because the untouched legacy formula groups by product code.
+  const variationId = cleanText(first(item, [
+    'variation_id','variationId','variant_id','variantId',
+    'variation_info.id','variationInfo.id','variation.id','variant.id'
+  ]));
   if (variationId) return {code:`VAR-${variationId}`, fallback:true};
-  const productId = cleanText(first(item, ['product_id','productId','product.id']));
+
+  const productId = cleanText(first(item, [
+    'product_id','productId','variation_info.product_id','variationInfo.productId','product.id'
+  ]));
   if (productId) return {code:`SP-${productId}`, fallback:true};
+
   const id = cleanText(first(item, ['id','item_id','itemId']));
   if (id) return {code:`ITEM-${id}`, fallback:true};
+
+  // Last-resort stable text code. Do not fabricate a random id.
+  const textCode = cleanText(first(item, [
+    'variation_name','variationName','product_name','productName','name','title'
+  ]));
+  if (textCode) return {code:`NAME-${textCode}`.slice(0,160), fallback:true};
   return {code:'', fallback:true};
 }
 
 function productName(item, code) {
   const raw = first(item, [
     'variation_info.name','variation_info.product_name','variation_info.display_name',
+    'variation_info.product_display_name','variation_info.title',
     'variationInfo.name','variationInfo.product_name','variationInfo.display_name',
-    'product.name','product.product_name','product.display_name',
-    'variant.name','variant.product_name','variation.name','variation.product_name',
-    'product_name','productName','name','display_name','displayName','title'
+    'variationInfo.productName','variationInfo.productDisplayName','variationInfo.title',
+    'product.name','product.product_name','product.display_name','product.title',
+    'variant.name','variant.product_name','variant.display_name','variant.title',
+    'variation.name','variation.product_name','variation.display_name','variation.title',
+    'product_name','productName','variation_name','variationName',
+    'name','display_name','displayName','title'
   ]);
-  return cleanText(raw) || code;
+  const direct = cleanText(raw);
+  if (direct) return direct;
+
+  // Some responses store variation_info/product as serialized JSON.
+  for (const key of ['variation_info','variationInfo','product','variant','variation']) {
+    const nested = parseMaybeJson(item?.[key]);
+    if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+      const text = cleanText(first(nested, ['name','product_name','productName','display_name','displayName','title','sku','display_id']));
+      if (text) return text;
+    }
+  }
+  return code;
 }
 
 function orderId(order) {
   return cleanText(first(order, [
-    'display_id','order_number','orderNumber','order_code','orderCode','code','id'
+    'display_id','displayId','order_number','orderNumber','order_code','orderCode','code','id'
   ]));
+}
+
+function orderApiIds(order) {
+  const out = [];
+  for (const path of ['id','order_id','orderId','display_id','displayId','order_number','orderNumber']) {
+    const value = cleanText(first(order, [path]));
+    if (value && !out.includes(value)) out.push(value);
+  }
+  return out;
+}
+
+function matchKeys(order) {
+  return orderApiIds(order).map(v => String(v));
+}
+
+function mergeOrder(summary, detail) {
+  if (!detail || typeof detail !== 'object') return summary;
+  return {...summary, ...detail};
+}
+
+function unwrapOrderDetail(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  const candidates = [
+    payload.order,
+    payload.data?.order,
+    payload.result?.order,
+    payload.data,
+    payload.result,
+    payload
+  ];
+  for (const value of candidates) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+    if (Array.isArray(value) && value[0] && typeof value[0] === 'object') return value[0];
+  }
+  return null;
+}
+
+function listData(payload) {
+  const candidates = [
+    payload?.data,
+    payload?.orders,
+    payload?.results,
+    payload?.data?.data,
+    payload?.data?.orders,
+    payload?.data?.results,
+    payload?.result?.data,
+    payload?.result?.orders,
+    payload?.result?.results
+  ];
+  for (const value of candidates) if (Array.isArray(value)) return value;
+  return [];
+}
+
+function mergePageOrders(summaryOrders, enrichedOrders) {
+  if (!Array.isArray(summaryOrders) || !summaryOrders.length || !Array.isArray(enrichedOrders) || !enrichedOrders.length) {
+    return summaryOrders || [];
+  }
+
+  const byKey = new Map();
+  for (const detail of enrichedOrders) {
+    for (const key of matchKeys(detail)) if (!byKey.has(key)) byKey.set(key, detail);
+  }
+
+  return summaryOrders.map((summary, index) => {
+    let detail = null;
+    for (const key of matchKeys(summary)) {
+      if (byKey.has(key)) { detail = byKey.get(key); break; }
+    }
+
+    // Safe positional fallback only when both rows point to the same visible order id.
+    if (!detail && enrichedOrders[index]) {
+      const a = orderId(summary), b = orderId(enrichedOrders[index]);
+      if (a && b && a === b) detail = enrichedOrders[index];
+    }
+    return detail ? mergeOrder(summary, detail) : summary;
+  });
 }
 
 export function normalizeOrders(orders) {
@@ -160,36 +394,55 @@ export function normalizeOrders(orders) {
   for (const order of (Array.isArray(orders) ? orders : [])) {
     const oid = orderId(order);
     if (!oid) continue;
+
     const status = statusFor(order);
     statusCounts[status] = (statusCounts[status] || 0) + 1;
 
     const rawStatus = cleanText(first(order, ['status','order_status','orderStatus','status_id','statusId']));
-    if (/^-?\d+$/.test(rawStatus) && !findStatusLabel(order) && !Object.prototype.hasOwnProperty.call(KNOWN_STATUS, Number(rawStatus))) {
+    if (/^-?\d+$/.test(rawStatus) && !findStatusLabel(order) &&
+        !Object.prototype.hasOwnProperty.call(KNOWN_STATUS, Number(rawStatus))) {
       unknownNumericStatuses[rawStatus] = (unknownNumericStatuses[rawStatus] || 0) + 1;
     }
 
     const items = itemArrays(order);
-    if (!items.length) { ordersWithoutItems++; continue; }
+    if (!items.length) {
+      ordersWithoutItems++;
+      continue;
+    }
 
     const seenCodes = new Set();
     for (const item of items) {
       const pc = productCode(item);
-      if (!pc.code) { itemsWithoutCode++; continue; }
+      if (!pc.code) {
+        itemsWithoutCode++;
+        continue;
+      }
       if (pc.fallback) fallbackCodeCount++;
+
+      // Exactly one row/product/order. The legacy parser later counts distinct order ids unchanged.
       if (seenCodes.has(pc.code)) continue;
       seenCodes.add(pc.code);
+
       const name = productName(item, pc.code);
       rows.push({
-        product:name,
-        orderId:oid,
-        code:pc.code,
+        product: name,
+        orderId: oid,
+        code: pc.code,
         name,
         status,
-        statusCode:rawStatus
+        statusCode: rawStatus
       });
     }
   }
-  return {rows, ordersWithoutItems, itemsWithoutCode, fallbackCodeCount, statusCounts, unknownNumericStatuses};
+
+  return {
+    rows,
+    ordersWithoutItems,
+    itemsWithoutCode,
+    fallbackCodeCount,
+    statusCounts,
+    unknownNumericStatuses
+  };
 }
 
 export function validatePancakeConfig(config, {requireToken=true}={}) {
@@ -216,13 +469,20 @@ export function monthFromDate(value) {
   return m ? `Tháng ${Number(m[2])}/${m[1]}` : '';
 }
 
-export function buildPancakeUrl({shopId, savedFilterId, startDateTime, endDateTime, page=1, pageSize=PAGE_SIZE, accessToken}) {
+export function buildPancakeUrl({
+  shopId, savedFilterId, startDateTime, endDateTime,
+  page=1, pageSize=PAGE_SIZE, accessToken, esOnly=true, filterProfile='neutral'
+}) {
   validatePancakeConfig({shopId,savedFilterId,accessToken});
   const base = `https://pos.pancake.vn/api/v1/shops/${encodeURIComponent(shopId)}/orders/get_orders`;
   const params = new URLSearchParams();
   params.set('access_token', accessToken);
   params.set('editorId', 'none');
   params.set('endDateTime', String(endDateTime));
+
+  // Saved filter itself is authoritative. Keep generic OR/exclude switches from the
+  // captured Pancake request, but do not force one specific "multiple_*" mode unless
+  // a fallback profile is explicitly used.
   params.set('is_filter_attributes_by_or', 'true');
   params.set('is_filter_conversation_tag_by_or', 'true');
   params.set('is_filter_customer_tag_by_or', 'true');
@@ -231,14 +491,23 @@ export function buildPancakeUrl({shopId, savedFilterId, startDateTime, endDateTi
   params.set('is_filter_exclude_customer_tag', 'false');
   params.set('is_filter_exclude_partner', 'false');
   params.set('is_filter_exclude_product_tag', 'false');
-  params.set('is_filter_multiple_employee', 'false');
-  params.set('is_filter_multiple_field_address', 'false');
-  params.set('is_filter_multiple_partner', 'false');
-  params.set('is_filter_multiple_promotion', 'false');
-  params.set('is_filter_multiple_source', 'true');
   params.set('is_filter_order_tag_by_or', 'true');
   params.set('is_filter_product_by_or', 'true');
   params.set('is_filter_tag_by_or', 'true');
+
+  const multipleKeys = [
+    'is_filter_multiple_employee','is_filter_multiple_field_address',
+    'is_filter_multiple_partner','is_filter_multiple_promotion','is_filter_multiple_source'
+  ];
+  if (filterProfile === 'legacy-source') {
+    for (const key of multipleKeys) params.set(key, key === 'is_filter_multiple_source' ? 'true' : 'false');
+  } else if (filterProfile === 'all-multiple') {
+    for (const key of multipleKeys) params.set(key, 'true');
+  } else if (filterProfile === 'all-single') {
+    for (const key of multipleKeys) params.set(key, 'false');
+  }
+  // neutral => omit multiple_* keys and let saved_filters_id decide.
+
   params.set('option_sort', 'inserted_at_desc');
   params.set('page', String(page));
   params.set('page_size', String(pageSize));
@@ -247,51 +516,265 @@ export function buildPancakeUrl({shopId, savedFilterId, startDateTime, endDateTi
   params.set('status', '-1');
   params.append('timeRange[]', '0');
   params.set('updateStatus', 'inserted_at');
-  params.set('es_only', 'true');
+  params.set('es_only', esOnly ? 'true' : 'false');
   return `${base}?${params.toString()}`;
 }
 
-async function fetchPage(args, attempts=3) {
-  const url = buildPancakeUrl(args);
+async function fetchJson(url, {method='GET', attempts=3}={}) {
   let lastError = null;
+
   for (let attempt=0; attempt<attempts; attempt++) {
     try {
-      // Keep the cross-origin request "simple" (no JSON Content-Type) to avoid
-      // an unnecessary CORS preflight on static GitHub Pages.
       const response = await fetch(url, {
-        method:'POST',
+        method,
         mode:'cors',
         credentials:'omit',
         headers:{'Accept':'application/json, text/plain, */*'}
       });
+
       const text = await response.text();
       let data = {};
-      try { data = text ? JSON.parse(text) : {}; }
-      catch (_) { throw new Error(`Pancake trả dữ liệu không phải JSON (HTTP ${response.status}).`); }
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (_) {
+        const err = new Error(`Pancake trả dữ liệu không phải JSON (HTTP ${response.status}).`);
+        err.status = response.status;
+        throw err;
+      }
+
       if (response.ok) return data;
-      const message = cleanText(data.message || data.error || data.error_message) || `HTTP ${response.status}`;
+
+      const message = cleanText(data?.message || data?.error || data?.error_message) || `HTTP ${response.status}`;
       const err = new Error(`Pancake POS: ${message}`);
       err.status = response.status;
+
       if ((response.status===429 || response.status>=500) && attempt+1<attempts) {
         lastError = err;
-        await new Promise(r=>setTimeout(r, 400*Math.pow(2,attempt)));
+        await sleep(400*Math.pow(2,attempt));
         continue;
       }
       throw err;
     } catch (error) {
       lastError = error;
-      if (error?.status) throw error;
+      if (error?.status && error.status < 500 && error.status !== 429) throw error;
       if (attempt+1<attempts) {
-        await new Promise(r=>setTimeout(r, 400*Math.pow(2,attempt)));
+        await sleep(400*Math.pow(2,attempt));
         continue;
       }
     }
   }
+
   const err = lastError || new Error('Không kết nối được Pancake POS.');
-  if (err instanceof TypeError || /failed to fetch|networkerror/i.test(String(err?.message||''))) {
-    throw new Error('Không gọi được Pancake POS từ trình duyệt. Có thể Pancake đang chặn CORS cho domain GitHub Pages. Hãy kiểm tra lại domain/Network hoặc dùng một proxy backend riêng nếu Pancake không cho phép CORS.');
+  if (err instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(String(err?.message||''))) {
+    throw new Error('Không gọi được Pancake POS từ trình duyệt. Có thể Pancake đang chặn CORS cho domain GitHub Pages.');
   }
   throw err;
+}
+
+async function fetchPage(args, attempts=3) {
+  return fetchJson(buildPancakeUrl(args), {method:'POST', attempts});
+}
+
+function totalEntriesFromPayload(payload, fallback=0) {
+  const values = [
+    payload?.total_entries,payload?.totalEntries,payload?.total,
+    payload?.data?.total_entries,payload?.data?.totalEntries,payload?.data?.total,
+    payload?.result?.total_entries,payload?.result?.totalEntries,payload?.result?.total
+  ];
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return Math.max(0, Number(fallback) || 0);
+}
+
+function totalPagesFromPayload(payload, fallback=1) {
+  const values = [
+    payload?.total_pages,payload?.totalPages,
+    payload?.data?.total_pages,payload?.data?.totalPages,
+    payload?.result?.total_pages,payload?.result?.totalPages
+  ];
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 1) return Math.floor(n);
+  }
+  return Math.max(1, Number(fallback) || 1);
+}
+
+async function fetchFirstUsablePage(baseArgs) {
+  // neutral: let saved_filters_id decide its own filter shape.
+  // legacy-source: exact compatibility profile captured from the Pancake web request.
+  const profiles = ['neutral','legacy-source'];
+  let best = null;
+  let lastError = null;
+
+  for (const filterProfile of profiles) {
+    for (const esOnly of [true,false]) {
+      try {
+        const payload = await fetchPage({...baseArgs,filterProfile,esOnly}, 2);
+        const orders = listData(payload);
+        const totalEntries = totalEntriesFromPayload(payload, orders.length);
+        const totalPages = totalPagesFromPayload(payload, 1);
+        const current = {payload,orders,totalEntries,totalPages,filterProfile,esOnly};
+
+        // A non-empty page is the strongest signal.
+        if (orders.length) return current;
+        if (!best || totalEntries > best.totalEntries) best = current;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+  }
+
+  if (best) return best;
+  throw lastError || new Error('Không lấy được danh sách đơn từ Pancake.');
+}
+
+function detailUrl(shopId, orderId, accessToken) {
+  const params = new URLSearchParams();
+  params.set('access_token', accessToken);
+  params.set('editorId', 'none');
+  return `https://pos.pancake.vn/api/v1/shops/${encodeURIComponent(shopId)}/orders/${encodeURIComponent(orderId)}?${params.toString()}`;
+}
+
+function orderLookupUrl(shopId, orderId, accessToken) {
+  const params = new URLSearchParams();
+  params.set('access_token', accessToken);
+  params.set('editorId', 'none');
+  params.set('page', '1');
+  params.set('page_size', '20');
+  params.set('status', '-1');
+  params.set('option_sort', 'inserted_at_desc');
+  params.set('updateStatus', 'inserted_at');
+  params.set('es_only', 'false');
+  params.set('search', String(orderId));
+  return `https://pos.pancake.vn/api/v1/shops/${encodeURIComponent(shopId)}/orders/get_orders?${params.toString()}`;
+}
+
+function pickMatchingOrder(payload, expectedIds) {
+  const wanted = new Set((expectedIds||[]).map(String));
+  const rows = listData(payload);
+  for (const row of rows) {
+    if (matchKeys(row).some(key => wanted.has(String(key)))) return row;
+  }
+  return null;
+}
+
+function cacheSet(key, value) {
+  if (detailCache.size >= DETAIL_CACHE_LIMIT) {
+    const firstKey = detailCache.keys().next().value;
+    if (firstKey !== undefined) detailCache.delete(firstKey);
+  }
+  detailCache.set(key, value);
+}
+
+async function fetchOneOrderDetail({shopId, accessToken, order}) {
+  const ids = orderApiIds(order);
+  if (!ids.length) throw new Error('Đơn không có ID để tải chi tiết.');
+
+  let lastError = null;
+  for (const id of ids) {
+    const key = `${shopId}:${id}`;
+    if (detailCache.has(key)) return detailCache.get(key);
+
+    // 1) Direct detail endpoint (GET, then POST only if the server rejects the verb).
+    for (const method of ['GET','POST']) {
+      try {
+        const payload = await fetchJson(detailUrl(shopId,id,accessToken), {method, attempts:2});
+        const detail = unwrapOrderDetail(payload);
+        if (detail) {
+          const merged = mergeOrder(order, detail);
+          if (itemArrays(merged).length) {
+            cacheSet(key, merged);
+            return merged;
+          }
+          lastError = new Error(`Chi tiết đơn ${id} chưa có dòng sản phẩm.`);
+        } else {
+          lastError = new Error(`Chi tiết đơn ${id} không có dữ liệu.`);
+        }
+      } catch (error) {
+        lastError = error;
+        if (error?.status === 401 || error?.status === 403) throw error;
+        if (method === 'GET' && error?.status === 405) continue;
+        if (error?.status && ![400,404,405,422].includes(error.status)) throw error;
+      }
+      // If GET returned 200 but lacked items, POST on the same route is still worth one try.
+    }
+
+    // 2) Internal order search fallback using the same access token. We only accept
+    // an exact matching order id, so this cannot add orders outside the saved filter.
+    try {
+      const payload = await fetchJson(orderLookupUrl(shopId,id,accessToken), {method:'POST', attempts:2});
+      const detail = pickMatchingOrder(payload, ids);
+      if (detail) {
+        const merged = mergeOrder(order, detail);
+        if (itemArrays(merged).length) {
+          cacheSet(key, merged);
+          return merged;
+        }
+        lastError = new Error(`Tra cứu đơn ${id} có dữ liệu nhưng chưa có dòng sản phẩm.`);
+      }
+    } catch (error) {
+      lastError = error;
+      if (error?.status === 401 || error?.status === 403) throw error;
+    }
+  }
+
+  throw lastError || new Error('Không tải được chi tiết đơn.');
+}
+
+async function hydrateMissingOrderItems(orders, {shopId, accessToken, onProgress=null}) {
+  const output = (Array.isArray(orders) ? orders : []).slice();
+  const missing = [];
+  for (let i=0;i<output.length;i++) if (!itemArrays(output[i]).length) missing.push(i);
+
+  if (!missing.length) {
+    return {orders:output, requested:0, loaded:0, failures:0, failureSamples:[]};
+  }
+
+  let cursor = 0;
+  let loaded = 0;
+  let failures = 0;
+  const failureSamples = [];
+
+  async function worker() {
+    while (true) {
+      const current = cursor++;
+      if (current >= missing.length) return;
+      const index = missing[current];
+      const order = output[index];
+      try {
+        output[index] = await fetchOneOrderDetail({shopId,accessToken,order});
+        loaded++;
+      } catch (error) {
+        failures++;
+        if (failureSamples.length < 5) {
+          failureSamples.push(`${orderId(order)||'không mã'}: ${String(error?.message||error)}`);
+        }
+      }
+      onProgress?.({
+        phase:'details',
+        detailsDone:loaded+failures,
+        detailsTotal:missing.length,
+        detailsLoaded:loaded,
+        detailFailures:failures
+      });
+    }
+  }
+
+  const workers = Array.from(
+    {length:Math.min(DETAIL_CONCURRENCY,missing.length)},
+    () => worker()
+  );
+  await Promise.all(workers);
+
+  return {
+    orders:output,
+    requested:missing.length,
+    loaded,
+    failures,
+    failureSamples
+  };
 }
 
 export async function fetchPancakeOrders({
@@ -301,7 +784,9 @@ export async function fetchPancakeOrders({
   validatePancakeConfig({shopId,savedFilterId,accessToken});
   startDateTime = Number(startDateTime);
   endDateTime = Number(endDateTime);
-  if (!Number.isInteger(startDateTime) || !Number.isInteger(endDateTime) || startDateTime<=0 || endDateTime<=0) {
+
+  if (!Number.isInteger(startDateTime) || !Number.isInteger(endDateTime) ||
+      startDateTime<=0 || endDateTime<=0) {
     throw new Error('Khoảng thời gian không hợp lệ.');
   }
   if (endDateTime < startDateTime) throw new Error('Ngày kết thúc phải sau ngày bắt đầu.');
@@ -312,34 +797,112 @@ export async function fetchPancakeOrders({
   let page = 1;
   let totalPages = 1;
   let totalEntries = 0;
+  let enrichedPages = 0;
+  let enrichmentFailures = 0;
+  let requestProfile = 'neutral';
+  let listEsOnly = true;
   const maxWantedPages = testOnly ? 1 : MAX_PAGES;
 
   do {
-    onProgress?.({page,totalPages,totalEntries,fetchedOrders:allOrders.length});
-    const data = await fetchPage({
+    onProgress?.({phase:'list',page,totalPages,totalEntries,fetchedOrders:allOrders.length});
+
+    const baseArgs = {
       shopId,savedFilterId,accessToken,startDateTime,endDateTime,
       page,pageSize:testOnly?20:PAGE_SIZE
-    });
-    const pageData = Array.isArray(data.data) ? data.data :
-      Array.isArray(data.orders) ? data.orders :
-      Array.isArray(data.results) ? data.results : [];
+    };
+
+    let data, pageData;
+
+    if (page === 1) {
+      // Important: saved filters are not all built from the same UI switches.
+      // Probe a neutral saved-filter request first, then the captured legacy profiles.
+      // Also retry es_only=false when Elasticsearch returns zero/stale results.
+      const firstPage = await fetchFirstUsablePage(baseArgs);
+      data = firstPage.payload;
+      pageData = firstPage.orders;
+      totalPages = firstPage.totalPages;
+      totalEntries = firstPage.totalEntries;
+      requestProfile = firstPage.filterProfile;
+      listEsOnly = firstPage.esOnly;
+    } else {
+      data = await fetchPage({...baseArgs,filterProfile:requestProfile,esOnly:listEsOnly});
+      pageData = listData(data);
+      totalPages = totalPagesFromPayload(data,totalPages);
+      totalEntries = totalEntriesFromPayload(data,totalEntries || pageData.length);
+    }
+
+    // If the chosen list mode has orders but compact rows omit products,
+    // query the SAME page with es_only=false and merge exact matching orders.
+    if (pageData.some(order => !itemArrays(order).length) && listEsOnly) {
+      try {
+        const enrichedPayload = await fetchPage({
+          ...baseArgs,filterProfile:requestProfile,esOnly:false
+        }, 2);
+        const enrichedData = listData(enrichedPayload);
+        if (enrichedData.length) {
+          pageData = mergePageOrders(pageData, enrichedData);
+          enrichedPages++;
+        }
+      } catch (_) {
+        enrichmentFailures++;
+        // Continue: per-order detail/search fallbacks below will handle missing items.
+      }
+    }
+
     allOrders.push(...pageData);
-    totalPages = Math.max(1, Number(data.total_pages || data.totalPages || 1) || 1);
-    totalEntries = Math.max(0, Number(data.total_entries || data.totalEntries || data.total || pageData.length) || 0);
     if (allOrders.length >= MAX_ORDERS) break;
     page++;
   } while (page <= totalPages && page <= maxWantedPages);
 
-  const normalized = normalizeOrders(allOrders);
+  // If the list is genuinely empty, there is nothing from which a product row can be made.
+  // Return a valid empty result instead of misreporting a "product extraction" failure.
+  if (!allOrders.length && totalEntries === 0) {
+    return {
+      ok:true,
+      testOnly,
+      totalEntries:0,
+      fetchedOrders:0,
+      fetchedPages:1,
+      totalPages:1,
+      truncated:false,
+      rows:[],
+      meta:{
+        rowCount:0,
+        ordersWithoutItems:0,
+        itemsWithoutCode:0,
+        fallbackCodeCount:0,
+        statusCounts:{},
+        unknownNumericStatuses:{},
+        enrichedPages,
+        enrichmentFailures,
+        detailRequested:0,
+        detailLoaded:0,
+        detailFailures:0,
+        detailFailureSamples:[],
+        requestProfile,
+        listEsOnly,
+        emptyRange:true,
+        elapsedMs:Date.now()-started
+      }
+    };
+  }
+
+  // Second fallback: direct order detail + exact internal order search, only for
+  // orders still missing line items. The set of orders remains the saved-filter set.
+  const hydrated = await hydrateMissingOrderItems(allOrders, {
+    shopId,accessToken,onProgress
+  });
+
+  const normalized = normalizeOrders(hydrated.orders);
   return {
     ok:true,
     testOnly,
-    totalEntries,
+    totalEntries:Math.max(totalEntries,allOrders.length),
     fetchedOrders:allOrders.length,
     fetchedPages:Math.min(page-1,totalPages),
     totalPages,
     truncated:!testOnly && (totalPages>MAX_PAGES || allOrders.length>=MAX_ORDERS),
-    rows:testOnly ? normalized.rows.slice(0,20) : normalized.rows,
+    rows:testOnly ? normalized.rows.slice(0,200) : normalized.rows,
     meta:{
       rowCount:normalized.rows.length,
       ordersWithoutItems:normalized.ordersWithoutItems,
@@ -347,6 +910,15 @@ export async function fetchPancakeOrders({
       fallbackCodeCount:normalized.fallbackCodeCount,
       statusCounts:normalized.statusCounts,
       unknownNumericStatuses:normalized.unknownNumericStatuses,
+      enrichedPages,
+      enrichmentFailures,
+      detailRequested:hydrated.requested,
+      detailLoaded:hydrated.loaded,
+      detailFailures:hydrated.failures,
+      detailFailureSamples:hydrated.failureSamples,
+      requestProfile,
+      listEsOnly,
+      emptyRange:false,
       elapsedMs:Date.now()-started
     }
   };
@@ -366,6 +938,8 @@ export function applyStatusMap(rows, statusMap={}) {
 export function remainingUnknownStatuses(meta, statusMap={}) {
   const unknown = {...(meta?.unknownNumericStatuses || {})};
   const remaining = {};
-  for (const code of Object.keys(unknown)) if (!statusMap?.[code]) remaining[code]=unknown[code];
+  for (const code of Object.keys(unknown)) {
+    if (!statusMap?.[code]) remaining[code]=unknown[code];
+  }
   return remaining;
 }
