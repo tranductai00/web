@@ -206,7 +206,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
     import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
-    import { fetchPancakeOrders, validatePancakeConfig, unixDay, remainingUnknownStatuses } from '../pancake-browser-common.js?v=2';
+    import { fetchPancakeOrders, validatePancakeConfig, unixDay, remainingUnknownStatuses } from '../pancake-browser-common.js?v=3';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA_Q5SQDpLVckk8Zpf8nZ6GUAaQAlX088k',
@@ -418,6 +418,16 @@
           startDateTime:unixDay(ymd(start),false),endDateTime:unixDay(ymd(now),true),testOnly:false
         });
         if(data.truncated)throw new Error('Dữ liệu tháng hiện tại vượt giới hạn kiểm tra 60.000 đơn. Hãy thu hẹp khoảng kiểm tra hoặc chia cấu hình.');
+        if(!data.meta?.rowCount){
+          const m=data.meta||{};
+          const detailInfo=m.detailRequested
+            ? ` Đã thử tải chi tiết ${m.detailRequested} đơn: thành công ${m.detailLoaded||0}, lỗi ${m.detailFailures||0}.`
+            : '';
+          const sample=Array.isArray(m.detailFailureSamples)&&m.detailFailureSamples.length
+            ? ` ${m.detailFailureSamples.join(' · ')}`
+            : '';
+          throw new Error(`Pancake trả ${data.totalEntries||data.fetchedOrders||0} đơn nhưng chưa lấy được dòng sản phẩm.${detailInfo}${sample}`);
+        }
         const unknown=remainingUnknownStatuses(data.meta,c.statusMap||{});
         if(Object.keys(unknown).length){
           const map={...(c.statusMap||{})};Object.keys(unknown).forEach(code=>{if(!(code in map))map[code]='';});
@@ -427,7 +437,7 @@
           setPkStatus(`Kết nối thành công: ${data.totalEntries} đơn. Còn mã trạng thái chưa gán: ${Object.entries(unknown).map(([k,n])=>`${k} (${n} đơn)`).join(', ')}. Hãy điền tên sau dấu “=” rồi lưu.`, 'warn');
         }else{
           const sample=Object.entries(data.meta?.statusCounts||{}).slice(0,8).map(([k,n])=>`${k}: ${n}`).join(' · ');
-          setPkStatus(`Kết nối thành công: ${data.totalEntries} đơn${sample?' · '+sample:''}.`,'ok');
+          setPkStatus(`Kết nối thành công: ${data.totalEntries} đơn · ${data.meta?.rowCount||0} dòng sản phẩm${data.meta?.detailLoaded?` · bổ sung chi tiết ${data.meta.detailLoaded} đơn`:''}${sample?' · '+sample:''}.`,'ok');
         }
       }catch(e){setPkStatus(e.message||String(e),'error');}
       finally{setPkBusy(false);}
