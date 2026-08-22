@@ -13,7 +13,9 @@ Bản này KHÔNG cần Vercel / Node / serverless function.
       https://<username>.github.io/web/bang-ti-le-hoan/bang-ti-le-hoan-admin/
 6. Firebase Authentication -> Settings -> Authorized domains:
    thêm domain <username>.github.io.
-7. Deploy firestore.rules trong Firebase Console/CLI trước khi dùng Pancake API.
+7. BẮT BUỘC publish firestore.rules mới trong Firebase Console/CLI.
+   Nếu bỏ bước này, Firestore sẽ báo “Missing or insufficient permissions”.
+   Xem FIX_FIRESTORE_PERMISSIONS.txt.
 
 PANCAKE API
 -----------

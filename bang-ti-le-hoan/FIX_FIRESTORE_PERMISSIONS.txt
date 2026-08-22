@@ -1,0 +1,61 @@
+FIX “MISSING OR INSUFFICIENT PERMISSIONS”
+=========================================
+
+Bản này đã sửa nguyên nhân phổ biến khi nâng cấp từ dữ liệu cũ:
+- orderDashboards/{UID} cũ có thể chưa có ownerUid/authProvider.
+- Rules cũ yêu cầu resource.data.ownerUid tồn tại trước khi update nên tài khoản Google
+  bị “Missing or insufficient permissions”.
+- Rules mới cho phép CHÍNH UID đó migrate document cũ, nhưng dữ liệu sau update vẫn bắt buộc:
+    ownerUid == Firebase Auth UID
+    authProvider == google.com
+- Pancake config vẫn chỉ Admin được sửa. User chỉ đọc config đúng UID của mình.
+- Công thức tính và index 4.html KHÔNG thay đổi.
+
+BẮT BUỘC PUBLISH FIRESTORE RULES MỚI
+------------------------------------
+GitHub Pages chỉ deploy file web. GitHub Pages KHÔNG tự publish Firestore Security Rules.
+Sau khi upload bản này lên GitHub, cần publish file firestore.rules MỘT LẦN.
+
+Cách 1 — Firebase Console:
+1. Firebase Console -> project taidt-904f7.
+2. Firestore Database -> Rules.
+3. Copy toàn bộ file firestore.rules trong gói này.
+4. Bấm Publish.
+
+Cách 2 — Firebase CLI:
+1. Đăng nhập:
+      npx firebase-tools login
+2. Tại thư mục bang-ti-le-hoan chạy:
+      npx firebase-tools deploy --only firestore:rules --project taidt-904f7
+
+ADMIN
+-----
+Trang Admin dùng tài khoản Email/Password nhưng quyền Admin KHÔNG dựa vào loại đăng nhập.
+UID admin phải có document:
+    admins/{UID_ADMIN}
+
+Có thể tạo thủ công trong Firebase Console:
+- Collection: admins
+- Document ID: đúng UID hiển thị ở màn hình Admin
+- Có thể để field ví dụ:
+    enabled = true
+
+Rules chỉ kiểm tra document tồn tại; field không ảnh hưởng.
+
+Nếu đã tạo admins/{UID_ADMIN} mà vẫn lỗi:
+1. Kiểm tra UID document có đúng Firebase Authentication UID không.
+2. Publish lại firestore.rules mới.
+3. Đăng xuất Admin, đăng nhập lại.
+4. Reload cứng trang (Ctrl+F5).
+
+GITHUB PAGES
+------------
+Sau khi publish Rules, trang chính và Admin tiếp tục chạy trực tiếp trên GitHub Pages.
+Không cần Vercel/Node/backend.
+
+LƯU Ý
+-----
+Không đổi công thức tính.
+Không đổi parser/cách tính legacy.
+Không xóa upload Excel.
+Không cho user chỉnh Pancake API.

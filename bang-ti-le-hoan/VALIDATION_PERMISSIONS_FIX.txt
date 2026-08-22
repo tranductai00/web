@@ -1,0 +1,39 @@
+BẢNG TỶ LỆ HOÀN — VALIDATION PERMISSION FIX
+============================================
+
+Mục tiêu:
+- Fix lỗi Firestore: Missing or insufficient permissions.
+- Giữ nguyên toàn bộ chức năng/công thức tính.
+- Cài đặt Pancake API vẫn chỉ ở trang Admin.
+- Website vẫn deploy trực tiếp GitHub Pages.
+
+Thay đổi:
+1. firestore.rules:
+   - Cho phép chính Google UID migrate orderDashboards/{UID} legacy thiếu ownerUid.
+   - Dữ liệu sau update vẫn bắt buộc ownerUid == UID và authProvider == google.com.
+   - Admin vẫn cần admins/{UID_ADMIN} hoặc custom claim admin=true.
+   - pancakeConfigs: user chỉ get đúng UID; create/update/delete chỉ Admin.
+
+2. Admin:
+   - Chỉ cải thiện thông báo khi Firestore Rules chưa publish/UID admin sai.
+   - Không đổi công thức tính.
+
+3. User:
+   - Chỉ cải thiện thông báo lỗi quyền khi migrate Cloud.
+   - Không đổi parser/công thức.
+
+4. Deploy:
+   - Thêm firebase.json + .firebaserc để chạy:
+     npx firebase-tools deploy --only firestore:rules --project taidt-904f7
+
+Kiểm tra:
+- SHA-256 index 4.html trước: bbfd5d17c232db002d27d6514075c35b8041bb1e27cd1369fe7ca23b7af11e1f
+- SHA-256 index 4.html sau  : bbfd5d17c232db002d27d6514075c35b8041bb1e27cd1369fe7ca23b7af11e1f
+- Kết quả: GIỐNG HỆT
+- node --check google-account-sync.js: OK
+- node --check pancake-user-sync.js: OK
+- node --check pancake-browser-common.js: OK
+- node --check JS module trong Admin: OK
+
+Lưu ý:
+GitHub Pages không tự publish Firestore Rules. Phải publish firestore.rules mới ít nhất một lần.

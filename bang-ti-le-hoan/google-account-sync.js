@@ -253,7 +253,13 @@ async function activateUser(user){
   installGoogleAccountBridge();
   installUIOverrides();
   hideLogin();
-  try{await ensureProfile(user);}catch(e){console.error('profile sync',e);toastSafe('Không thể cập nhật hồ sơ Cloud: '+(e.message||e));}
+  try{await ensureProfile(user);}catch(e){
+    console.error('profile sync',e);
+    const permission=e?.code==='permission-denied'||/missing or insufficient permissions/i.test(String(e?.message||''));
+    toastSafe(permission
+      ? 'Firestore chưa cho phép cập nhật dữ liệu. Hãy Publish file firestore.rules mới trong Firebase Console rồi tải lại trang.'
+      : 'Không thể cập nhật hồ sơ Cloud: '+(e.message||e));
+  }
   // Phát sự kiện cũ để giữ nguyên toàn bộ luồng pull/listen/save hiện hữu của trang.
   window.dispatchEvent(new Event('firebase-cloud-ready'));
   // Sự kiện mới chỉ báo tài khoản Google đã sẵn sàng cho adapter Pancake.

@@ -5,33 +5,43 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Admin hợp lệ khi:
+    // 1) có custom claim admin=true; HOẶC
+    // 2) có document admins/{Firebase Auth UID}.
+    //
+    // Không tự cấp admin theo email/password để tránh một tài khoản password bất kỳ
+    // có thể tự trở thành quản trị.
     function isAdmin() {
       return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        && (
+          request.auth.token.admin == true
+          || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
     }
 
     function ownsDashboard(userId) {
       return signedIn() && request.auth.uid == userId;
     }
 
-    // Tạo admins/{UID_ADMIN} thủ công từ Firebase Console.
+    // Tạo admins/{UID_ADMIN} từ Firebase Console hoặc dùng custom claim admin=true.
+    // Admin chỉ cần đọc document UID của chính mình để xác minh quyền.
     match /admins/{uid} {
-      allow get: if signedIn() && request.auth.uid == uid;
-      allow list, create, update, delete: if false;
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
     }
 
-
-    // Pancake API config is managed only by Admin.
-    // The owner can read only their own config so the static GitHub Pages client can sync orders.
-    // The owner cannot create/update/delete API settings.
+    // Pancake API config chỉ Admin được tạo/sửa/xóa.
+    // User Google chỉ đọc đúng cấu hình theo UID của chính mình để GitHub Pages
+    // có thể đồng bộ Pancake mà không hiển thị phần cài đặt.
     match /pancakeConfigs/{userId} {
-      allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow get: if isAdmin() || ownsDashboard(userId);
       allow list: if isAdmin();
       allow create, update, delete: if isAdmin();
     }
 
-    // Mỗi tài khoản Google chỉ đọc/ghi document có ID = Firebase Auth UID của chính họ.
-    // Admin chỉ đọc/list để theo dõi realtime, không sửa dữ liệu người dùng.
+    // Mỗi tài khoản Google chỉ đọc/ghi document có ID = Firebase Auth UID của mình.
+    // Admin chỉ đọc/list để theo dõi realtime.
     match /orderDashboards/{userId} {
       allow get: if isAdmin() || ownsDashboard(userId);
       allow list: if isAdmin();
@@ -40,8 +50,11 @@ service cloud.firestore {
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.authProvider == 'google.com';
 
+      // FIX PERMISSION / LEGACY MIGRATION:
+      // Bản cũ có thể đã tạo document orderDashboards/{UID} trước khi có ownerUid.
+      // Chỉ cần path UID đúng tài khoản là đủ để cho phép tài khoản đó tự migrate.
+      // Dữ liệu SAU update vẫn bắt buộc ownerUid = UID và authProvider = google.com.
       allow update: if ownsDashboard(userId)
-        && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.authProvider == 'google.com';
 
