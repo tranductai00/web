@@ -197,7 +197,7 @@
       <div class="loginField"><label>Mật khẩu</label><input type="password" id="adminPassword" required autocomplete="current-password"></div>
       <div class="loginActions"><button class="btn primary" id="loginBtn" type="submit">Đăng nhập</button></div>
       <div class="loginError" id="loginError"></div>
-      <div class="setupBox" id="setupBox">Tài khoản đã đăng nhập nhưng chưa được cấp quyền admin. Tạo document theo UID dưới đây tại <b>Firestore → admins → UID</b>.<div class="uid" id="adminUid"></div></div>
+      <div class="setupBox" id="setupBox">Tài khoản đã đăng nhập nhưng chưa được cấp quyền admin. Tạo document <b>admins/{UID}</b> theo UID dưới đây và <b>Publish firestore.rules mới</b>.<div class="uid" id="adminUid"></div></div>
     </form>
   </div>
   <div class="toast" id="toast"></div>
@@ -451,7 +451,18 @@
       try{return JSON.parse(localStorage.getItem(UI_KEY)||'{}')||{};}catch(e){return{};}
     }
 
-    async function verifyAdmin(user){const snap=await getDoc(doc(db,'admins',user.uid));return snap.exists();}
+    async function verifyAdmin(user){
+      try{
+        const snap=await getDoc(doc(db,'admins',user.uid));
+        return snap.exists();
+      }catch(e){
+        if(e?.code==='permission-denied'){
+          const err=new Error('Firestore Rules chưa được Publish hoặc chưa cho phép đọc admins/{UID}. Hãy publish file firestore.rules mới rồi đăng nhập lại.');
+          err.code=e.code; throw err;
+        }
+        throw e;
+      }
+    }
     function showLogin(error=''){$('#loginOverlay').classList.remove('hidden');$('#loginError').style.display=error?'block':'none';$('#loginError').textContent=error;}
     function hideLogin(){$('#loginOverlay').classList.add('hidden');$('#loginError').style.display='none';$('#setupBox').style.display='none';}
     function setLive(ok,text){$('#liveStatus').innerHTML=`<span class="statusDot ${ok?'ok':''}"></span> ${esc(text)}`;}
@@ -473,7 +484,7 @@
         renderAll();
       },error=>{
         console.error(error);setLive(false,'Không có quyền đọc danh sách');
-        toast(error.code==='permission-denied'?'Tài khoản chưa có quyền admin hoặc Firestore Rules chưa được cập nhật.':error.message);
+        toast(error.code==='permission-denied'?'Thiếu quyền Firestore: hãy Publish firestore.rules mới và kiểm tra admins/{UID_ADMIN}.':error.message);
       });
     }
 
