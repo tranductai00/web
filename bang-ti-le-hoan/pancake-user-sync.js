@@ -18,7 +18,7 @@
 
   async function loadApi(){
     if(api)return api;
-    api=await import('./pancake-browser-common.js?v=4');
+    api=await import('./pancake-browser-common.js?v=5');
     return api;
   }
 
@@ -199,7 +199,10 @@
       if(data.meta?.ordersWithoutItems)warnings.push(`${data.meta.ordersWithoutItems} đơn vẫn thiếu dòng sản phẩm`);
       if(data.meta?.detailFailures)warnings.push(`${data.meta.detailFailures} đơn lỗi khi tải chi tiết`);
       if(data.meta?.fallbackCodeCount)warnings.push(`${data.meta.fallbackCodeCount} item dùng mã dự phòng`);
-      setStatus(`Đã cập nhật “${committed.actual}”: ${data.fetchedOrders}/${data.totalEntries||data.fetchedOrders} đơn, ${data.meta?.rowCount||rows.length} dòng sản phẩm, ${data.fetchedPages} trang.${data.meta?.detailLoaded?` Đã bổ sung chi tiết ${data.meta.detailLoaded} đơn.`:''}${warnings.length?' Lưu ý: '+warnings.join(' · ')+'.':''}`,warnings.length?'warn':'ok');
+      const rangeFallback=data.meta?.rangeFallbackMode&&data.meta.rangeFallbackMode!=='full'
+        ? ` Pancake được tự chia khoảng theo ${data.meta.rangeFallbackMode==='daily'?'ngày':'7 ngày'} để tránh lỗi trả 0 đơn của khoảng dài.`
+        : '';
+      setStatus(`Đã cập nhật “${committed.actual}”: ${data.fetchedOrders}/${data.totalEntries||data.fetchedOrders} đơn, ${data.meta?.rowCount||rows.length} dòng sản phẩm, ${data.fetchedPages} trang.${rangeFallback}${data.meta?.detailLoaded?` Đã bổ sung chi tiết ${data.meta.detailLoaded} đơn.`:''}${warnings.length?' Lưu ý: '+warnings.join(' · ')+'.':''}`,warnings.length?'warn':'ok');
       toastMsg(`Đã lấy dữ liệu Pancake cho ${committed.actual}`);
     }catch(e){setStatus(e.message||String(e),'error');}
     finally{setBusy(false);}

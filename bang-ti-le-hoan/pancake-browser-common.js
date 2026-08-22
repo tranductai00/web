@@ -21,6 +21,8 @@ export const KNOWN_STATUS = {
 
 const detailCache = new Map();
 const DETAIL_CACHE_LIMIT = 5000;
+const RANGE_WEEK_SECONDS = 7 * 24 * 60 * 60;
+const RANGE_DAY_SECONDS = 24 * 60 * 60;
 
 function first(obj, paths) {
   for (const path of paths) {
@@ -480,33 +482,43 @@ export function buildPancakeUrl({
   params.set('editorId', 'none');
   params.set('endDateTime', String(endDateTime));
 
-  // Saved filter itself is authoritative. Keep generic OR/exclude switches from the
-  // captured Pancake request, but do not force one specific "multiple_*" mode unless
-  // a fallback profile is explicitly used.
-  params.set('is_filter_attributes_by_or', 'true');
-  params.set('is_filter_conversation_tag_by_or', 'true');
-  params.set('is_filter_customer_tag_by_or', 'true');
-  params.set('is_filter_exclude', 'false');
-  params.set('is_filter_exclude_conversation_tag', 'false');
-  params.set('is_filter_exclude_customer_tag', 'false');
-  params.set('is_filter_exclude_partner', 'false');
-  params.set('is_filter_exclude_product_tag', 'false');
-  params.set('is_filter_order_tag_by_or', 'true');
-  params.set('is_filter_product_by_or', 'true');
-  params.set('is_filter_tag_by_or', 'true');
+  // Saved filter itself is authoritative. Pancake's internal UI can send slightly
+  // different helper flags depending on how a saved filter was created. "bare"
+  // intentionally omits them; the other profiles reproduce common UI shapes.
+  if (filterProfile !== 'bare') {
+    params.set('is_filter_attributes_by_or', 'true');
+    params.set('is_filter_conversation_tag_by_or', 'true');
+    params.set('is_filter_customer_tag_by_or', 'true');
+    params.set('is_filter_exclude', 'false');
+    params.set('is_filter_exclude_conversation_tag', 'false');
+    params.set('is_filter_exclude_customer_tag', 'false');
+    params.set('is_filter_exclude_partner', 'false');
+    params.set('is_filter_exclude_product_tag', 'false');
+    params.set('is_filter_order_tag_by_or', 'true');
+    params.set('is_filter_product_by_or', 'true');
+    params.set('is_filter_tag_by_or', 'true');
+  }
 
   const multipleKeys = [
     'is_filter_multiple_employee','is_filter_multiple_field_address',
     'is_filter_multiple_partner','is_filter_multiple_promotion','is_filter_multiple_source'
   ];
   if (filterProfile === 'legacy-source') {
+    // Exact shape captured from Pancake POS for a saved filter with multiple sources.
     for (const key of multipleKeys) params.set(key, key === 'is_filter_multiple_source' ? 'true' : 'false');
+  } else if (filterProfile === 'employee-source') {
+    for (const key of multipleKeys) {
+      params.set(key, (key === 'is_filter_multiple_employee' || key === 'is_filter_multiple_source') ? 'true' : 'false');
+    }
+  } else if (filterProfile === 'employee-only') {
+    for (const key of multipleKeys) params.set(key, key === 'is_filter_multiple_employee' ? 'true' : 'false');
   } else if (filterProfile === 'all-multiple') {
     for (const key of multipleKeys) params.set(key, 'true');
   } else if (filterProfile === 'all-single') {
     for (const key of multipleKeys) params.set(key, 'false');
   }
-  // neutral => omit multiple_* keys and let saved_filters_id decide.
+  // neutral => generic flags are sent, but multiple_* keys are omitted.
+  // bare    => all filter-helper flags are omitted and saved_filters_id stands alone.
 
   params.set('option_sort', 'inserted_at_desc');
   params.set('page', String(page));
@@ -601,15 +613,15 @@ function totalPagesFromPayload(payload, fallback=1) {
   return Math.max(1, Number(fallback) || 1);
 }
 
-async function fetchFirstUsablePage(baseArgs) {
-  // neutral: let saved_filters_id decide its own filter shape.
-  // legacy-source: exact compatibility profile captured from the Pancake web request.
-  const profiles = ['neutral','legacy-source'];
+async function fetchFirstUsablePage(baseArgs, {
+  profiles=['legacy-source','bare','neutral','employee-source','employee-only','all-single','all-multiple'],
+  esModes=[true,false]
+}={}) {
   let best = null;
   let lastError = null;
 
   for (const filterProfile of profiles) {
-    for (const esOnly of [true,false]) {
+    for (const esOnly of esModes) {
       try {
         const payload = await fetchPage({...baseArgs,filterProfile,esOnly}, 2);
         const orders = listData(payload);
@@ -628,6 +640,206 @@ async function fetchFirstUsablePage(baseArgs) {
 
   if (best) return best;
   throw lastError || new Error('Không lấy được danh sách đơn từ Pancake.');
+}
+
+function mergeUniqueOrders(target, incoming) {
+  const out = Array.isArray(target) ? target.slice() : [];
+  const index = new Map();
+
+  const register = (order, pos) => {
+    const keys = matchKeys(order);
+    if (!keys.length) {
+      const visible = orderId(order);
+      if (visible) keys.push(`visible:${visible}`);
+    }
+    for (const key of keys) if (!index.has(String(key))) index.set(String(key), pos);
+  };
+
+  for (let i=0;i<out.length;i++) register(out[i], i);
+
+  for (const order of (Array.isArray(incoming) ? incoming : [])) {
+    let existingIndex = -1;
+    for (const key of matchKeys(order)) {
+      if (index.has(String(key))) { existingIndex = index.get(String(key)); break; }
+    }
+    if (existingIndex < 0) {
+      const visible = orderId(order);
+      if (visible && index.has(`visible:${visible}`)) existingIndex = index.get(`visible:${visible}`);
+    }
+
+    if (existingIndex >= 0) {
+      // Keep whichever copy contains richer line-item/detail data.
+      out[existingIndex] = mergeOrder(out[existingIndex], order);
+      register(out[existingIndex], existingIndex);
+    } else {
+      const pos = out.length;
+      out.push(order);
+      register(order, pos);
+    }
+  }
+  return out;
+}
+
+function rangeChunks(startDateTime, endDateTime, chunkSeconds) {
+  const chunks = [];
+  let start = Number(startDateTime);
+  const end = Number(endDateTime);
+  const size = Math.max(60, Number(chunkSeconds) || RANGE_DAY_SECONDS);
+  while (start <= end) {
+    const chunkEnd = Math.min(end, start + size - 1);
+    chunks.push([start, chunkEnd]);
+    start = chunkEnd + 1;
+  }
+  return chunks;
+}
+
+async function collectRangePages({
+  shopId, savedFilterId, accessToken, startDateTime, endDateTime,
+  testOnly=false, onProgress=null, firstPageProfiles=null, forcedProfile='', forcedEsOnly=null,
+  rangeIndex=1, rangeTotal=1
+}) {
+  let allOrders = [];
+  let page = 1;
+  let totalPages = 1;
+  let totalEntries = 0;
+  let enrichedPages = 0;
+  let enrichmentFailures = 0;
+  let requestProfile = forcedProfile || 'legacy-source';
+  let listEsOnly = forcedEsOnly === null ? true : !!forcedEsOnly;
+  const maxWantedPages = testOnly ? 1 : MAX_PAGES;
+
+  do {
+    onProgress?.({
+      phase:'list',page,totalPages,totalEntries,fetchedOrders:allOrders.length,
+      rangeIndex,rangeTotal,rangeStart:startDateTime,rangeEnd:endDateTime
+    });
+
+    const baseArgs = {
+      shopId,savedFilterId,accessToken,startDateTime,endDateTime,
+      page,pageSize:testOnly?20:PAGE_SIZE
+    };
+
+    let data, pageData;
+
+    if (page === 1 && !forcedProfile) {
+      const firstPage = await fetchFirstUsablePage(
+        baseArgs,
+        firstPageProfiles ? {profiles:firstPageProfiles} : undefined
+      );
+      data = firstPage.payload;
+      pageData = firstPage.orders;
+      totalPages = firstPage.totalPages;
+      totalEntries = firstPage.totalEntries;
+      requestProfile = firstPage.filterProfile;
+      listEsOnly = firstPage.esOnly;
+    } else {
+      data = await fetchPage({
+        ...baseArgs,filterProfile:requestProfile,esOnly:listEsOnly
+      });
+      pageData = listData(data);
+      totalPages = totalPagesFromPayload(data,totalPages);
+      totalEntries = totalEntriesFromPayload(data,totalEntries || pageData.length);
+    }
+
+    // Compact Elasticsearch rows often omit products. Ask for the same page from
+    // the non-ES path and merge only exact matching order ids.
+    if (pageData.some(order => !itemArrays(order).length) && listEsOnly) {
+      try {
+        const enrichedPayload = await fetchPage({
+          ...baseArgs,filterProfile:requestProfile,esOnly:false
+        }, 2);
+        const enrichedData = listData(enrichedPayload);
+        if (enrichedData.length) {
+          pageData = mergePageOrders(pageData, enrichedData);
+          enrichedPages++;
+        }
+      } catch (_) {
+        enrichmentFailures++;
+      }
+    }
+
+    allOrders = mergeUniqueOrders(allOrders, pageData);
+    if (allOrders.length >= MAX_ORDERS) break;
+    page++;
+  } while (page <= totalPages && page <= maxWantedPages);
+
+  return {
+    orders:allOrders,
+    totalEntries,
+    totalPages,
+    fetchedPages:Math.min(page-1,totalPages),
+    enrichedPages,
+    enrichmentFailures,
+    requestProfile,
+    listEsOnly
+  };
+}
+
+async function collectChunkedRange({
+  shopId,savedFilterId,accessToken,startDateTime,endDateTime,
+  testOnly=false,onProgress=null,chunkSeconds=RANGE_WEEK_SECONDS,mode='weekly',
+  profileCandidates=['legacy-source','bare','neutral','employee-source','employee-only']
+}) {
+  const chunks = rangeChunks(startDateTime,endDateTime,chunkSeconds);
+  let allOrders = [];
+  let totalEntries = 0;
+  let totalPages = 0;
+  let fetchedPages = 0;
+  let enrichedPages = 0;
+  let enrichmentFailures = 0;
+  let requestProfile = '';
+  let listEsOnly = true;
+  let discoveredProfile = '';
+  let discoveredEsOnly = null;
+
+  for (let i=0;i<chunks.length;i++) {
+    const [chunkStart,chunkEnd] = chunks[i];
+
+    // Until a working profile is discovered, prioritize the exact captured Pancake
+    // request and a "bare saved filter" request. Once one chunk has data, lock that
+    // profile for every remaining chunk to keep requests small and consistent.
+    const part = await collectRangePages({
+      shopId,savedFilterId,accessToken,
+      startDateTime:chunkStart,endDateTime:chunkEnd,
+      testOnly,onProgress,
+      firstPageProfiles:discoveredProfile ? null : profileCandidates,
+      forcedProfile:discoveredProfile,
+      forcedEsOnly:discoveredProfile ? discoveredEsOnly : null,
+      rangeIndex:i+1,rangeTotal:chunks.length
+    });
+
+    if (!discoveredProfile && part.orders.length) {
+      discoveredProfile = part.requestProfile;
+      discoveredEsOnly = part.listEsOnly;
+    }
+
+    allOrders = mergeUniqueOrders(allOrders, part.orders);
+    totalEntries += Number(part.totalEntries || part.orders.length || 0);
+    totalPages += Number(part.totalPages || 0);
+    fetchedPages += Number(part.fetchedPages || 0);
+    enrichedPages += Number(part.enrichedPages || 0);
+    enrichmentFailures += Number(part.enrichmentFailures || 0);
+    requestProfile = part.requestProfile || requestProfile;
+    listEsOnly = part.listEsOnly;
+
+    if (allOrders.length >= MAX_ORDERS) break;
+
+    // Connection test only needs proof that the saved filter can return real orders.
+    if (testOnly && allOrders.length) break;
+  }
+
+  return {
+    orders:allOrders,
+    totalEntries:Math.max(totalEntries,allOrders.length),
+    totalPages:Math.max(1,totalPages),
+    fetchedPages,
+    enrichedPages,
+    enrichmentFailures,
+    requestProfile:discoveredProfile || requestProfile || 'legacy-source',
+    listEsOnly:discoveredProfile ? discoveredEsOnly : listEsOnly,
+    rangeFallbackMode:mode,
+    rangeChunksTried:chunks.length
+  };
 }
 
 function detailUrl(shopId, orderId, accessToken) {
@@ -793,77 +1005,69 @@ export async function fetchPancakeOrders({
   if (endDateTime - startDateTime > 370*24*60*60) throw new Error('Mỗi lần đồng bộ tối đa 370 ngày.');
 
   const started = Date.now();
-  const allOrders = [];
-  let page = 1;
-  let totalPages = 1;
-  let totalEntries = 0;
-  let enrichedPages = 0;
-  let enrichmentFailures = 0;
-  let requestProfile = 'neutral';
-  let listEsOnly = true;
-  const maxWantedPages = testOnly ? 1 : MAX_PAGES;
+  const spanSeconds = endDateTime - startDateTime + 1;
 
-  do {
-    onProgress?.({phase:'list',page,totalPages,totalEntries,fetchedOrders:allOrders.length});
+  // First use the normal Pancake request for the whole selected range.
+  let collected = await collectRangePages({
+    shopId,savedFilterId,accessToken,startDateTime,endDateTime,testOnly,onProgress
+  });
 
-    const baseArgs = {
+  let rangeFallbackMode = '';
+  let rangeChunksTried = 1;
+
+  // Pancake's saved-filter endpoint can return an empty list for a long historical
+  // range even though the same filter returns orders for shorter windows. This was
+  // observed with month syncs while one-day UI requests worked. Do not accept that
+  // false zero: retry the SAME saved filter in non-overlapping 7-day windows.
+  if (!collected.orders.length && spanSeconds > RANGE_WEEK_SECONDS) {
+    const weekly = await collectChunkedRange({
       shopId,savedFilterId,accessToken,startDateTime,endDateTime,
-      page,pageSize:testOnly?20:PAGE_SIZE
-    };
-
-    let data, pageData;
-
-    if (page === 1) {
-      // Important: saved filters are not all built from the same UI switches.
-      // Probe a neutral saved-filter request first, then the captured legacy profiles.
-      // Also retry es_only=false when Elasticsearch returns zero/stale results.
-      const firstPage = await fetchFirstUsablePage(baseArgs);
-      data = firstPage.payload;
-      pageData = firstPage.orders;
-      totalPages = firstPage.totalPages;
-      totalEntries = firstPage.totalEntries;
-      requestProfile = firstPage.filterProfile;
-      listEsOnly = firstPage.esOnly;
-    } else {
-      data = await fetchPage({...baseArgs,filterProfile:requestProfile,esOnly:listEsOnly});
-      pageData = listData(data);
-      totalPages = totalPagesFromPayload(data,totalPages);
-      totalEntries = totalEntriesFromPayload(data,totalEntries || pageData.length);
+      testOnly,onProgress,chunkSeconds:RANGE_WEEK_SECONDS,mode:'weekly'
+    });
+    rangeChunksTried += weekly.rangeChunksTried || 0;
+    if (weekly.orders.length || weekly.totalEntries > collected.totalEntries) {
+      collected = weekly;
+      rangeFallbackMode = 'weekly';
     }
+  }
 
-    // If the chosen list mode has orders but compact rows omit products,
-    // query the SAME page with es_only=false and merge exact matching orders.
-    if (pageData.some(order => !itemArrays(order).length) && listEsOnly) {
-      try {
-        const enrichedPayload = await fetchPage({
-          ...baseArgs,filterProfile:requestProfile,esOnly:false
-        }, 2);
-        const enrichedData = listData(enrichedPayload);
-        if (enrichedData.length) {
-          pageData = mergePageOrders(pageData, enrichedData);
-          enrichedPages++;
-        }
-      } catch (_) {
-        enrichmentFailures++;
-        // Continue: per-order detail/search fallbacks below will handle missing items.
+  // Some Pancake filters behave like the captured UI request and only become
+  // reliable on a one-day window. If weekly chunks still look empty, retry daily.
+  // For very long ranges keep the fallback bounded; normal ranges (a month) are
+  // fully covered day-by-day.
+  if (!collected.orders.length && spanSeconds > RANGE_DAY_SECONDS) {
+    const dayCount = Math.ceil(spanSeconds / RANGE_DAY_SECONDS);
+    if (dayCount <= 62) {
+      const daily = await collectChunkedRange({
+        shopId,savedFilterId,accessToken,startDateTime,endDateTime,
+        testOnly,onProgress,chunkSeconds:RANGE_DAY_SECONDS,mode:'daily',
+        profileCandidates:['legacy-source','bare']
+      });
+      rangeChunksTried += daily.rangeChunksTried || 0;
+      if (daily.orders.length || daily.totalEntries > collected.totalEntries) {
+        collected = daily;
+        rangeFallbackMode = 'daily';
       }
     }
+  }
 
-    allOrders.push(...pageData);
-    if (allOrders.length >= MAX_ORDERS) break;
-    page++;
-  } while (page <= totalPages && page <= maxWantedPages);
+  const allOrders = collected.orders || [];
+  const totalEntries = Math.max(Number(collected.totalEntries||0), allOrders.length);
+  const totalPages = Math.max(1, Number(collected.totalPages||1));
+  const enrichedPages = Number(collected.enrichedPages||0);
+  const enrichmentFailures = Number(collected.enrichmentFailures||0);
+  const requestProfile = collected.requestProfile || 'legacy-source';
+  const listEsOnly = !!collected.listEsOnly;
 
-  // If the list is genuinely empty, there is nothing from which a product row can be made.
-  // Return a valid empty result instead of misreporting a "product extraction" failure.
+  // Only after whole-range + chunk fallbacks are exhausted is an empty range real.
   if (!allOrders.length && totalEntries === 0) {
     return {
       ok:true,
       testOnly,
       totalEntries:0,
       fetchedOrders:0,
-      fetchedPages:1,
-      totalPages:1,
+      fetchedPages:Number(collected.fetchedPages||1),
+      totalPages,
       truncated:false,
       rows:[],
       meta:{
@@ -882,13 +1086,15 @@ export async function fetchPancakeOrders({
         requestProfile,
         listEsOnly,
         emptyRange:true,
+        rangeFallbackMode:rangeFallbackMode || 'full',
+        rangeChunksTried,
         elapsedMs:Date.now()-started
       }
     };
   }
 
-  // Second fallback: direct order detail + exact internal order search, only for
-  // orders still missing line items. The set of orders remains the saved-filter set.
+  // Direct detail + exact internal order search for orders that still do not contain
+  // product lines. The order set itself never expands beyond the saved-filter result.
   const hydrated = await hydrateMissingOrderItems(allOrders, {
     shopId,accessToken,onProgress
   });
@@ -897,9 +1103,9 @@ export async function fetchPancakeOrders({
   return {
     ok:true,
     testOnly,
-    totalEntries:Math.max(totalEntries,allOrders.length),
+    totalEntries,
     fetchedOrders:allOrders.length,
-    fetchedPages:Math.min(page-1,totalPages),
+    fetchedPages:Number(collected.fetchedPages||1),
     totalPages,
     truncated:!testOnly && (totalPages>MAX_PAGES || allOrders.length>=MAX_ORDERS),
     rows:testOnly ? normalized.rows.slice(0,200) : normalized.rows,
@@ -919,6 +1125,8 @@ export async function fetchPancakeOrders({
       requestProfile,
       listEsOnly,
       emptyRange:false,
+      rangeFallbackMode:rangeFallbackMode || 'full',
+      rangeChunksTried,
       elapsedMs:Date.now()-started
     }
   };
