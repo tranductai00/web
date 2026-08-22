@@ -33,6 +33,7 @@ const LEGACY_FLAGS = ['workspace_login_done','v43_workspace_login_done','v39_wor
 let currentUser = null;
 let authBooted = false;
 let accountPanel = null;
+let cachedPancakeAdminConfig = null;
 
 function qs(s){ return document.querySelector(s); }
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -95,6 +96,51 @@ function writeAccountScope(user){
   localStorage.setItem(GOOGLE_UID,user.uid); localStorage.setItem(GOOGLE_EMAIL,user.email||'');
   try{ if(typeof window.v46LoadWorkspaceLocal==='function') window.v46LoadWorkspaceLocal(key); }catch(e){console.warn('load local account scope',e);}
   return key;
+}
+
+function cleanPancakeAdminConfig(config){
+  if(!config || typeof config !== 'object') return null;
+  const statusMap={};
+  if(config.statusMap && typeof config.statusMap==='object'){
+    Object.entries(config.statusMap).slice(0,60).forEach(([k,v])=>{
+      const key=String(k||'').trim().slice(0,20), value=String(v||'').trim().slice(0,80);
+      if(key && value) statusMap[key]=value;
+    });
+  }
+  const out={
+    shopId:String(config.shopId||'').trim(),
+    savedFilterId:String(config.savedFilterId||'').trim(),
+    label:String(config.label||'').trim().slice(0,120),
+    accessToken:String(config.accessToken||'').trim(),
+    statusMap
+  };
+  return out.shopId || out.savedFilterId || out.label || out.accessToken || Object.keys(statusMap).length ? out : null;
+}
+
+function pancakeConfigDoc(user=currentUser){
+  if(!user) throw new Error('Bạn chưa đăng nhập Google.');
+  return doc(db,'pancakeConfigs',user.uid);
+}
+
+async function loadPancakeAdminConfig(user=currentUser){
+  if(!isGoogleUser(user)) return null;
+  const snap=await getDoc(pancakeConfigDoc(user));
+  cachedPancakeAdminConfig=snap.exists()?cleanPancakeAdminConfig(snap.data()):null;
+  return cachedPancakeAdminConfig;
+}
+
+function installGoogleAccountBridge(){
+  window.googleAccountBridge={
+    getUser(){ return auth.currentUser && isGoogleUser(auth.currentUser) ? auth.currentUser : null; },
+    async getIdToken(force=false){
+      const u=auth.currentUser;
+      if(!isGoogleUser(u)) throw new Error('Bạn chưa đăng nhập Google.');
+      return u.getIdToken(!!force);
+    },
+    // Pancake settings are read-only on the user page. Only Admin writes pancakeConfigs/{UID}.
+    loadPancakeAdminConfig,
+    getCachedPancakeAdminConfig(){ return cachedPancakeAdminConfig; }
+  };
 }
 
 function installCloud(user){
@@ -202,12 +248,16 @@ function installUIOverrides(){
 async function activateUser(user){
   currentUser=user;
   writeAccountScope(user);
+  try{await loadPancakeAdminConfig(user);}catch(e){cachedPancakeAdminConfig=null;console.warn('pancake admin config load',e);}
   installCloud(user);
+  installGoogleAccountBridge();
   installUIOverrides();
   hideLogin();
   try{await ensureProfile(user);}catch(e){console.error('profile sync',e);toastSafe('Không thể cập nhật hồ sơ Cloud: '+(e.message||e));}
   // Phát sự kiện cũ để giữ nguyên toàn bộ luồng pull/listen/save hiện hữu của trang.
   window.dispatchEvent(new Event('firebase-cloud-ready'));
+  // Sự kiện mới chỉ báo tài khoản Google đã sẵn sàng cho adapter Pancake.
+  window.dispatchEvent(new CustomEvent('google-account-ready',{detail:{uid:user.uid,email:user.email||''}}));
   setTimeout(()=>{try{if(typeof window.startCloudSync==='function')window.startCloudSync(true);}catch(e){}},80);
 }
 
@@ -220,7 +270,7 @@ onAuthStateChanged(auth,async user=>{
     await signOut(auth).catch(()=>{}); showLogin('Vui lòng đăng nhập bằng tài khoản Google.'); return;
   }
   authBooted=true;
-  if(!user){ currentUser=null; delete window.firebaseCloud; installUIOverrides(); showLogin(); return; }
+  if(!user){ currentUser=null; cachedPancakeAdminConfig=null; delete window.firebaseCloud; delete window.googleAccountBridge; installUIOverrides(); showLogin(); return; }
   await activateUser(user);
 });
 

@@ -19,9 +19,10 @@
 
   <script type="module">
     const SOURCE_VERSION = '5f21d9935c175a655b590525738b13e0b7874855';
-    const UI_VERSION = '70';
+    const UI_VERSION = '72';
     const CACHE_KEY = 'bang_ti_le_hoan_legacy_source_' + SOURCE_VERSION;
     const sources = [
+      './index%204.html',
       `https://cdn.jsdelivr.net/gh/tranductai00/web@${SOURCE_VERSION}/bang-ti-le-hoan/index.html`,
       `https://raw.githubusercontent.com/tranductai00/web/${SOURCE_VERSION}/bang-ti-le-hoan/index.html`
     ];
@@ -68,7 +69,10 @@
       if(!html.includes('google-account-sync.css')){
         html=html.replace('</head>','<link rel="stylesheet" href="./google-account-sync.css?v=49">\n</head>');
       }
-      // V50 chỉ bổ sung lớp giao diện, không thay đổi dữ liệu/công thức.
+      // Chỉ bổ sung UI đồng bộ Pancake; toàn bộ CÀI ĐẶT API nằm ở trang Admin.
+      if(!html.includes('pancake-sync.css')){
+        html=html.replace('</head>',`<link rel="stylesheet" href="./pancake-sync.css?v=${UI_VERSION}">\n</head>`);
+      }
       if(!html.includes('ui-v50.css')){
         html=html.replace('</head>',`<link rel="stylesheet" href="./ui-v50.css?v=${UI_VERSION}">\n</head>`);
       }
@@ -110,6 +114,9 @@
       }
       if(!html.includes('ui-v50.js')){
         html=html.replace('</body>',`<script src="./ui-v50.js?v=${UI_VERSION}"><\/script>\n</body>`);
+      }
+      if(!html.includes('pancake-user-sync.js')){
+        html=html.replace('</body>',`<script src="./pancake-user-sync.js?v=${UI_VERSION}"><\/script>\n</body>`);
       }
       return html;
     }

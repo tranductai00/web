@@ -1,0 +1,11 @@
+PANCAKE API V2 — ADMIN ONLY + GITHUB PAGES
+==========================================
+- Chuyển toàn bộ Shop ID / Saved Filter ID / Access Token / status mapping sang trang Admin.
+- Trang user không còn form cấu hình API; chỉ có nút Đồng bộ Pancake + khoảng ngày/tháng.
+- Mỗi UID user có pancakeConfigs/{UID} riêng.
+- Firestore Rules: Admin ghi, user chỉ đọc config của chính UID.
+- Bỏ Vercel api/, lib/, vercel.json và PANCAKE_SESSION_SECRET.
+- Chạy trực tiếp GitHub Pages.
+- index.html ưu tiên load local "index 4.html" để snapshot công thức nằm ngay trong repo.
+- index 4.html không sửa.
+- Upload Excel và toàn bộ công thức cũ giữ nguyên.

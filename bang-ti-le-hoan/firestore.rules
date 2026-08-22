@@ -20,6 +20,16 @@ service cloud.firestore {
       allow list, create, update, delete: if false;
     }
 
+
+    // Pancake API config is managed only by Admin.
+    // The owner can read only their own config so the static GitHub Pages client can sync orders.
+    // The owner cannot create/update/delete API settings.
+    match /pancakeConfigs/{userId} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
     // Mỗi tài khoản Google chỉ đọc/ghi document có ID = Firebase Auth UID của chính họ.
     // Admin chỉ đọc/list để theo dõi realtime, không sửa dữ liệu người dùng.
     match /orderDashboards/{userId} {

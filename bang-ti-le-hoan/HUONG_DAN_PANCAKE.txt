@@ -1,0 +1,75 @@
+BẢNG TỶ LỆ HOÀN — PANCAKE API V2 · ADMIN ONLY · GITHUB PAGES
+================================================================
+
+Mục tiêu
+--------
+1. Giữ nguyên toàn bộ chức năng/công thức trang tính hiện tại.
+2. Upload Excel thủ công vẫn dùng như trước.
+3. Pancake API theo saved_filters_id vẫn tạo dữ liệu đầu vào cho parser cũ.
+4. CÀI ĐẶT Pancake API chỉ xuất hiện trong trang Admin.
+5. Frontend chạy trực tiếp trên GitHub Pages, không cần Vercel.
+
+TRANG ADMIN
+-----------
+Mở:
+  ./bang-ti-le-hoan-admin/
+
+Admin đăng nhập Firebase Email/Password và phải có:
+  admins/{UID_ADMIN}
+
+Chọn tài khoản Google ở cột trái. Khu vực "Cài đặt Pancake POS API" cho phép:
+- Tên Team / cấu hình
+- Shop ID
+- Saved Filter ID
+- Access token
+- Mapping trạng thái mã=tên
+- Lưu
+- Kiểm tra API
+- Xóa cấu hình
+
+Cấu hình được lưu:
+  pancakeConfigs/{UID_USER}
+
+TRANG NGƯỜI DÙNG
+----------------
+Không còn Shop ID / Saved Filter ID / Token / mapping.
+Chỉ có nút:
+  Đồng bộ Pancake
+
+Người dùng chọn:
+- Từ ngày
+- Đến ngày
+- Tên tháng
+- Có/không ghi đè tháng
+
+Nếu Admin chưa cài API cho UID, trang chỉ báo "Chưa được cấu hình Pancake API".
+
+CÔNG THỨC
+---------
+KHÔNG THAY ĐỔI.
+Luồng:
+Pancake -> normalize item -> 5 cột cũ -> window.parseRawOrderSheet -> công thức cũ.
+
+Mã trạng thái đã xác minh:
+  0=Mới
+  11=Chờ hàng
+  13=Đã in
+
+Mã khác phải được Admin gán đúng tên. Nếu còn mã chưa gán, user sync bị dừng
+TRƯỚC khi dữ liệu được đưa vào parser để tránh làm sai tỷ lệ.
+
+PHÂN TRANG
+----------
+1000 đơn/trang, tối đa 60 trang / 60.000 đơn cho một lần đồng bộ.
+Nếu vượt ngưỡng, hệ thống yêu cầu thu hẹp khoảng ngày.
+
+GITHUB PAGES / CORS
+-------------------
+Bản V2 gọi Pancake trực tiếp từ trình duyệt để không cần server Vercel.
+Nếu Pancake không cho CORS từ github.io thì GitHub Pages thuần tĩnh không thể đọc API.
+Lúc đó cần proxy/backend riêng. Xem GITHUB_PAGES_DEPLOY.txt.
+
+FIRESTORE RULES
+---------------
+Phải cập nhật file firestore.rules đi kèm.
+pancakeConfigs chỉ Admin được ghi; user chỉ đọc document đúng UID của mình.

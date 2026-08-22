@@ -1,0 +1,40 @@
+VALIDATION — PANCAKE V2 GITHUB ADMIN ONLY
+=========================================
+Ngày build: 2026-08-22
+
+1. Snapshot công thức legacy
+   index 4.html SHA-256:
+   bbfd5d17c232db002d27d6514075c35b8041bb1e27cd1369fe7ca23b7af11e1f
+   Kết quả so với bản đầu vào: IDENTICAL = True
+
+2. JavaScript syntax
+   - google-account-sync.js: PASS
+   - pancake-browser-common.js: PASS
+   - pancake-user-sync.js: PASS
+   - bang-ti-le-hoan-admin/index.html inline module: PASS
+
+3. Adapter Pancake
+   - Synthetic normalize test: PASS
+   - Known status 0=Mới, 11=Chờ hàng: PASS
+   - Unknown numeric status detection: PASS
+   - Admin status-map application: PASS
+   - Saved Filter URL generation: PASS
+   - No rateBad/rateSuccess calculation in Pancake modules: PASS
+
+4. Admin-only settings
+   - Trang user không chứa form Shop ID: PASS
+   - Trang user không chứa form Saved Filter ID: PASS
+   - Trang user không chứa form Access Token: PASS
+   - Trang Admin có Shop ID / Saved Filter ID / Token / mapping: PASS
+   - Firestore pancakeConfigs: Admin write, owner read only: PASS
+
+5. GitHub Pages
+   - .nojekyll: PASS
+   - index.html ưu tiên local index%204.html: PASS
+   - Không còn /api/pancake serverless dependency: PASS
+   - Không còn vercel.json/api/lib runtime: PASS
+   - Static HTTP smoke test index/admin/assets: PASS
+
+Lưu ý: GitHub Pages là static. Nếu Pancake không gửi CORS header cho github.io,
+browser sẽ không đọc được response API; đây là giới hạn của browser/Pancake,
+không phải công thức của website. Hệ thống sẽ dừng và báo lỗi, không tính thiếu dữ liệu.

@@ -1,0 +1,48 @@
+BẢNG TỶ LỆ HOÀN — DEPLOY TRỰC TIẾP GITHUB PAGES
+=================================================
+
+Bản này KHÔNG cần Vercel / Node / serverless function.
+
+1. Đưa nguyên thư mục bang-ti-le-hoan lên GitHub.
+2. Repository -> Settings -> Pages.
+3. Source: Deploy from a branch.
+4. Chọn branch main (hoặc branch đang dùng), folder / (root).
+5. Nếu thư mục bang-ti-le-hoan nằm trong repo web:
+      https://<username>.github.io/web/bang-ti-le-hoan/
+   Trang Admin:
+      https://<username>.github.io/web/bang-ti-le-hoan/bang-ti-le-hoan-admin/
+6. Firebase Authentication -> Settings -> Authorized domains:
+   thêm domain <username>.github.io.
+7. Deploy firestore.rules trong Firebase Console/CLI trước khi dùng Pancake API.
+
+PANCAKE API
+-----------
+- Cài đặt Shop ID / Saved Filter ID / Access Token / map trạng thái CHỈ nằm ở trang Admin.
+- Người dùng chỉ thấy nút "Đồng bộ Pancake"; không có form cài đặt API.
+- Admin chọn đúng tài khoản Google bên trái rồi lưu cấu hình cho UID đó.
+- Cấu hình lưu tại Firestore collection:
+      pancakeConfigs/{UID_USER}
+- Firestore Rules trong gói này:
+  + Admin: đọc/ghi pancakeConfigs.
+  + User: chỉ đọc pancakeConfigs/{UID_CỦA_CHÍNH_MÌNH}.
+  + User: không được tự sửa cấu hình Pancake.
+
+LƯU Ý QUAN TRỌNG VỀ GITHUB PAGES
+--------------------------------
+GitHub Pages là web tĩnh, không có backend để giấu access token.
+Để chạy hoàn toàn trên GitHub Pages, trình duyệt của user phải đọc token của chính UID
+từ Firestore rồi gọi Pancake trực tiếp. Vì vậy user kỹ thuật vẫn có thể thấy token
+trong DevTools/Network. Giao diện cài đặt vẫn chỉ có ở Admin và Rules ngăn user sửa config.
+
+Nếu Pancake chặn CORS đối với domain github.io, trình duyệt sẽ báo lỗi "Không gọi được
+Pancake POS từ trình duyệt". Khi đó không có cách thuần GitHub Pages để đọc response POST;
+cần một backend/proxy riêng. Bản này báo lỗi rõ, không tự tính bằng dữ liệu thiếu.
+
+GIỮ NGUYÊN CÔNG THỨC
+--------------------
+- index 4.html là snapshot legacy và không bị sửa.
+- Pancake browser adapter chỉ tạo 5 cột:
+  Sản phẩm | Mã đơn hàng | Mã sản phẩm | Tên sản phẩm | Trạng thái
+- Sau đó gọi window.parseRawOrderSheet(...) của trang cũ.
+- Không có hàm rateBad/rateSuccess trong module đồng bộ Pancake.
+- Upload Excel cũ vẫn giữ nguyên.
