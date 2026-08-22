@@ -206,7 +206,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
     import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
-    import { fetchPancakeOrders, validatePancakeConfig, unixDay, remainingUnknownStatuses } from '../pancake-browser-common.js?v=3';
+    import { fetchPancakeOrders, validatePancakeConfig, unixDay, remainingUnknownStatuses } from '../pancake-browser-common.js?v=4';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA_Q5SQDpLVckk8Zpf8nZ6GUAaQAlX088k',
@@ -419,14 +419,20 @@
         });
         if(data.truncated)throw new Error('Dữ liệu tháng hiện tại vượt giới hạn kiểm tra 60.000 đơn. Hãy thu hẹp khoảng kiểm tra hoặc chia cấu hình.');
         if(!data.meta?.rowCount){
+          const orderCount=Number(data.fetchedOrders||data.totalEntries||0);
           const m=data.meta||{};
+          if(orderCount===0){
+            const startText=ymd(start),endText=ymd(now);
+            setPkStatus(`Kết nối Pancake thành công nhưng bộ lọc không có đơn trong ${startText} → ${endText}. Vì có 0 đơn nên không có dòng sản phẩm để tính. Hãy kiểm tra Saved Filter hoặc thử khoảng ngày có đơn.`, 'warn');
+            return;
+          }
           const detailInfo=m.detailRequested
             ? ` Đã thử tải chi tiết ${m.detailRequested} đơn: thành công ${m.detailLoaded||0}, lỗi ${m.detailFailures||0}.`
             : '';
           const sample=Array.isArray(m.detailFailureSamples)&&m.detailFailureSamples.length
             ? ` ${m.detailFailureSamples.join(' · ')}`
             : '';
-          throw new Error(`Pancake trả ${data.totalEntries||data.fetchedOrders||0} đơn nhưng chưa lấy được dòng sản phẩm.${detailInfo}${sample}`);
+          throw new Error(`Pancake đã trả ${orderCount} đơn nhưng chưa đọc được dòng sản phẩm.${detailInfo}${sample}`);
         }
         const unknown=remainingUnknownStatuses(data.meta,c.statusMap||{});
         if(Object.keys(unknown).length){
