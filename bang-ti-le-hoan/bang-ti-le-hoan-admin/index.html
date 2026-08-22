@@ -51,6 +51,25 @@
 
     @media(max-width:1280px){.layout{grid-template-columns:280px minmax(0,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.productSearch{width:240px}}
     @media(max-width:860px){.top{height:auto;min-height:var(--topH);padding:9px 11px;align-items:flex-start}.brand p{display:none}.actions{max-width:55%}.app{padding:9px}.layout{grid-template-columns:1fr}.sidebar{height:auto;position:static}.workspaceList{max-height:260px}.stats{grid-template-columns:repeat(2,1fr)}.workspaceHero{align-items:flex-start;flex-direction:column}.heroActions{width:100%;justify-content:flex-start}.filterBar{position:static;align-items:stretch}.field,.productSearch,.select{width:100%;min-width:0}.check{flex:1}.tableWrap{max-height:65vh}.pageInfo{position:static;margin-left:8px}}
+
+    /* Pancake API settings — Admin only */
+    .pkAdminCard{padding:16px 18px;display:grid;gap:14px}
+    .pkAdminHead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .pkAdminTitle{display:flex;gap:11px;align-items:flex-start}.pkAdminIcon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;font-weight:950}
+    .pkAdminTitle h3{margin:0;font-size:15px}.pkAdminTitle p{margin:4px 0 0;color:var(--muted);line-height:1.45}
+    .pkAdminBadge{padding:6px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-weight:800;color:var(--muted)}
+    .pkAdminBadge.ok{background:var(--greenBg);border-color:#86efac;color:var(--green)}.pkAdminBadge.warn{background:var(--orangeBg);border-color:#fdba74;color:var(--orange)}
+    .pkAdminGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+    .pkAdminField{display:grid;gap:6px}.pkAdminField.full{grid-column:1/-1}.pkAdminField label{font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+    .pkAdminField input,.pkAdminField textarea{width:100%;border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--text);padding:10px 11px;outline:none}
+    .pkAdminField textarea{min-height:105px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.55}
+    .pkAdminField input:focus,.pkAdminField textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.11)}
+    .pkTokenRow{display:grid;grid-template-columns:1fr auto;gap:8px}.pkTokenState{display:flex;align-items:center;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);font-size:11px;font-weight:850;color:var(--muted);white-space:nowrap}
+    .pkAdminHelp{font-size:11px;color:var(--muted);line-height:1.5}.pkAdminActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .pkAdminStatus{display:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);line-height:1.5;white-space:pre-wrap}
+    .pkAdminStatus.show{display:block}.pkAdminStatus.ok{background:var(--greenBg);border-color:#86efac;color:var(--green)}.pkAdminStatus.warn{background:var(--orangeBg);border-color:#fdba74;color:var(--orange)}.pkAdminStatus.error{background:var(--redBg);border-color:#fda4af;color:var(--red)}
+    .pkAdminEmpty{padding:12px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);background:var(--panel2)}
+    @media(max-width:860px){.pkAdminGrid{grid-template-columns:1fr}.pkAdminField.full{grid-column:auto}.pkTokenRow{grid-template-columns:1fr}.pkTokenState{min-height:38px}}
   </style>
 </head>
 <body>
@@ -99,6 +118,30 @@
             <select class="select" id="detailMonth" disabled aria-label="Chọn tháng"></select>
             <button class="btn" id="copyWorkspaceBtn" type="button" disabled>Sao chép UID</button>
             <button class="btn primary" id="exportDetailBtn" type="button" disabled>Xuất CSV</button>
+          </div>
+        </section>
+
+
+        <section class="card pkAdminCard" id="pancakeAdminCard">
+          <div class="pkAdminHead">
+            <div class="pkAdminTitle"><span class="pkAdminIcon">P</span><div><h3>Cài đặt Pancake POS API</h3><p>Chỉ Admin được chỉnh. Cấu hình được gán riêng theo UID tài khoản Google đang chọn.</p></div></div>
+            <span class="pkAdminBadge warn" id="pkAdminBadge">Chưa chọn tài khoản</span>
+          </div>
+          <div class="pkAdminEmpty" id="pkAdminEmpty">Chọn một tài khoản Google ở cột bên trái để cấu hình Pancake API.</div>
+          <div id="pkAdminForm" class="hidden">
+            <div class="pkAdminGrid">
+              <div class="pkAdminField"><label>Tên Team / cấu hình</label><input id="pkLabel" placeholder="Ví dụ: TEAM TÀI"></div>
+              <div class="pkAdminField"><label>Shop ID</label><input id="pkShopId" inputmode="numeric" autocomplete="off" placeholder="816161074"></div>
+              <div class="pkAdminField full"><label>Saved Filter ID</label><input id="pkFilterId" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
+              <div class="pkAdminField full"><label>Access token Pancake</label><div class="pkTokenRow"><input id="pkAccessToken" type="password" autocomplete="new-password" placeholder="Để trống nếu giữ token đang lưu"><span class="pkTokenState" id="pkTokenState">Chưa lưu</span></div><div class="pkAdminHelp">GitHub Pages là web tĩnh nên token được lưu trong Firestore theo UID và chỉ trang của chính UID đó/Admin được đọc theo Rules. Người dùng không có giao diện chỉnh API.</div></div>
+              <div class="pkAdminField full"><label>Mapping trạng thái (mỗi dòng: mã=tên)</label><textarea id="pkStatusMap" spellcheck="false" placeholder="0=Mới&#10;11=Chờ hàng&#10;13=Đã in"></textarea><div class="pkAdminHelp">Các mã 0, 11, 13 đã được xác minh. Nếu Pancake trả mã mới, bấm “Kiểm tra API”, hệ thống sẽ báo để Admin gán đúng tên trước khi người dùng đồng bộ.</div></div>
+            </div>
+            <div class="pkAdminStatus" id="pkAdminStatus"></div>
+            <div class="pkAdminActions">
+              <button class="btn danger" id="pkDeleteBtn" type="button">Xóa cấu hình</button>
+              <button class="btn" id="pkTestBtn" type="button">Kiểm tra API</button>
+              <button class="btn primary" id="pkSaveBtn" type="button">Lưu cho tài khoản này</button>
+            </div>
           </div>
         </section>
 
@@ -162,7 +205,8 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { getFirestore, collection, doc, getDoc, onSnapshot, query, limit } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { fetchPancakeOrders, validatePancakeConfig, unixDay, remainingUnknownStatuses } from '../pancake-browser-common.js?v=2';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA_Q5SQDpLVckk8Zpf8nZ6GUAaQAlX088k',
@@ -181,7 +225,8 @@
     const UI_KEY = 'multi_admin_v3_google_ui';
     const state = {
       workspaces:[], activeId:'', detailMonth:'', unsubscribe:null,
-      filtered:[], page:1, highOnly:false, showChart:false
+      filtered:[], page:1, highOnly:false, showChart:false,
+      pancakeConfig:null, pancakeLoadedId:'', pancakeLoadSeq:0, pancakeBusy:false
     };
 
     function esc(value){return String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -235,6 +280,169 @@
     function userEmail(ws){return ws?.data?.email||'';}
     function userPhoto(ws){return ws?.data?.photoURL||'';}
     function isGoogleDashboard(ws){return !!(ws?.data?.ownerUid&&ws?.data?.authProvider==='google.com');}
+
+
+    // PANCAKE API — cấu hình CHỈ ADMIN được phép chỉnh.
+    function defaultPancakeStatusMap(){return {'0':'Mới','11':'Chờ hàng','13':'Đã in'};}
+    function cleanPancakeConfig(raw){
+      if(!raw||typeof raw!=='object')return null;
+      const statusMap={};
+      Object.entries(raw.statusMap||{}).slice(0,60).forEach(([k,v])=>{
+        const key=String(k||'').trim().slice(0,20),value=String(v||'').trim().slice(0,80);
+        if(key&&value)statusMap[key]=value;
+      });
+      return {
+        ownerUid:String(raw.ownerUid||''),
+        label:String(raw.label||'').trim().slice(0,120),
+        shopId:String(raw.shopId||'').trim(),
+        savedFilterId:String(raw.savedFilterId||'').trim(),
+        accessToken:String(raw.accessToken||'').trim(),
+        statusMap:Object.keys(statusMap).length?statusMap:defaultPancakeStatusMap(),
+        updatedAt:raw.updatedAt||null
+      };
+    }
+    function parseStatusMap(text){
+      const map={};
+      String(text||'').split(/\r?\n/).forEach(line=>{
+        const s=line.trim();if(!s||s.startsWith('#'))return;
+        const p=s.indexOf('=');if(p<1)return;
+        const code=s.slice(0,p).trim().slice(0,20),name=s.slice(p+1).trim().slice(0,80);
+        if(code&&name)map[code]=name;
+      });
+      return map;
+    }
+    function statusMapText(map){
+      const entries=Object.entries(map||{});
+      entries.sort((a,b)=>{
+        const na=Number(a[0]),nb=Number(b[0]);
+        if(Number.isFinite(na)&&Number.isFinite(nb))return na-nb;
+        return a[0].localeCompare(b[0]);
+      });
+      return entries.map(([k,v])=>`${k}=${v}`).join('\n');
+    }
+    function setPkStatus(message='',type=''){
+      const el=$('#pkAdminStatus');if(!el)return;
+      el.textContent=message||'';el.className='pkAdminStatus'+(message?' show':'')+(type?' '+type:'');
+    }
+    function setPkBusy(on){
+      state.pancakeBusy=!!on;
+      ['#pkSaveBtn','#pkTestBtn','#pkDeleteBtn'].forEach(s=>{const x=$(s);if(x)x.disabled=!!on||!state.activeId;});
+    }
+    function currentPancakeForm(){
+      const existing=state.pancakeConfig||{};
+      return {
+        label:$('#pkLabel')?.value.trim()||'',
+        shopId:$('#pkShopId')?.value.trim()||'',
+        savedFilterId:$('#pkFilterId')?.value.trim()||'',
+        accessToken:$('#pkAccessToken')?.value.trim()||existing.accessToken||'',
+        statusMap:parseStatusMap($('#pkStatusMap')?.value||'')
+      };
+    }
+    function paintPancakeForm(config){
+      const hasUser=!!state.activeId;
+      $('#pkAdminEmpty')?.classList.toggle('hidden',hasUser);
+      $('#pkAdminForm')?.classList.toggle('hidden',!hasUser);
+      const badge=$('#pkAdminBadge');
+      if(!hasUser){
+        if(badge){badge.className='pkAdminBadge warn';badge.textContent='Chưa chọn tài khoản';}
+        return;
+      }
+      const c=config||{statusMap:defaultPancakeStatusMap()};
+      $('#pkLabel').value=c.label||'';
+      $('#pkShopId').value=c.shopId||'';
+      $('#pkFilterId').value=c.savedFilterId||'';
+      $('#pkAccessToken').value='';
+      $('#pkStatusMap').value=statusMapText(c.statusMap||defaultPancakeStatusMap());
+      const ready=!!(c.shopId&&c.savedFilterId&&c.accessToken);
+      if(badge){badge.className='pkAdminBadge '+(ready?'ok':'warn');badge.textContent=ready?'Đã cấu hình':'Chưa đủ cấu hình';}
+      const token=$('#pkTokenState');
+      if(token)token.textContent=c.accessToken?'Đã lưu token':'Chưa có token';
+      setPkBusy(false);
+    }
+    async function loadPancakeForActive(force=false){
+      const id=state.activeId;
+      if(!id){state.pancakeConfig=null;state.pancakeLoadedId='';paintPancakeForm(null);setPkStatus('');return;}
+      if(!force&&state.pancakeLoadedId===id){paintPancakeForm(state.pancakeConfig);return;}
+      const seq=++state.pancakeLoadSeq;
+      state.pancakeLoadedId=id;
+      setPkStatus('Đang tải cấu hình Pancake của tài khoản…');
+      try{
+        const snap=await getDoc(doc(db,'pancakeConfigs',id));
+        if(seq!==state.pancakeLoadSeq||id!==state.activeId)return;
+        state.pancakeConfig=snap.exists()?cleanPancakeConfig(snap.data()):null;
+        paintPancakeForm(state.pancakeConfig);
+        setPkStatus(state.pancakeConfig?'Đã tải cấu hình Pancake.':'Tài khoản này chưa được Admin cài Pancake API.',state.pancakeConfig?'ok':'warn');
+      }catch(e){
+        if(seq!==state.pancakeLoadSeq)return;
+        state.pancakeConfig=null;paintPancakeForm(null);setPkStatus('Không tải được cấu hình Pancake: '+(e.message||e),'error');
+      }
+    }
+    async function savePancakeForActive(){
+      if(!state.activeId||state.pancakeBusy)return;
+      setPkBusy(true);setPkStatus('Đang lưu cấu hình Pancake…');
+      try{
+        const c=currentPancakeForm();
+        validatePancakeConfig(c);
+        if(!Object.keys(c.statusMap||{}).length)c.statusMap=defaultPancakeStatusMap();
+        const w=activeWorkspace();
+        await setDoc(doc(db,'pancakeConfigs',state.activeId),{
+          ownerUid:state.activeId,
+          ownerEmail:userEmail(w),
+          ownerName:userName(w),
+          label:c.label,
+          shopId:c.shopId,
+          savedFilterId:c.savedFilterId,
+          accessToken:c.accessToken,
+          statusMap:c.statusMap,
+          updatedAt:serverTimestamp(),
+          updatedBy:auth.currentUser?.uid||''
+        },{merge:true});
+        state.pancakeConfig={...c,ownerUid:state.activeId};
+        state.pancakeLoadedId=state.activeId;
+        paintPancakeForm(state.pancakeConfig);
+        setPkStatus('Đã lưu Pancake API cho đúng tài khoản Google đang chọn. Người dùng chỉ có nút đồng bộ, không có phần cài đặt.','ok');
+        toast('Đã lưu cấu hình Pancake.');
+      }catch(e){setPkStatus(e.message||String(e),'error');}
+      finally{setPkBusy(false);}
+    }
+    async function testPancakeForActive(){
+      if(!state.activeId||state.pancakeBusy)return;
+      setPkBusy(true);setPkStatus('Đang kiểm tra Pancake API trực tiếp từ GitHub Pages…');
+      try{
+        const c=currentPancakeForm();
+        validatePancakeConfig(c);
+        const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1);
+        const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const data=await fetchPancakeOrders({
+          shopId:c.shopId,savedFilterId:c.savedFilterId,accessToken:c.accessToken,
+          startDateTime:unixDay(ymd(start),false),endDateTime:unixDay(ymd(now),true),testOnly:false
+        });
+        if(data.truncated)throw new Error('Dữ liệu tháng hiện tại vượt giới hạn kiểm tra 60.000 đơn. Hãy thu hẹp khoảng kiểm tra hoặc chia cấu hình.');
+        const unknown=remainingUnknownStatuses(data.meta,c.statusMap||{});
+        if(Object.keys(unknown).length){
+          const map={...(c.statusMap||{})};Object.keys(unknown).forEach(code=>{if(!(code in map))map[code]='';});
+          const existingLines=statusMapText(c.statusMap||{});
+          const missingLines=Object.keys(unknown).filter(code=>!c.statusMap?.[code]).map(code=>`${code}=`).join('\n');
+          $('#pkStatusMap').value=[existingLines,missingLines].filter(Boolean).join('\n');
+          setPkStatus(`Kết nối thành công: ${data.totalEntries} đơn. Còn mã trạng thái chưa gán: ${Object.entries(unknown).map(([k,n])=>`${k} (${n} đơn)`).join(', ')}. Hãy điền tên sau dấu “=” rồi lưu.`, 'warn');
+        }else{
+          const sample=Object.entries(data.meta?.statusCounts||{}).slice(0,8).map(([k,n])=>`${k}: ${n}`).join(' · ');
+          setPkStatus(`Kết nối thành công: ${data.totalEntries} đơn${sample?' · '+sample:''}.`,'ok');
+        }
+      }catch(e){setPkStatus(e.message||String(e),'error');}
+      finally{setPkBusy(false);}
+    }
+    async function deletePancakeForActive(){
+      if(!state.activeId||state.pancakeBusy)return;
+      if(!confirm('Xóa toàn bộ cấu hình Pancake của tài khoản đang chọn? Người dùng sẽ không thể đồng bộ API cho đến khi Admin cài lại.'))return;
+      setPkBusy(true);
+      try{
+        await deleteDoc(doc(db,'pancakeConfigs',state.activeId));
+        state.pancakeConfig=null;state.pancakeLoadedId=state.activeId;paintPancakeForm(null);
+        setPkStatus('Đã xóa cấu hình Pancake của tài khoản này.','ok');toast('Đã xóa cấu hình Pancake.');
+      }catch(e){setPkStatus(e.message||String(e),'error');}
+      finally{setPkBusy(false);}
+    }
 
     function saveUI(){
       try{localStorage.setItem(UI_KEY,JSON.stringify({theme:document.documentElement.dataset.theme,workspaceSort:$('#workspaceSort').value,cat:$('#catFilter').value,sort:$('#sortFilter').value,perPage:$('#perPage').value,highOnly:state.highOnly,showChart:state.showChart}));}catch(e){}
@@ -408,7 +616,7 @@
       $('#highSwitch').classList.toggle('on',state.highOnly);$('#highToggle').setAttribute('aria-checked',String(state.highOnly));
       $('#chartSwitch').classList.toggle('on',state.showChart);$('#chartToggle').setAttribute('aria-checked',String(state.showChart));
     }
-    function renderAll(){renderWorkspaceList();renderWorkspaceHeader();renderStats();updateSwitches();renderProducts();}
+    function renderAll(){renderWorkspaceList();renderWorkspaceHeader();renderStats();updateSwitches();renderProducts();loadPancakeForActive().catch(e=>console.warn('pancake config',e));}
 
     function resetFilters(){
       $('#productSearch').value='';$('#catFilter').value='';$('#sortFilter').value='badDesc';$('#perPage').value='50';state.highOnly=false;state.showChart=false;state.page=1;saveUI();renderAll();
@@ -446,6 +654,9 @@
     $('#resetFiltersBtn').addEventListener('click',resetFilters);
     $('#copyWorkspaceBtn').addEventListener('click',async()=>{if(!state.activeId)return;try{await navigator.clipboard.writeText(state.activeId);toast('Đã sao chép UID người dùng.');}catch(e){toast('Không thể sao chép tự động.');}});
     $('#exportDetailBtn').addEventListener('click',exportDetail);
+    $('#pkSaveBtn').addEventListener('click',savePancakeForActive);
+    $('#pkTestBtn').addEventListener('click',testPancakeForActive);
+    $('#pkDeleteBtn').addEventListener('click',deletePancakeForActive);
     $('#themeBtn').addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;saveUI();});
 
     const ui=loadUI();
